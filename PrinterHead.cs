@@ -6,5 +6,6 @@
         public bool ProbePresent;
         public double NozzleDiameter;
         public string NozzleMaterial;
+        public Camera Camera;
     }
 }
