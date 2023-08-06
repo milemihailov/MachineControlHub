@@ -1,4 +1,4 @@
-﻿namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.SerialConnection
 {
     public class SerialConnection
     {

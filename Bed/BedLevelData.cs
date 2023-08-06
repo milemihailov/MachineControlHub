@@ -1,4 +1,6 @@
-﻿namespace ControllingAndManagingApp
+﻿using ControllingAndManagingApp.Motion;
+
+namespace ControllingAndManagingApp.Bed
 {
     public class BedLevelData
     {

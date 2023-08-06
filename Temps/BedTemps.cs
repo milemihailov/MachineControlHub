@@ -1,4 +1,4 @@
-﻿namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.Temps
 {
     public class BedTemps
     {

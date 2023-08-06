@@ -1,4 +1,4 @@
-﻿namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.Gcode
 {
     public class GcodeCommand
     {

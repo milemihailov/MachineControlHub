@@ -1,4 +1,4 @@
-﻿namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.Motion
 {
     public class XYCoordinates
     {

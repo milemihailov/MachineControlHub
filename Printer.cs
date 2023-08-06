@@ -1,4 +1,9 @@
-﻿namespace ControllingAndManagingApp
+﻿using ControllingAndManagingApp.Bed;
+using ControllingAndManagingApp.Head;
+using ControllingAndManagingApp.Material;
+using ControllingAndManagingApp.Temps;
+
+namespace ControllingAndManagingApp
 {
     public class Printer
     {
@@ -16,6 +21,5 @@
         public bool HasFilamentRunoutSensor;
         public bool NetworkConnection;
         public int ZMaxBuildVolume;
-
     }
 }
