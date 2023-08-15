@@ -23,7 +23,8 @@
         public int EDefaultAcceleration;
 
         public int StepsPerUnit;
-        public int PrintSpeed;
+        public int? FeedRate;
+        public double PrintSpeed;
         public int FanSpeed;
         public int PrintFlow;
 
@@ -34,5 +35,14 @@
         public double XHomePos;
         public double YHomePos;
         public double ZHomePos;
+
+        public string FeedRateString()
+        {
+            if (FeedRate != null)
+            {
+                return $"F{FeedRate}";
+            }
+            return null;
+        }
     }
 }

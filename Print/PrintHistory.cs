@@ -2,6 +2,6 @@
 {
     public class PrintHistory
     {
-        public Print Prints;
+        public List<Print> Prints;
     }
 }

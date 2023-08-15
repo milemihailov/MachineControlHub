@@ -2,7 +2,7 @@
 {
     public class HotendTemps
     {
-        public double PIDHotendValues;
+        public PIDValues PIDHotendValues;
         public int HotendCurrentTemp;
         public int HotendMaxTemp;
         public int HotendSetTemp;
