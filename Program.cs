@@ -7,7 +7,7 @@ namespace ControllingAndManagingApp
     {
         static void Main(string[] args)
         {
-            GcodeCommand command = new GcodeCommand();
+            GCodeCommandsData command = new GCodeCommandsData();
             Position position = new Position();
             MotionSettingsData motionSettingsData = new MotionSettingsData();
 
@@ -18,10 +18,12 @@ namespace ControllingAndManagingApp
             position.YHomePosition = 3;
             position.ZHomePosition = 2;
             motionSettingsData.FeedRate = 1;
+            Print.Print filename = new Print.Print();
+            filename.File = "fee";
 
-            Console.WriteLine(Commands.HomeAxes(position));
-            //Console.WriteLine(Commands.DisableSteppers());
-            Console.WriteLine(Commands.RapidLinearMove(position, motionSettingsData));
+            Console.WriteLine(CommandMethods.HomeAxes(position));
+
+            Console.WriteLine(CommandMethods.StartSDWrite(filename.File));
         }
 
     }
