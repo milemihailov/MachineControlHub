@@ -1,6 +1,4 @@
-﻿using ControllingAndManagingApp.Gcode;
-
-namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.Gcode
 {
     public class GCodeMethods
     {
@@ -19,5 +17,6 @@ namespace ControllingAndManagingApp
         {
             return $"{gcode.Type}{gcode.Instruction} {gcode.ParametersString()};".ToUpper();
         }
+
     }
 }
