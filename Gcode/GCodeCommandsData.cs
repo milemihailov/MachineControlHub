@@ -1,19 +1,13 @@
 ﻿namespace ControllingAndManagingApp.Gcode
 {
-    public class GcodeCommand
+    public class GCodeCommandsData
     {
         public char Type;
         public int Instruction;
         public List<string> Parameters;
 
 
-        public string GcodeLine()
-        {
-            return $"{Type}{Instruction} {GetParameters()};".ToUpper();
-        }
-
-
-        public string GetParameters()
+        public string ParametersString()
         {
             if (Parameters != null)
             {

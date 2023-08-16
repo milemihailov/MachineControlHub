@@ -1,6 +1,6 @@
 ﻿namespace ControllingAndManagingApp.Gcode
 {
-    public class GCodeInstructions
+    public class GCodeInstructionsEnums
     {
         public enum GCommands
         {
@@ -29,10 +29,10 @@
             EndOfProgram = 2,
             DisableSteppers = 18,
             ListSdCard = 20,
-            InitSdCadr,
+            InitSdCard,
             ReleaseSdCard,
             SelectSdFile,
-            StartOrResumeSdPrint,
+            StartPrint,
             PauseSdPrint,
             SetSdPosition,
             ReportSdPrintStatus,
