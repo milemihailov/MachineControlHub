@@ -1,6 +1,6 @@
 ﻿namespace ControllingAndManagingApp.Gcode
 {
-    public class GCodeCommandsData
+    public class GCodeCommands
     {
         public char Type;
         public int Instruction;
