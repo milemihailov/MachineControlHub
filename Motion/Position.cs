@@ -1,12 +1,5 @@
 ﻿namespace ControllingAndManagingApp.Motion
 {
-    public enum HomePositions
-    {
-        XHomePos,
-        YHomePos,
-        ZHomePos,
-    }
-
     public enum MovePositions
     {
         XMovePos,
@@ -25,10 +18,6 @@
         public double? YMovePosition;
         public double? ZMovePosition;
         public double? EMovePosition;
-
-        public double? XHomePosition;
-        public double? YHomePosition;
-        public double? ZHomePosition;
 
         public string XYZEMoveString(MovePositions position)
         {
@@ -56,32 +45,6 @@
                     if (EMovePosition != null)
                     {
                         return $"E{EMovePosition}";
-                    }
-                    return null;
-            }
-            return null;
-        }
-
-        public string XYZHomeString(HomePositions position)
-        {
-            switch (position)
-            {
-                case HomePositions.XHomePos:
-                    if (XHomePosition != null)
-                    {
-                        return $"X{XHomePosition}";
-                    }
-                    return null;
-                case HomePositions.YHomePos:
-                    if (YHomePosition != null)
-                    {
-                        return $"Y{YHomePosition}";
-                    }
-                    return null;
-                case HomePositions.ZHomePos:
-                    if (ZHomePosition != null)
-                    {
-                        return $"Z{ZHomePosition}";
                     }
                     return null;
             }

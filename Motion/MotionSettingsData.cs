@@ -32,9 +32,9 @@
         public double? YHomeOffset;
         public double? ZHomeOffset;
 
-        public double? XHomePos;
-        public double? YHomePos;
-        public double? ZHomePos;
+        public double XHomePos;
+        public double YHomePos;
+        public double ZHomePos;
 
         public string FeedRateString()
         {

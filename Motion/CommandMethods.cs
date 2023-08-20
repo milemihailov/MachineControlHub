@@ -13,7 +13,7 @@ namespace ControllingAndManagingApp.Motion
         /// <param name="position"></param>
         /// <param name="feedRate"></param>
         /// <returns></returns>
-        public static string LinearMove(Position position, MotionSettingsData feedRate)
+        public static string SendLinearMove(Position position, MotionSettingsData feedRate)
         {
             var linearMoveCommand = new GCodeCommands
             {
@@ -21,8 +21,8 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.GCommands.LinearMove,
                 Parameters = new List<string>() { position.XYZEMoveString(MovePositions.XMovePos), position.XYZEMoveString(MovePositions.YMovePos), position.XYZEMoveString(MovePositions.ZMovePos), position.XYZEMoveString(MovePositions.EMovePos), feedRate.FeedRateString() }
             };
-            return GCodeMethods.GCodeString(linearMoveCommand);
 
+            return GCodeMethods.GCodeString(linearMoveCommand);
         }
 
 
@@ -32,7 +32,7 @@ namespace ControllingAndManagingApp.Motion
         /// The park position is defined by NOZZLE_PARK_POINT.
         /// </summary>
         /// <returns></returns>
-        public static string ParkToolhead()
+        public static string SendParkToolhead()
         {
             var parkToolhead = new GCodeCommands
             {
@@ -49,13 +49,13 @@ namespace ControllingAndManagingApp.Motion
         /// The G28 command is used to home one or more axes. The default behavior with no parameters is to home all axes.
         /// </summary>
         /// <returns></returns>
-        public static string HomeAxes(Position position)
+        public static string SendHomeAxes(string x = "", string y = "", string z = "")
         {
             var homeAxes = new GCodeCommands
             {
                 Type = 'G',
                 Instruction = (int)GCodeInstructionsEnums.GCommands.HomeAllAxes,
-                Parameters = new List<string>() { position.XYZHomeString(HomePositions.XHomePos), position.XYZHomeString(HomePositions.YHomePos), position.XYZHomeString(HomePositions.ZHomePos) }
+                Parameters = new List<string>() { x, y, z }
             };
 
             return GCodeMethods.GCodeString(homeAxes);
@@ -63,10 +63,10 @@ namespace ControllingAndManagingApp.Motion
 
 
         /// <summary>
-        /// It levels the bed regarding the bed leveling option chosen in the firmware.
+        /// It levels the bed regarding the bed leveling system in the firmware.
         /// </summary>
         /// <returns></returns>
-        public static string BedLeveling()
+        public static string SendBedLeveling()
         {
             var bedLeveling = new GCodeCommands
             {
@@ -82,7 +82,7 @@ namespace ControllingAndManagingApp.Motion
         /// This command can be used to disable one or more steppers (X,Y,Z,E).
         /// </summary>
         /// <returns></returns>
-        public static string DisableSteppers()
+        public static string SendDisableSteppers()
         {
             var disableSteppers = new GCodeCommands
             {
@@ -101,7 +101,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string ListSDCard()
+        public static string SendListSDCard()
         {
             var sdCard = new GCodeCommands
             {
@@ -119,7 +119,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string InitSDCard()
+        public static string SendInitSDCard()
         {
             var sdCard = new GCodeCommands
             {
@@ -137,7 +137,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static string SelectSDCard(string fileName)
+        public static string SendSelectSDCard(string fileName)
         {
             var selectSDCard = new GCodeCommands
             {
@@ -154,7 +154,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string StartSDPrint()
+        public static string SendStartSDPrint()
         {
             var startSDPrint = new GCodeCommands
             {
@@ -162,6 +162,7 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StartPrint,
 
             };
+
             return GCodeMethods.GCodeString(startSDPrint);
         }
 
@@ -171,13 +172,14 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string PauseSDPrint()
+        public static string SendPauseSDPrint()
         {
             var pauseSDPrint = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.PauseSdPrint,
             };
+
             return GCodeMethods.GCodeString(pauseSDPrint);
         }
 
@@ -188,13 +190,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static string StartSDWrite(string fileName)
+        public static string SendStartSDWrite(string fileName)
         {
             var startSDWrite = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StartSdWrite,
             };
+
             return GCodeMethods.GCodeString(startSDWrite, fileName);
         }
 
@@ -204,13 +207,14 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string StopSDWrite()
+        public static string SendStopSDWrite()
         {
             var stopSDWrite = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StopSdWrite
             };
+
             return GCodeMethods.GCodeString(stopSDWrite);
         }
 
@@ -221,13 +225,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static string DeleteSDFile(string fileName)
+        public static string SendDeleteSDFile(string fileName)
         {
             var deleteSDFile = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.DeleteSdFile
             };
+
             return GCodeMethods.GCodeString(deleteSDFile, fileName);
         }
 
@@ -238,13 +243,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"> Accepts SetHotendTemperature field from HotendTemps</param>
         /// <returns></returns>
-        public static string SetHotendTemperature(int setTemp)
+        public static string SendHotendTemperature(int setTemp)
         {
             var hotendTemp = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHotendTemperature,
             };
+
             return GCodeMethods.GCodeString(hotendTemp, setTemp);
         }
 
@@ -255,13 +261,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"></param>
         /// <returns></returns>
-        public static string SetBedTemperature(int setTemp)
+        public static string SendBedTemperature(int setTemp)
         {
             var bedTemp = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetBedTemperature
             };
+
             return GCodeMethods.GCodeString(bedTemp, setTemp);
         }
 
@@ -272,13 +279,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"></param>
         /// <returns></returns>
-        public static string SetChamberTemperature(int setTemp)
+        public static string SendChamberTemperature(int setTemp)
         {
             var chamberTemp = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetChamberTemperature
             };
+
             return GCodeMethods.GCodeString(chamberTemp, setTemp);
         }
 
@@ -288,13 +296,14 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fanSpeed"></param>
         /// <returns></returns>
-        public static string SetFanSpeed(int fanSpeed)
+        public static string SendFanSpeed(int fanSpeed)
         {
             var setFanSpeed = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetFanSpeed
             };
+
             return GCodeMethods.GCodeString(setFanSpeed, fanSpeed);
         }
 
@@ -303,13 +312,14 @@ namespace ControllingAndManagingApp.Motion
         /// Turn off one of the fans. If no fan index is given, the print cooling fan.
         /// </summary>
         /// <returns></returns>
-        public static string FanOff()
+        public static string SendFanOff()
         {
             var fanOff = new GCodeCommands
             {
                 Type = 'M',
                 Instruction = (int)GCodeInstructionsEnums.MCommands.FanOff
             };
+
             return GCodeMethods.GCodeString(fanOff);
         }
 
@@ -319,7 +329,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="profiles"></param>
         /// <returns></returns>
-        public static string SetMaterialPreset(PreheatingProfiles profiles)
+        public static string SendMaterialPreset(PreheatingProfiles profiles)
         {
             var preset = new GCodeCommands
             {
@@ -337,7 +347,7 @@ namespace ControllingAndManagingApp.Motion
         /// diameter refers to FilamentProperties.FilamentDiameter
         /// </summary>
         /// <returns></returns>
-        public static string SetFilamentDiameter(double diamaeter)
+        public static string SendFilamentDiameter(double diamaeter)
         {
             var filamentDiameter = new GCodeCommands
             {
@@ -345,6 +355,7 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetFilamentDiameter,
                 Parameters = new List<string>() { $"D{diamaeter}" }
             };
+
             return GCodeMethods.GCodeString(filamentDiameter);
         }
 
@@ -354,7 +365,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="motion"></param>
         /// <returns></returns>
-        public static string SetMaxFeedrate(MotionSettingsData motion)
+        public static string SendMaxFeedrate(MotionSettingsData motion)
         {
             var maxFeedrate = new GCodeCommands
             {
@@ -362,11 +373,18 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaxFeedrates,
                 Parameters = new List<string>() { motion.EString(motion.EMaxFeedrate), motion.XString(motion.XMaxFeedrate), motion.YString(motion.YMaxFeedrate), motion.ZString(motion.ZMaxFeedrate) }
             };
+
             return GCodeMethods.GCodeString(maxFeedrate);
         }
 
 
-        public static string SetHomeOffsets(MotionSettingsData motion)
+        /// <summary>
+        /// Apply a persistent offset to the native home position and coordinate space.
+        /// This effectively shifts the coordinate space in the negative direction.
+        /// </summary>
+        /// <param name="motion"></param>
+        /// <returns></returns>
+        public static string SendHomeOffsets(MotionSettingsData motion)
         {
             var homeOffsets = new GCodeCommands
             {
@@ -374,6 +392,7 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
                 Parameters = new List<string>() { motion.XString(motion.XHomeOffset), motion.YString(motion.YHomeOffset), motion.ZString(motion.ZHomeOffset) }
             };
+
             return GCodeMethods.GCodeString(homeOffsets);
         }
     }
