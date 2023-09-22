@@ -1,9 +1,7 @@
-﻿using ControllingAndManagingApp.Motion;
-
-namespace ControllingAndManagingApp.Bed
+﻿namespace ControllingAndManagingApp.Bed
 {
     public class BedLevelData
     {
-        public List <Position>Measurements;
+        public string BedLevelGridData;
     }
 }

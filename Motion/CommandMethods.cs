@@ -5,13 +5,11 @@ namespace ControllingAndManagingApp.Motion
 {
     public class CommandMethods
     {
-
-
         /// <summary>
         /// Add a linear move to the queue to be performed after all previous moves are completed.
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="feedRate"></param>
+        /// <param name="position">Sets X,Y,Z,E position for the movement.</param>
+        /// <param name="feedRate">Sets the speed for the movement.</param>
         /// <returns></returns>
         public static string SendLinearMove(Position position, MotionSettingsData feedRate)
         {
@@ -47,15 +45,36 @@ namespace ControllingAndManagingApp.Motion
 
         /// <summary>
         /// The G28 command is used to home one or more axes. The default behavior with no parameters is to home all axes.
+        /// If one or more axes are added as parameters it will home only the axes added.
         /// </summary>
+        /// <param name="x">true to home X axis</param>
+        /// <param name="y">true to home Y axis</param>
+        /// <param name="z">true to home Z axis</param>
         /// <returns></returns>
-        public static string SendHomeAxes(string x = "", string y = "", string z = "")
+        public static string SendHomeAxes(bool x = false, bool y = false, bool z = false)
         {
+            string XYZ = "";
+
+            if (x)
+            {
+                XYZ += "X";
+            }
+
+            if (y)
+            {
+                XYZ += "Y";
+            }
+
+            if (z)
+            {
+                XYZ += "Z";
+            }
+
             var homeAxes = new GCodeCommands
             {
                 Type = 'G',
                 Instruction = (int)GCodeInstructionsEnums.GCommands.HomeAllAxes,
-                Parameters = new List<string>() { x, y, z }
+                Parameters = new List<string>() { XYZ }
             };
 
             return GCodeMethods.GCodeString(homeAxes);
@@ -135,7 +154,7 @@ namespace ControllingAndManagingApp.Motion
         /// Select an SD file for printing or processing.
         /// Requires SDSUPPORT
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
         public static string SendSelectSDCard(string fileName)
         {
@@ -188,7 +207,7 @@ namespace ControllingAndManagingApp.Motion
         /// This command starts a file write. All commands received by Marlin are written to the file and are not executed until M29 closes the file.
         /// Requires SDSUPPORT
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
         public static string SendStartSDWrite(string fileName)
         {
@@ -223,7 +242,7 @@ namespace ControllingAndManagingApp.Motion
         /// Delete a file from the SD card.
         /// Requires SDSUPPORT
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
         public static string SendDeleteSDFile(string fileName)
         {
