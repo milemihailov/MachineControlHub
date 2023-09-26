@@ -1,7 +1,14 @@
 ﻿namespace ControllingAndManagingApp.Print
 {
+    /// <summary>
+    /// Represents a history of 3D printing jobs.
+    /// </summary>
     public class PrintHistory
     {
-        public List<Print> Prints;
+        /// <summary>
+        /// Gets or sets the list of printed jobs.
+        /// </summary>
+        public List<Print> Prints { get; set; }
     }
+
 }

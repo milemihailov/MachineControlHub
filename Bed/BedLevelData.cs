@@ -1,6 +1,8 @@
 ﻿namespace ControllingAndManagingApp.Bed
 {
-
+    /// <summary>
+    /// This class holds the data obtained from autobedleveling "G29"
+    /// </summary>
     public class BedLevelData
     {
         public const int LINES_TO_EXCLUDE = 4;

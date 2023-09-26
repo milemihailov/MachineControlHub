@@ -3,6 +3,11 @@ using ControllingAndManagingApp.Material;
 
 namespace ControllingAndManagingApp.Motion
 {
+
+    /// <summary>
+    /// Contains predefined methods for generating G-code commands as strings.
+    /// This class simplifies the process of creating G-code commands for controlling a 3D printer.
+    /// </summary>
     public class CommandMethods
     {
         /// <summary>
@@ -19,7 +24,6 @@ namespace ControllingAndManagingApp.Motion
                 Instruction = (int)GCodeInstructionsEnums.GCommands.LinearMove,
                 Parameters = new List<string>() { position.XYZEMoveString(MovePositions.XMovePos), position.XYZEMoveString(MovePositions.YMovePos), position.XYZEMoveString(MovePositions.ZMovePos), position.XYZEMoveString(MovePositions.EMovePos), feedRate.FeedRateString() }
             };
-
             return GCodeMethods.GCodeString(linearMoveCommand);
         }
 

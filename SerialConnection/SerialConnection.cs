@@ -2,6 +2,11 @@
 
 namespace ControllingAndManagingApp.SerialConnection
 {
+    /// <summary>
+    /// This class provides methods to open, close, read, and write data to a serial port.
+    /// It also includes features for configuring serial port settings such as port name, baud rate,
+    /// data bits, stop bits, rts enable, dtr enable and parity.
+    /// </summary>
     public class SerialConnection
     {
 
