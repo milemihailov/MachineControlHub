@@ -9,7 +9,7 @@ namespace ControllingAndManagingApp.SerialConnection
     /// </summary>
     public class SerialConnection
     {
-
+        const string BUSY_CHECK = "echo:busy: processing\n";
         private SerialPort serialPort;
 
         public SerialConnection()
@@ -92,7 +92,6 @@ namespace ControllingAndManagingApp.SerialConnection
                 if (serialPort.IsOpen)
                 {
                     serialPort.WriteLine(data);
-                    Console.WriteLine("Writing to port");
                     Thread.Sleep(200);
                 }
             }
@@ -142,7 +141,7 @@ namespace ControllingAndManagingApp.SerialConnection
         {
             string data = serialPort.ReadLine();
 
-            while (data == "echo:busy: processing\n" || !HasData())
+            while (data == BUSY_CHECK || !HasData())
             {
                 Console.WriteLine(serialPort.ReadLine());
                 Thread.Sleep(200);

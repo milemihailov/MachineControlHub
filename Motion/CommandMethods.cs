@@ -22,7 +22,7 @@ namespace ControllingAndManagingApp.Motion
             {
                 Type = 'G',
                 Instruction = (int)GCodeInstructionsEnums.GCommands.LinearMove,
-                Parameters = new List<string>() { position.XYZEMoveString(MovePositions.XMovePos), position.XYZEMoveString(MovePositions.YMovePos), position.XYZEMoveString(MovePositions.ZMovePos), position.XYZEMoveString(MovePositions.EMovePos), feedRate.FeedRateString() }
+                Parameters = new List<string>() { position.XYZEMoveString(MovePositions.XMovePos), position.XYZEMoveString(MovePositions.YMovePos), position.XYZEMoveString(MovePositions.ZMovePos), position.XYZEMoveString(MovePositions.EMovePos), feedRate.FeedRateString(feedRate.FeedRateFreeMove) }
             };
             return GCodeMethods.GCodeString(linearMoveCommand);
         }
@@ -160,7 +160,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
-        public static string SendSelectSDCard(string fileName)
+        public static string SendSelectSDFile(string fileName)
         {
             var selectSDCard = new GCodeCommands
             {

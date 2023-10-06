@@ -6,7 +6,7 @@
     public class PrintProgress
     {
         /// <summary>
-        /// Gets or sets the name of the file being printed.
+        /// Gets or sets the file being printed.
         /// </summary>
         public string File { get; set; }
 

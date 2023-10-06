@@ -4,7 +4,6 @@ namespace ControllingAndManagingApp
 {
     internal class Program
     {
-
         static void Main(string[] args)
         {
 
@@ -13,17 +12,35 @@ namespace ControllingAndManagingApp
             serialPort.PortName = "COM4";
             serialPort.BaudRate = 115200;
 
+            Material.PreheatingProfiles preheat = new Material.PreheatingProfiles();
+
+            preheat.MaterialIndex = 2;
+            preheat.BedTemp = 60;
+            preheat.HotendTemp = 230;
+            preheat.FanSpeed = 0;
+
+            Position position = new Position();
+            position.YMovePosition = 40;
+
+            MotionSettingsData motionSettings = new MotionSettingsData();
+
+            Print.Print na = new Print.Print();
+            na.ParseExtractedSettingsFromPrintedFile("C:/Users/mile mihailov/Desktop/V29 Whistle.gcode");
+
+            //string result = na.StartTimeOfPrint;
 
 
-            serialPort.Open();
-            serialPort.Write(CommandMethods.SendFanOff());
-            serialPort.CheckForBusy();
+            //string a = na.StartTimeOfPrint.ToString();
+            Console.WriteLine(na.ExtractedSettingsFromPrintedFile);
+            //serialPort.Open();
+            //Console.WriteLine(serialPort.Read());
 
-            string input = serialPort.Read();
+            //serialPort.CheckForBusy();
 
-            Console.WriteLine(input);
+            //string input = serialPort.Read();
+            //Console.WriteLine(input);
 
-            serialPort.Close();
+            //serialPort.Close();
         }
 
     }
