@@ -2,10 +2,11 @@
 
 namespace ControllingAndManagingApp.Print
 {
+
     /// <summary>
     /// Represents a 3D printing job.
     /// </summary>
-    public class Print
+    public class PrintJob
     {
         public const string DATA_SEPARATOR = "; ";
         public const char NEW_LINE = '\n';
@@ -26,9 +27,13 @@ namespace ControllingAndManagingApp.Print
         /// </summary>
         public DateTime StartTimeOfPrint
         {
-            get { return DateTime.UtcNow; }
+            get { return DateTime.Now; }
         }
 
+        /// <summary>
+        /// Gets or sets the total print time for the job in seconds.
+        /// </summary>
+        public int TotalPrintTime { get; set; }
 
 
         /// <summary>

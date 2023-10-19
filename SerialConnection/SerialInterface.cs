@@ -1,4 +1,5 @@
-﻿using System.IO.Ports;
+﻿using ControllingAndManagingApp.Motion;
+using System.IO.Ports;
 
 namespace ControllingAndManagingApp.SerialConnection
 {
@@ -7,12 +8,13 @@ namespace ControllingAndManagingApp.SerialConnection
     /// It also includes features for configuring serial port settings such as port name, baud rate,
     /// data bits, stop bits, rts enable, dtr enable and parity.
     /// </summary>
-    public class SerialConnection
+    public class SerialInterface
     {
         const string BUSY_CHECK = "echo:busy: processing\n";
+        const string GCODE_FILE_EXTENSION = ".gco";
         private SerialPort serialPort;
 
-        public SerialConnection()
+        public SerialInterface()
         {
             serialPort = new SerialPort();
             serialPort.StopBits = StopBits.One;
@@ -92,7 +94,6 @@ namespace ControllingAndManagingApp.SerialConnection
                 if (serialPort.IsOpen)
                 {
                     serialPort.WriteLine(data);
-                    Thread.Sleep(200);
                 }
             }
             catch (Exception ex)
@@ -144,7 +145,7 @@ namespace ControllingAndManagingApp.SerialConnection
             while (data == BUSY_CHECK || !HasData())
             {
                 Console.WriteLine(serialPort.ReadLine());
-                Thread.Sleep(200);
+                Thread.Sleep(2000);
             }
         }
 
@@ -177,6 +178,47 @@ namespace ControllingAndManagingApp.SerialConnection
                 ports += port;
             }
             return ports;
+        }
+
+
+
+        /// <summary>
+        /// Transfers a G-code file to the SD card using a serial connection.
+        /// </summary>
+        /// <param name="GcodeFilePath">The path to the G-code file to be transferred.</param>
+        /// <param name="fileName">The name to assign to the file on the SD card.</param>
+        /// <remarks>
+        /// This method sends the G-code commands line by line to the printer's SD card via the serial connection.
+        /// It starts by writing the file name and then sends the contents of the file, followed by a stop command.
+        /// </remarks>
+        /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
+        /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
+        public void TransferFileToSD(string GcodeFilePath, string fileName, SerialInterface serial)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(GcodeFilePath))
+                {
+                    string line;
+                    serial.Write($"{CommandMethods.SendStartSDWrite(fileName)}{GCODE_FILE_EXTENSION}");
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        serial.Write(line);
+                        Console.WriteLine(line);
+                    }
+
+                    serial.Write(CommandMethods.SendStopSDWrite());
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("File not found.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("An error occurred: " + e.Message);
+            }
         }
     }
 

@@ -4,12 +4,14 @@ using ControllingAndManagingApp.Material;
 namespace ControllingAndManagingApp.Motion
 {
 
+
     /// <summary>
     /// Contains predefined methods for generating G-code commands as strings.
     /// This class simplifies the process of creating G-code commands for controlling a 3D printer.
     /// </summary>
     public class CommandMethods
     {
+
         /// <summary>
         /// Add a linear move to the queue to be performed after all previous moves are completed.
         /// </summary>
@@ -418,5 +420,6 @@ namespace ControllingAndManagingApp.Motion
 
             return GCodeMethods.GCodeString(homeOffsets);
         }
+
     }
 }
