@@ -436,7 +436,7 @@ namespace ControllingAndManagingApp.Motion
         /// </remarks>
         /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
         /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
-        public void TransferFileToSD(string GcodeFilePath, string fileName, SerialInterface serial)
+        public static void TransferFileToSD(string GcodeFilePath, string fileName, SerialInterface serial)
         {
             try
             {

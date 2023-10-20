@@ -10,7 +10,7 @@ namespace ControllingAndManagingApp.SerialConnection
     public class SerialInterface
     {
         const string BUSY_CHECK = "echo:busy: processing\n";
-        const string GCODE_FILE_EXTENSION = ".gco";
+
         private SerialPort serialPort;
 
         public SerialInterface()

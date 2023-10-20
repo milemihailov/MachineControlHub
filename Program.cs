@@ -43,7 +43,7 @@ namespace ControllingAndManagingApp
 
             CommandMethods.SendInitSDCard();
 
-            serialPort.TransferFileToSD(filePath, fileName, serialPort);
+            CommandMethods.TransferFileToSD(filePath, fileName, serialPort);
 
             serialPort.Write($"{CommandMethods.SendListSDCard()}");
             serialPort.Write(CommandMethods.SendSelectSDFile($"{fileName}"));
