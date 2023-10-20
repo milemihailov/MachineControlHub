@@ -1,5 +1,6 @@
 ﻿using ControllingAndManagingApp.Gcode;
 using ControllingAndManagingApp.Material;
+using ControllingAndManagingApp.SerialConnection;
 
 namespace ControllingAndManagingApp.Motion
 {
@@ -11,6 +12,8 @@ namespace ControllingAndManagingApp.Motion
     /// </summary>
     public class CommandMethods
     {
+        const string GCODE_FILE_EXTENSION = ".gco";
+
 
         /// <summary>
         /// Add a linear move to the queue to be performed after all previous moves are completed.
@@ -421,5 +424,44 @@ namespace ControllingAndManagingApp.Motion
             return GCodeMethods.GCodeString(homeOffsets);
         }
 
+
+        /// <summary>
+        /// Transfers a G-code file to the SD card using a serial connection.
+        /// </summary>
+        /// <param name="GcodeFilePath">The path to the G-code file to be transferred.</param>
+        /// <param name="fileName">The name to assign to the file on the SD card.</param>
+        /// <remarks>
+        /// This method sends the G-code commands line by line to the printer's SD card via the serial connection.
+        /// It starts by writing the file name and then sends the contents of the file, followed by a stop command.
+        /// </remarks>
+        /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
+        /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
+        public void TransferFileToSD(string GcodeFilePath, string fileName, SerialInterface serial)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(GcodeFilePath))
+                {
+                    string line;
+                    serial.Write($"{SendStartSDWrite(fileName)}{GCODE_FILE_EXTENSION}");
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        serial.Write(line);
+                        Console.WriteLine(line);
+                    }
+
+                    serial.Write(SendStopSDWrite());
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("File not found.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("An error occurred: " + e.Message);
+            }
+        }
     }
 }

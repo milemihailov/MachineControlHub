@@ -4,13 +4,20 @@ namespace ControllingAndManagingApp
 {
     internal class Program
     {
+        //public static int CalculateChecksum(string command)
+        //{
+        //    byte[] bytes = command.Select(Convert.ToByte).ToArray();
+        //    int checksum = bytes.Aggregate((x, y) => (byte)(x ^ y));
+        //    return checksum;
+        //}
+
         static void Main(string[] args)
         {
 
-            SerialConnection.SerialConnection serialPort = new();
+            SerialConnection.SerialInterface serialPort = new();
 
             serialPort.PortName = "COM4";
-            serialPort.BaudRate = 115200;
+            serialPort.BaudRate = 1000000;
 
             Material.PreheatingProfiles preheat = new Material.PreheatingProfiles();
 
@@ -20,28 +27,39 @@ namespace ControllingAndManagingApp
             preheat.FanSpeed = 0;
 
             Position position = new Position();
-            position.YMovePosition = 40;
+            position.YMovePosition = 50;
+            position.XMovePosition = 50;
+            position.ZMovePosition = 200;
 
             MotionSettingsData motionSettings = new MotionSettingsData();
-
-            Print.Print na = new Print.Print();
-            na.ParseExtractedSettingsFromPrintedFile("C:/Users/mile mihailov/Desktop/V29 Whistle.gcode");
-
-            //string result = na.StartTimeOfPrint;
+            motionSettings.FeedRateFreeMove = 3500;
 
 
-            //string a = na.StartTimeOfPrint.ToString();
-            Console.WriteLine(na.ExtractedSettingsFromPrintedFile);
-            //serialPort.Open();
-            //Console.WriteLine(serialPort.Read());
+            serialPort.Open();
 
-            //serialPort.CheckForBusy();
+            string filePath = "C:/Users/mile mihailov/Desktop/bagholder_btt.gcode";
+            string fileName = "box.GCO";
+            Console.WriteLine(DateTime.Now);
 
-            //string input = serialPort.Read();
-            //Console.WriteLine(input);
+            CommandMethods.SendInitSDCard();
+
+            serialPort.TransferFileToSD(filePath, fileName, serialPort);
+
+            serialPort.Write($"{CommandMethods.SendListSDCard()}");
+            serialPort.Write(CommandMethods.SendSelectSDFile($"{fileName}"));
+            serialPort.Write(CommandMethods.SendStartSDPrint());
+
+            //serialPort.Write($"M30 {fileName}");
+
+            serialPort.CheckForBusy();
+
+            string input = serialPort.Read();
+            Console.WriteLine(input);
 
             //serialPort.Close();
+
         }
+
 
     }
 }
