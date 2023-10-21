@@ -525,6 +525,11 @@
             ReportSettings,
 
             /// <summary>
+            /// Abort current print.
+            /// </summary>
+            AbortSDPrint = 524,
+
+            /// <summary>
             /// Sets TMC stepping mode.
             /// </summary>
             SetTMCSteppingMode = 569,

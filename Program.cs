@@ -17,7 +17,7 @@ namespace ControllingAndManagingApp
             SerialConnection.SerialInterface serialPort = new();
 
             serialPort.PortName = "COM4";
-            serialPort.BaudRate = 1000000;
+            serialPort.BaudRate = 115200;
 
             Material.PreheatingProfiles preheat = new Material.PreheatingProfiles();
 
@@ -43,11 +43,20 @@ namespace ControllingAndManagingApp
 
             CommandMethods.SendInitSDCard();
 
-            CommandMethods.TransferFileToSD(filePath, fileName, serialPort);
+            //CommandMethods.TransferFileToSD(filePath, fileName, serialPort);
 
-            serialPort.Write($"{CommandMethods.SendListSDCard()}");
-            serialPort.Write(CommandMethods.SendSelectSDFile($"{fileName}"));
-            serialPort.Write(CommandMethods.SendStartSDPrint());
+            //serialPort.Write($"{CommandMethods.SendListSDCard()}");
+            //serialPort.Write(CommandMethods.SendSelectSDFile($"{fileName}"));
+            //serialPort.Write(CommandMethods.SendStartSDPrint());
+
+            CommandMethods.AbortCurrentPrint(serialPort);
+            //serialPort.Write(CommandMethods.SendStopSDPrint());
+            //serialPort.Write("M104 S0");
+            //serialPort.Write("M140 S0");
+            //serialPort.Write("M410");
+
+            Console.WriteLine(serialPort.Read());
+            serialPort.CheckForBusy();
 
             //serialPort.Write($"M30 {fileName}");
 

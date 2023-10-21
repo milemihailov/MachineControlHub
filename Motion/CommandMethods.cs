@@ -5,7 +5,6 @@ using ControllingAndManagingApp.SerialConnection;
 namespace ControllingAndManagingApp.Motion
 {
 
-
     /// <summary>
     /// Contains predefined methods for generating G-code commands as strings.
     /// This class simplifies the process of creating G-code commands for controlling a 3D printer.
@@ -13,6 +12,10 @@ namespace ControllingAndManagingApp.Motion
     public class CommandMethods
     {
         const string GCODE_FILE_EXTENSION = ".gco";
+        const string PRINT_ABORT_MESSAGE = "Print Aborted";
+        const char G_PREFIX = 'G';
+        const char M_PREFIX = 'M';
+
 
 
         /// <summary>
@@ -25,7 +28,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var linearMoveCommand = new GCodeCommands
             {
-                Type = 'G',
+                Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.LinearMove,
                 Parameters = new List<string>() { position.XYZEMoveString(MovePositions.XMovePos), position.XYZEMoveString(MovePositions.YMovePos), position.XYZEMoveString(MovePositions.ZMovePos), position.XYZEMoveString(MovePositions.EMovePos), feedRate.FeedRateString(feedRate.FeedRateFreeMove) }
             };
@@ -43,7 +46,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var parkToolhead = new GCodeCommands
             {
-                Type = 'G',
+                Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.ParkToolHead,
                 Parameters = new List<string>() { "P2" }
             };
@@ -81,7 +84,7 @@ namespace ControllingAndManagingApp.Motion
 
             var homeAxes = new GCodeCommands
             {
-                Type = 'G',
+                Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.HomeAllAxes,
                 Parameters = new List<string>() { XYZ }
             };
@@ -98,7 +101,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var bedLeveling = new GCodeCommands
             {
-                Type = 'G',
+                Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.AutoBedLeveling
             };
 
@@ -114,7 +117,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var disableSteppers = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.DisableSteppers,
             };
 
@@ -133,7 +136,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var sdCard = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.ListSdCard,
                 Parameters = new List<string>() { "L T" }
             };
@@ -151,7 +154,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var sdCard = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.InitSdCard
             };
 
@@ -169,7 +172,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var selectSDCard = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SelectSdFile
             };
 
@@ -186,7 +189,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var startSDPrint = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StartPrint,
 
             };
@@ -204,11 +207,28 @@ namespace ControllingAndManagingApp.Motion
         {
             var pauseSDPrint = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.PauseSdPrint,
             };
 
             return GCodeMethods.GCodeString(pauseSDPrint);
+        }
+
+
+        /// <summary>
+        /// Pause the SD print in progress. If PARK_HEAD_ON_PAUSE is enabled, park the nozzle.
+        /// Requires SDSUPPORT
+        /// </summary>
+        /// <returns></returns>
+        public static string SendStopSDPrint()
+        {
+            var stopSDPrint = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.AbortSDPrint,
+            };
+
+            return GCodeMethods.GCodeString(stopSDPrint);
         }
 
 
@@ -222,7 +242,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var startSDWrite = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StartSdWrite,
             };
 
@@ -239,11 +259,24 @@ namespace ControllingAndManagingApp.Motion
         {
             var stopSDWrite = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.StopSdWrite
             };
 
             return GCodeMethods.GCodeString(stopSDWrite);
+        }
+
+
+        public static string SendSetLCDStatus(string message)
+        {
+            var setLCDStatus = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetLCDStatus,
+            };
+
+            return GCodeMethods.GCodeString(setLCDStatus, message);
+
         }
 
 
@@ -257,7 +290,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var deleteSDFile = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.DeleteSdFile
             };
 
@@ -275,7 +308,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var hotendTemp = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHotendTemperature,
             };
 
@@ -293,7 +326,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var bedTemp = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetBedTemperature
             };
 
@@ -311,7 +344,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var chamberTemp = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetChamberTemperature
             };
 
@@ -328,7 +361,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var setFanSpeed = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetFanSpeed
             };
 
@@ -344,7 +377,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var fanOff = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.FanOff
             };
 
@@ -361,7 +394,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var preset = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaterialPreset,
                 Parameters = new List<string>() { profiles.MaterialIndexString(), profiles.HotendTempString(), profiles.BedTempString(), profiles.FanSpeedString() }
             };
@@ -379,7 +412,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var filamentDiameter = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetFilamentDiameter,
                 Parameters = new List<string>() { $"D{diamaeter}" }
             };
@@ -397,7 +430,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var maxFeedrate = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaxFeedrates,
                 Parameters = new List<string>() { motion.EString(motion.EMaxFeedrate), motion.XString(motion.XMaxFeedrate), motion.YString(motion.YMaxFeedrate), motion.ZString(motion.ZMaxFeedrate) }
             };
@@ -416,7 +449,7 @@ namespace ControllingAndManagingApp.Motion
         {
             var homeOffsets = new GCodeCommands
             {
-                Type = 'M',
+                Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
                 Parameters = new List<string>() { motion.XString(motion.XHomeOffset), motion.YString(motion.YHomeOffset), motion.ZString(motion.ZHomeOffset) }
             };
@@ -463,5 +496,21 @@ namespace ControllingAndManagingApp.Motion
                 Console.WriteLine("An error occurred: " + e.Message);
             }
         }
+
+
+        /// <summary>
+        /// Aborts the current print by sending necessary commands to the provided serial interface.
+        /// </summary>
+        /// <param name="serial">The serial interface used for communication.</param>
+        public static void AbortCurrentPrint(SerialInterface serial)
+        {
+            // Send commands to stop the SD print and set the LCD status.
+            serial.Write(SendStopSDPrint());
+            serial.Write(SendSetLCDStatus(PRINT_ABORT_MESSAGE));
+
+            // Print a message to the console.
+            Console.WriteLine(PRINT_ABORT_MESSAGE);
+        }
+
     }
 }
