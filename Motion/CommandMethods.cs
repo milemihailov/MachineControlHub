@@ -352,6 +352,17 @@ namespace ControllingAndManagingApp.Motion
         }
 
 
+        public static string SendReportTemperatures()
+        {
+            var tempReport = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.ReportTemperatures
+            };
+            return GCodeMethods.GCodeString(tempReport);
+        }
+
+
         /// <summary>
         /// Turn on one of the fans and set its speed. If no fan index is given, the print cooling fan is selected.
         /// </summary>

@@ -25,10 +25,8 @@ namespace ControllingAndManagingApp.Print
         /// <summary>
         /// Gets the start time of the print job.
         /// </summary>
-        public DateTime StartTimeOfPrint
-        {
-            get { return DateTime.Now; }
-        }
+
+        public DateTime StartTimeOfPrint { get; set; }
 
         /// <summary>
         /// Gets or sets the total print time for the job in seconds.
@@ -68,6 +66,14 @@ namespace ControllingAndManagingApp.Print
             File = filePath;
         }
 
+
+        /// <summary>
+        /// Parses and sets the start time of the print job to the current system time.
+        /// </summary>
+        public void ParseStartTimeOfPrint()
+        {
+            StartTimeOfPrint = DateTime.Now;
+        }
     }
 
 }

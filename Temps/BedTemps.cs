@@ -1,10 +1,17 @@
-﻿namespace ControllingAndManagingApp.Temps
+﻿using ControllingAndManagingApp.Motion;
+using ControllingAndManagingApp.SerialConnection;
+using System.Text.RegularExpressions;
+
+namespace ControllingAndManagingApp.Temps
 {
+
     /// <summary>
     /// Represents temperature-related information for the printer's heated bed.
     /// </summary>
     public class BedTemps
     {
+        const string BED_TEMP_PATTERN = @"B:(\d+)";
+
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) control values for the bed temperature.
         /// </summary>
@@ -24,6 +31,50 @@
         /// Gets or sets the target temperature set for the heated bed in degrees Celsius.
         /// </summary>
         public int BedSetTemp { get; set; }
+
+
+        /// <summary>
+        /// Parses and updates the current bed temperature from the response received from the printer.
+        /// </summary>
+        /// <param name="serial">The serial interface used for communication with the printer.</param>
+        public void ParseCurrentBedTemp(SerialInterface serial)
+        {
+            // Send a command to request temperature information
+            serial.Write(CommandMethods.SendReportTemperatures());
+
+            // Read the printer's response
+            string input = serial.Read();
+
+            // Define a regular expression pattern to match the bed temperature
+            string pattern = BED_TEMP_PATTERN;
+
+            // Create a regular expression object and find matches in the input string
+            Regex regex = new Regex(pattern);
+            MatchCollection matches = regex.Matches(input);
+
+            // Iterate through the matches and extract the temperature values
+            foreach (Match match in matches)
+            {
+                // The temperature value is captured in the first group (index 1)
+                string temperature = match.Groups[1].Value;
+                BedCurrentTemp = int.Parse(temperature);
+            }
+        }
+
+        /// <summary>
+        /// Sets the target bed temperature and sends the corresponding command to the printer.
+        /// </summary>
+        /// <param name="serial">The serial interface used for communication with the printer.</param>
+        /// <param name="targetTemp">The target bed temperature to set.</param>
+        public void SetHotendTemp(SerialInterface serial, int targetTemp)
+        {
+            // Send a command to set the target bed temperature
+            serial.Write(CommandMethods.SendBedTemperature(targetTemp));
+
+            // Update the target bed temperature property
+            BedSetTemp = targetTemp;
+        }
+
     }
 
 }
