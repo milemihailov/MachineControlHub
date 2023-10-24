@@ -201,8 +201,8 @@ namespace ControllingAndManagingApp.Motion
                 input = serial.Read();
 
                 // Create a regular expression object
-                Regex regex = new(pattern);
-                Match match = regex.Match(input);
+
+                Match match = Regex.Match(input, pattern);
 
                 if (match.Success)
                 {
@@ -262,8 +262,7 @@ namespace ControllingAndManagingApp.Motion
                 // Define a regular expression pattern to match the X, Y, and Z coordinates
                 string pattern = XYZ_COORDINATE_PARSE_PATTERN;
 
-                Regex regex = new Regex(pattern);
-                Match match = regex.Match(input);
+                Match match = Regex.Match(input, pattern);
 
                 if (match.Success)
                 {
@@ -275,10 +274,6 @@ namespace ControllingAndManagingApp.Motion
                 }
             }
         }
-
-
-
-
     }
 
 }

@@ -7,6 +7,8 @@
     /// </summary>
     public class MotionSettingsData
     {
+        public enum Axis { X = 'X', Y = 'Y', Z = 'Z', E = 'E' }
+
         /// <summary>
         /// Gets or sets the maximum feedrate for the X-axis.
         /// </summary>
@@ -142,115 +144,24 @@
 
 
         /// <summary>
-        /// Generates a G-code string for the feed rate if the value is not null.
+        /// Generates a G-code string for a specified axis and its corresponding value.
         /// </summary>
-        /// <param name="x">The feed rate value.</param>
-        /// <returns>The G-code string for the feed rate, or null if the value is null.</returns>
-        public string FeedRateString(int? x)
+        /// <param name="axis">The axis for which to generate the G-code (e.g., X, Y, Z, etc.).</param>
+        /// <param name="value">The value associated with the axis.</param>
+        /// <returns>
+        /// A G-code string representing the specified axis and its value, or null if the value is null.
+        /// </returns>
+        public string AxisString(Axis axis, object value)
         {
-            if (x != null)
+            if (value == null)
             {
-                return $"F{x}";
+                return null;
             }
-            return null;
-        }
 
-        /// <summary>
-        /// Generates a G-code string for the X-axis if the value is not null.
-        /// </summary>
-        /// <param name="x">The X-axis value.</param>
-        /// <returns>The G-code string for the X-axis, or null if the value is null.</returns>
-        public string XString(int? x)
-        {
-            if (x != null)
-            {
-                return $"X{x}";
-            }
-            return null;
-        }
+            string axisCode = axis.ToString();
+            string valueString = value.ToString();
 
-        /// <summary>
-        /// Generates a G-code string for the Y-axis if the value is not null.
-        /// </summary>
-        /// <param name="y">The Y-axis value.</param>
-        /// <returns>The G-code string for the Y-axis, or null if the value is null.</returns>
-        public string YString(int? y)
-        {
-            if (y != null)
-            {
-                return $"Y{y}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a G-code string for the Z-axis if the value is not null.
-        /// </summary>
-        /// <param name="z">The Z-axis value.</param>
-        /// <returns>The G-code string for the Z-axis, or null if the value is null.</returns>
-        public string ZString(int? z)
-        {
-            if (z != null)
-            {
-                return $"Z{z}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a G-code string for the extruder (E-axis) if the value is not null.
-        /// </summary>
-        /// <param name="e">The extruder (E-axis) value.</param>
-        /// <returns>The G-code string for the extruder (E-axis), or null if the value is null.</returns>
-        public string EString(int? e)
-        {
-            if (e != null)
-            {
-                return $"E{e}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a G-code string for the X-axis if the value is not null.
-        /// </summary>
-        /// <param name="x">The X-axis value.</param>
-        /// <returns>The G-code string for the X-axis, or null if the value is null.</returns>
-        public string XString(double? x)
-        {
-            if (x != null)
-            {
-                return $"X{x}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a G-code string for the Y-axis if the value is not null.
-        /// </summary>
-        /// <param name="y">The Y-axis value.</param>
-        /// <returns>The G-code string for the Y-axis, or null if the value is null.</returns>
-        public string YString(double? y)
-        {
-            if (y != null)
-            {
-                return $"Y{y}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a G-code string for the Z-axis if the value is not null.
-        /// </summary>
-        /// <param name="z">The Z-axis value.</param>
-        /// <returns>The G-code string for the Z-axis, or null if the value is null.</returns>
-        public string ZString(double? z)
-        {
-            if (z != null)
-            {
-                return $"Z{z}";
-            }
-            return null;
+            return $"{axisCode}{valueString}";
         }
 
     }
