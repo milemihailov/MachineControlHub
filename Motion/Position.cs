@@ -64,6 +64,7 @@ namespace ControllingAndManagingApp.Motion
         const string Y_COORDINATE_PARSE_PATTERN = @"Y:([-\d]+\.\d+)";
         const string Z_COORDINATE_PARSE_PATTERN = @"Z:([-\d]+\.\d+)";
         const string E_COORDINATE_PARSE_PATTERN = @"E:([-\d]+\.\d+)";
+        const string XYZ_COORDINATE_PARSE_PATTERN = @"X:([-\d]+\.\d+) Y:([-\d]+\.\d+) Z:([-\d]+\.\d+)";
 
         /// <summary>
         /// Gets or sets the current X-axis position.
@@ -104,6 +105,7 @@ namespace ControllingAndManagingApp.Motion
         /// Gets or sets the optional extruder (E) move position.
         /// </summary>
         public double? EMovePosition { get; set; }
+
 
         /// <summary>
         /// Generates a move string based on the specified move position.
@@ -150,17 +152,13 @@ namespace ControllingAndManagingApp.Motion
         /// <param name="position">The coordinate position to retrieve (X, Y, Z, or E).</param>
         /// <exception cref="ArgumentException">Thrown when an invalid or unsupported coordinate position is specified.</exception>
         /// <exception cref="Exception">Thrown when matching the coordinate pattern or parsing the coordinate value fails.</exception>
-        public void ParseCurrentPosition(SerialInterface serial, CurrentPositions position)
+        public void ParseChosenCurrentPosition(SerialInterface serial, CurrentPositions position)
         {
-            // Send a command to request temperature information
-            serial.Write(CommandMethods.BuildGetCurrentPositionCommand());
 
             // Sleep for a brief moment to ensure the input has enough time to be received and processed.
             // This sleep is used to account for potential delays in serial communication.
-            Thread.Sleep(100);
+            Thread.Sleep(10);
 
-            // Read the printer's response
-            string input = serial.Read();
 
             // Define a regular expression pattern based on the position
             string pattern;
@@ -185,18 +183,34 @@ namespace ControllingAndManagingApp.Motion
                     throw new ArgumentException("Invalid CurrentPositions value.");
             }
 
-            // Create a regular expression object
-            Regex regex = new(pattern);
-            Match match = regex.Match(input);
 
-            if (!match.Success)
+            // Read the printer's response
+
+            /// <summary>
+            /// Continuously sends a command to request the current position and reads the printer's response until a successful match is found.
+            /// </summary>
+            /// <param name="serial">The SerialInterface used for communication.</param>
+            /// <param name="pattern">The regular expression pattern to match the desired data.</param>
+            /// <param name="output">The matched output will be stored in this string.</param>
+            string input;
+            string output = "";
+            while (serial.Read() != null)
             {
-                // Handle the case where the regular expression pattern didn't match.
-                // You can throw an exception, log an error, or handle it as needed.
-                throw new Exception("Failed to match the coordinate pattern.");
+                serial.Write(CommandMethods.BuildGetCurrentPositionCommand());
+
+                input = serial.Read();
+
+                // Create a regular expression object
+                Regex regex = new(pattern);
+                Match match = regex.Match(input);
+
+                if (match.Success)
+                {
+                    output = match.Groups[1].Value;
+                    break;
+                }
             }
 
-            string output = match.Groups[1].Value;
 
             if (!double.TryParse(output, out double currentPosition))
             {
@@ -226,6 +240,42 @@ namespace ControllingAndManagingApp.Motion
                     throw new ArgumentException("Invalid CurrentPositions value.");
             }
         }
+
+
+        /// <summary>
+        /// Parses and updates the current X, Y, and Z positions from the printer's response.
+        /// </summary>
+        /// <param name="serial">The SerialInterface used for communication.</param>
+        public void ParseXYZCurrentPositions(SerialInterface serial)
+        {
+            // Sleep for a brief moment to ensure the input has enough time to be received and processed.
+            Thread.Sleep(10);
+
+            // Read the printer's response
+            string input;
+
+            while (serial.Read() != null)
+            {
+                serial.Write(CommandMethods.BuildGetCurrentPositionCommand());
+                input = serial.Read();
+
+                // Define a regular expression pattern to match the X, Y, and Z coordinates
+                string pattern = XYZ_COORDINATE_PARSE_PATTERN;
+
+                Regex regex = new Regex(pattern);
+                Match match = regex.Match(input);
+
+                if (match.Success)
+                {
+                    // Update the X, Y, and Z current positions
+                    XCurrentPosition = double.Parse(match.Groups[1].Value);
+                    YCurrentPosition = double.Parse(match.Groups[2].Value);
+                    ZCurrentPosition = double.Parse(match.Groups[3].Value);
+                    break;
+                }
+            }
+        }
+
 
 
 
