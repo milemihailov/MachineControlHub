@@ -62,7 +62,7 @@ namespace ControllingAndManagingApp.Print
         public void SelectAndParseSelectedFile(string filePath)
         {
             // Send a command to select the G-code file on the SD card
-            CommandMethods.SendSelectSDFile(filePath);
+            CommandMethods.BuildSelectSDFileCommand(filePath);
             File = filePath;
         }
 

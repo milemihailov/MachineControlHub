@@ -10,7 +10,7 @@ namespace ControllingAndManagingApp.Temps
     /// </summary>
     public class BedTemps
     {
-        const string BED_TEMP_PATTERN = @"B:(\d+)";
+        const string BED_TEMP_PARSE_PATTERN = @"B:(\d+)";
 
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) control values for the bed temperature.
@@ -40,13 +40,17 @@ namespace ControllingAndManagingApp.Temps
         public void ParseCurrentBedTemp(SerialInterface serial)
         {
             // Send a command to request temperature information
-            serial.Write(CommandMethods.SendReportTemperatures());
+            serial.Write(CommandMethods.BuildReportTemperaturesCommand());
+
+            // Sleep for a brief moment to ensure the input has enough time to be received and processed.
+            // This sleep is used to account for potential delays in serial communication.
+            Thread.Sleep(200);
 
             // Read the printer's response
             string input = serial.Read();
 
             // Define a regular expression pattern to match the bed temperature
-            string pattern = BED_TEMP_PATTERN;
+            string pattern = BED_TEMP_PARSE_PATTERN;
 
             // Create a regular expression object and find matches in the input string
             Regex regex = new Regex(pattern);
@@ -69,7 +73,7 @@ namespace ControllingAndManagingApp.Temps
         public void SetHotendTemp(SerialInterface serial, int targetTemp)
         {
             // Send a command to set the target bed temperature
-            serial.Write(CommandMethods.SendBedTemperature(targetTemp));
+            serial.Write(CommandMethods.BuildSetBedTempCommand(targetTemp));
 
             // Update the target bed temperature property
             BedSetTemp = targetTemp;

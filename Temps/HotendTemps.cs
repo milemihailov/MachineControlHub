@@ -11,7 +11,7 @@ namespace ControllingAndManagingApp.Temps
     /// </summary>
     public class HotendTemps
     {
-        const string HOTEND_TEMP_PATTERN = @"T:(\d+)";
+        const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)";
 
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) values for controlling the hotend temperature.
@@ -46,13 +46,17 @@ namespace ControllingAndManagingApp.Temps
         public void ParseCurrentHotendTemp(SerialInterface serial)
         {
             // Send a command to request temperature information
-            serial.Write(CommandMethods.SendReportTemperatures());
+            serial.Write(CommandMethods.BuildReportTemperaturesCommand());
+
+            // Sleep for a brief moment to ensure the input has enough time to be received and processed.
+            // This sleep is used to account for potential delays in serial communication.
+            Thread.Sleep(200);
 
             // Read the printer's response
             string input = serial.Read();
 
             // Define a regular expression pattern to match the bed temperature
-            string pattern = HOTEND_TEMP_PATTERN;
+            string pattern = HOTEND_TEMP_PARSE_PATTERN;
 
             // Create a regular expression object and find matches in the input string
             Regex regex = new Regex(pattern);
@@ -76,7 +80,7 @@ namespace ControllingAndManagingApp.Temps
         public void SetHotendTemp(SerialInterface serial, int targetTemp)
         {
             // Send the G-code command to set the hotend temperature
-            serial.Write(CommandMethods.SendHotendTemperature(targetTemp));
+            serial.Write(CommandMethods.BuildSetHotendTempCommand(targetTemp));
 
             // Update the HotendSetTemp property with the new target temperature
             HotendSetTemp = targetTemp;

@@ -24,7 +24,7 @@ namespace ControllingAndManagingApp.Motion
         /// <param name="position">Sets X,Y,Z,E position for the movement.</param>
         /// <param name="feedRate">Sets the speed for the movement.</param>
         /// <returns></returns>
-        public static string SendLinearMove(Position position, MotionSettingsData feedRate)
+        public static string BuildLinearMoveCommand(Position position, MotionSettingsData feedRate)
         {
             var linearMoveCommand = new GCodeCommands
             {
@@ -42,7 +42,7 @@ namespace ControllingAndManagingApp.Motion
         /// The park position is defined by NOZZLE_PARK_POINT.
         /// </summary>
         /// <returns></returns>
-        public static string SendParkToolhead()
+        public static string BuildParkToolheadCommand()
         {
             var parkToolhead = new GCodeCommands
             {
@@ -97,7 +97,7 @@ namespace ControllingAndManagingApp.Motion
         /// It levels the bed regarding the bed leveling system in the firmware.
         /// </summary>
         /// <returns></returns>
-        public static string SendBedLeveling()
+        public static string BuildBedLevelingCommand()
         {
             var bedLeveling = new GCodeCommands
             {
@@ -113,7 +113,7 @@ namespace ControllingAndManagingApp.Motion
         /// This command can be used to disable one or more steppers (X,Y,Z,E).
         /// </summary>
         /// <returns></returns>
-        public static string SendDisableSteppers()
+        public static string BuildDisableSteppersCommand()
         {
             var disableSteppers = new GCodeCommands
             {
@@ -132,7 +132,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendListSDCard()
+        public static string BuildListSDCardCommand()
         {
             var sdCard = new GCodeCommands
             {
@@ -150,7 +150,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendInitSDCard()
+        public static string BuildInitSDCardCommand()
         {
             var sdCard = new GCodeCommands
             {
@@ -168,7 +168,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
-        public static string SendSelectSDFile(string fileName)
+        public static string BuildSelectSDFileCommand(string fileName)
         {
             var selectSDCard = new GCodeCommands
             {
@@ -185,7 +185,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendStartSDPrint()
+        public static string BuildStartSDPrintCommand()
         {
             var startSDPrint = new GCodeCommands
             {
@@ -203,7 +203,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendPauseSDPrint()
+        public static string BuildPauseSDPrintCommand()
         {
             var pauseSDPrint = new GCodeCommands
             {
@@ -220,7 +220,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendStopSDPrint()
+        public static string BuildStopSDPrintCommand()
         {
             var stopSDPrint = new GCodeCommands
             {
@@ -238,7 +238,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
-        public static string SendStartSDWrite(string fileName)
+        public static string BuildStartSDWriteCommand(string fileName)
         {
             var startSDWrite = new GCodeCommands
             {
@@ -255,7 +255,7 @@ namespace ControllingAndManagingApp.Motion
         /// Requires SDSUPPORT
         /// </summary>
         /// <returns></returns>
-        public static string SendStopSDWrite()
+        public static string BuildStopSDWriteCommand()
         {
             var stopSDWrite = new GCodeCommands
             {
@@ -267,7 +267,19 @@ namespace ControllingAndManagingApp.Motion
         }
 
 
-        public static string SendSetLCDStatus(string message)
+        public static string BuildGetCurrentPositionCommand()
+        {
+            var currentPosition = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.GetCurrentPosition
+            };
+
+            return GCodeMethods.GCodeString(currentPosition);
+        }
+
+
+        public static string BuildSetLCDStatusCommand(string message)
         {
             var setLCDStatus = new GCodeCommands
             {
@@ -286,7 +298,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fileName">path to the gcode file on SD card</param>
         /// <returns></returns>
-        public static string SendDeleteSDFile(string fileName)
+        public static string BuildDeleteSDFileCommand(string fileName)
         {
             var deleteSDFile = new GCodeCommands
             {
@@ -304,7 +316,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"> Accepts SetHotendTemperature field from HotendTemps</param>
         /// <returns></returns>
-        public static string SendHotendTemperature(int setTemp)
+        public static string BuildSetHotendTempCommand(int setTemp)
         {
             var hotendTemp = new GCodeCommands
             {
@@ -322,7 +334,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"></param>
         /// <returns></returns>
-        public static string SendBedTemperature(int setTemp)
+        public static string BuildSetBedTempCommand(int setTemp)
         {
             var bedTemp = new GCodeCommands
             {
@@ -340,7 +352,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="setTemp"></param>
         /// <returns></returns>
-        public static string SendChamberTemperature(int setTemp)
+        public static string BuildSetChamberTempCommand(int setTemp)
         {
             var chamberTemp = new GCodeCommands
             {
@@ -352,7 +364,7 @@ namespace ControllingAndManagingApp.Motion
         }
 
 
-        public static string SendReportTemperatures()
+        public static string BuildReportTemperaturesCommand()
         {
             var tempReport = new GCodeCommands
             {
@@ -368,7 +380,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="fanSpeed"></param>
         /// <returns></returns>
-        public static string SendFanSpeed(int fanSpeed)
+        public static string BuildFanSpeedCommand(int fanSpeed)
         {
             var setFanSpeed = new GCodeCommands
             {
@@ -384,7 +396,7 @@ namespace ControllingAndManagingApp.Motion
         /// Turn off one of the fans. If no fan index is given, the print cooling fan.
         /// </summary>
         /// <returns></returns>
-        public static string SendFanOff()
+        public static string BuildFanOffCommand()
         {
             var fanOff = new GCodeCommands
             {
@@ -401,7 +413,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="profiles"></param>
         /// <returns></returns>
-        public static string SendMaterialPreset(PreheatingProfiles profiles)
+        public static string BuildMaterialPresetCommand(PreheatingProfiles profiles)
         {
             var preset = new GCodeCommands
             {
@@ -419,7 +431,7 @@ namespace ControllingAndManagingApp.Motion
         /// diameter refers to FilamentProperties.FilamentDiameter
         /// </summary>
         /// <returns></returns>
-        public static string SendFilamentDiameter(double diamaeter)
+        public static string BuildFilamentDiameterCommand(double diamaeter)
         {
             var filamentDiameter = new GCodeCommands
             {
@@ -437,7 +449,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="motion"></param>
         /// <returns></returns>
-        public static string SendMaxFeedrate(MotionSettingsData motion)
+        public static string BuildMaxFeedrateCommand(MotionSettingsData motion)
         {
             var maxFeedrate = new GCodeCommands
             {
@@ -456,7 +468,7 @@ namespace ControllingAndManagingApp.Motion
         /// </summary>
         /// <param name="motion"></param>
         /// <returns></returns>
-        public static string SendHomeOffsets(MotionSettingsData motion)
+        public static string BuildHomeOffsetsCommand(MotionSettingsData motion)
         {
             var homeOffsets = new GCodeCommands
             {
@@ -487,7 +499,7 @@ namespace ControllingAndManagingApp.Motion
                 using (StreamReader reader = new StreamReader(GcodeFilePath))
                 {
                     string line;
-                    serial.Write($"{SendStartSDWrite(fileName)}{GCODE_FILE_EXTENSION}");
+                    serial.Write($"{BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
 
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -495,7 +507,7 @@ namespace ControllingAndManagingApp.Motion
                         Console.WriteLine(line);
                     }
 
-                    serial.Write(SendStopSDWrite());
+                    serial.Write(BuildStopSDWriteCommand());
                 }
             }
             catch (FileNotFoundException)
@@ -516,8 +528,8 @@ namespace ControllingAndManagingApp.Motion
         public static void AbortCurrentPrint(SerialInterface serial)
         {
             // Send commands to stop the SD print and set the LCD status.
-            serial.Write(SendStopSDPrint());
-            serial.Write(SendSetLCDStatus(PRINT_ABORT_MESSAGE));
+            serial.Write(BuildStopSDPrintCommand());
+            serial.Write(BuildSetLCDStatusCommand(PRINT_ABORT_MESSAGE));
 
             // Print a message to the console.
             Console.WriteLine(PRINT_ABORT_MESSAGE);
