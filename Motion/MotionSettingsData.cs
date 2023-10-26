@@ -62,6 +62,8 @@
         /// <summary>
         /// Gets or sets the maximum acceleration for the Z-axis.
         /// </summary>
+        public int? ZMaxAcceleration { get; set; }
+
         /// <summary>
         /// Gets or sets the maximum acceleration for the extruder (E-axis).
         /// </summary>
@@ -141,6 +143,20 @@
         /// Gets or sets the Z-axis home position.
         /// </summary>
         public double ZHomePos { get; set; }
+
+
+        /// Generates a G-code string for the feed rate if the value is not null.
+        /// </summary>
+        /// <param name="x">The feed rate value.</param>
+        /// <returns>The G-code string for the feed rate, or null if the value is null.</returns>
+        public string FeedRateString(int? x)
+        {
+            if (x != null)
+            {
+                return $"F{x}";
+            }
+            return null;
+        }
 
 
         /// <summary>

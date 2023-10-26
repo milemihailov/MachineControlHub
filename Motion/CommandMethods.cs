@@ -455,7 +455,7 @@ namespace ControllingAndManagingApp.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaxFeedrates,
-                Parameters = new List<string>() { motion.EString(motion.EMaxFeedrate), motion.XString(motion.XMaxFeedrate), motion.YString(motion.YMaxFeedrate), motion.ZString(motion.ZMaxFeedrate) }
+                Parameters = new List<string>() { motion.AxisString(MotionSettingsData.Axis.E, motion.EMaxFeedrate), motion.AxisString(MotionSettingsData.Axis.X, motion.XMaxFeedrate), motion.AxisString(MotionSettingsData.Axis.Y, motion.YMaxFeedrate), motion.AxisString(MotionSettingsData.Axis.Z, motion.ZMaxFeedrate) }
             };
 
             return GCodeMethods.GCodeString(maxFeedrate);
@@ -474,7 +474,7 @@ namespace ControllingAndManagingApp.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
-                Parameters = new List<string>() { motion.XString(motion.XHomeOffset), motion.YString(motion.YHomeOffset), motion.ZString(motion.ZHomeOffset) }
+                Parameters = new List<string>() { motion.AxisString(MotionSettingsData.Axis.X, motion.XHomeOffset), motion.AxisString(MotionSettingsData.Axis.Y, motion.YHomeOffset), motion.AxisString(MotionSettingsData.Axis.Z, motion.ZHomeOffset) }
             };
 
             return GCodeMethods.GCodeString(homeOffsets);
