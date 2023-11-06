@@ -1,4 +1,5 @@
-﻿using System.IO.Ports;
+﻿using ControllingAndManagingApp.LogErrorHistory;
+using System.IO.Ports;
 
 namespace ControllingAndManagingApp.SerialConnection
 {
@@ -10,6 +11,7 @@ namespace ControllingAndManagingApp.SerialConnection
     public class SerialInterface
     {
         const string BUSY_CHECK = "echo:busy: processing\n";
+        const int SLEEP_TIME_AFTER_BUSY_CHECK = 2000;
 
         private SerialPort serialPort;
 
@@ -50,10 +52,29 @@ namespace ControllingAndManagingApp.SerialConnection
                     Console.WriteLine("Port opened");
                 }
             }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Logger.LogError($"{ex.Message}");
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.LogError($"{ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.LogError($"Unauthorized access when opening serial port: {ex.Message}");
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError($"The port is in an invalid state. {ex.Message}");
+            }
+            catch (InvalidOperationException)
+            {
+                Logger.LogError($"The specified port on the current instance of the SerialPort is already open.");
+            }
             catch (Exception ex)
             {
-                // Handle the exception (e.g., log or display an error message)
-                Console.WriteLine($"Error opening serial port: {ex.Message}");
+                Logger.LogError($"Error opening serial port: {ex.Message}");
             }
 
         }
@@ -66,16 +87,16 @@ namespace ControllingAndManagingApp.SerialConnection
         {
             try
             {
-                if (serialPort.IsOpen)
-                {
-                    serialPort.Close();
-                    Console.WriteLine("Port closed");
-                }
+                serialPort.Close();
+                Console.WriteLine("Port closed");
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError($"I/O error when closing serial port: {ex.Message}");
             }
             catch (Exception ex)
             {
-                // Handle the exception (e.g., log or display an error message)
-                Console.WriteLine($"Error closing serial port: {ex.Message}");
+                Logger.LogError($"Error closing serial port: {ex.Message}");
             }
 
         }
@@ -84,20 +105,30 @@ namespace ControllingAndManagingApp.SerialConnection
         /// <summary>
         /// Write data to the serial port.
         /// </summary>
-        /// <param name="data">Write string data</param>
+        /// <param name="data">The data to be written to the serial port.</param>
         public void Write(string data)
         {
+            serialPort.WriteTimeout = 1000;
+
             try
             {
-                if (serialPort.IsOpen)
-                {
-                    serialPort.WriteLine(data);
-                }
+                serialPort.WriteLine(data);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Logger.LogError($"The specified port is not open: {ex.Message}");
+            }
+            catch (ArgumentNullException ex)
+            {
+                Logger.LogError($"{ex.Message}");
+            }
+            catch (TimeoutException ex)
+            {
+                Logger.LogError($"Timeout when writing to serial port: {ex.Message}");
             }
             catch (Exception ex)
             {
-                // Handle the exception (e.g., log or display an error message)
-                Console.WriteLine($"Error writing to serial port: {ex.Message}");
+                Logger.LogError($"Error writing to serial port: {ex.Message}");
             }
         }
 
@@ -112,22 +143,27 @@ namespace ControllingAndManagingApp.SerialConnection
 
             try
             {
-                if (serialPort.IsOpen)
-                {
-                    string data = serialPort.ReadExisting();
-                    return data;
-                }
-                return null;
+                string data = serialPort.ReadExisting();
+                return data;
             }
             catch (TimeoutException)
             {
-                Console.WriteLine("Timeout: No data received within the specified time.");
+                Logger.LogError("Timeout: No data received within the specified time.");
+                return null;
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError($"I/O error while reading from the serial port: {ex.Message}");
+                return null;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Logger.LogError($"Invalid operation while reading from the serial port: {ex.Message}");
                 return null;
             }
             catch (Exception ex)
             {
-                // Handle the exception (e.g., log or display an error message)
-                Console.WriteLine($"Error reading from serial port: {ex.Message}");
+                Logger.LogError($"Error reading from serial port: {ex.Message}");
                 return null;
             }
         }
@@ -138,12 +174,27 @@ namespace ControllingAndManagingApp.SerialConnection
         /// </summary>
         public void CheckForBusy()
         {
-            string data = serialPort.ReadLine();
-
-            while (data == BUSY_CHECK || !HasData())
+            try
             {
-                Console.WriteLine(serialPort.ReadLine());
-                Thread.Sleep(2000);
+                string data = serialPort.ReadLine();
+
+                while (data == BUSY_CHECK || !HasData())
+                {
+                    Console.WriteLine(serialPort.ReadLine());
+                    Thread.Sleep(SLEEP_TIME_AFTER_BUSY_CHECK);
+                }
+            }
+            catch (TimeoutException ex)
+            {
+                Logger.LogError($"Timeout while checking for busy: {ex.Message}");
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError($"I/O error while checking for busy: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error while checking for busy: {ex.Message}");
             }
         }
 
