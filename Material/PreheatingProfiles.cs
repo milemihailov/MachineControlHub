@@ -5,6 +5,14 @@
     /// </summary>
     public class PreheatingProfiles
     {
+        public enum Prefixes
+        {
+            Hotend = 'H',
+            Bed = 'B',
+            Fan = 'F',
+            MaterialIndex = 'S'
+        }
+
         /// <summary>
         /// Gets or sets the hotend temperature in degrees Celsius.
         /// </summary>
@@ -25,54 +33,20 @@
         /// </summary>
         public int? MaterialIndex { get; set; }
 
-        /// <summary>
-        /// Generates a string representation of the hotend temperature for G-code commands.
-        /// </summary>
-        /// <returns>The string representation of the hotend temperature for G-code commands, or null if not specified.</returns>
-        public string HotendTempString()
-        {
-            if (HotendTemp != null)
-            {
-                return $"H{HotendTemp}";
-            }
-            return null;
-        }
 
         /// <summary>
-        /// Generates a string representation of the bed temperature for G-code commands.
+        /// Constructs a string by concatenating a prefix and a value.
         /// </summary>
-        /// <returns>The string representation of the bed temperature for G-code commands, or null if not specified.</returns>
-        public string BedTempString()
+        /// <param name="prefix">The prefix to prepend to the value.</param>
+        /// <param name="value">The value to be concatenated with the prefix.</param>
+        /// <returns>
+        /// A string that consists of the prefix followed by the value. Returns null if the value is null.
+        /// </returns>
+        public string StringWithPrefixAndValue(Prefixes prefix, object value)
         {
-            if (BedTemp != null)
+            if (value != null)
             {
-                return $"B{BedTemp}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a string representation of the fan speed for G-code commands.
-        /// </summary>
-        /// <returns>The string representation of the fan speed for G-code commands, or null if not specified.</returns>
-        public string FanSpeedString()
-        {
-            if (FanSpeed != null)
-            {
-                return $"F{FanSpeed}";
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Generates a string representation of the material index for G-code commands.
-        /// </summary>
-        /// <returns>The string representation of the material index for G-code commands, or null if not specified.</returns>
-        public string MaterialIndexString()
-        {
-            if (MaterialIndex != null)
-            {
-                return $"S{MaterialIndex}";
+                return $"{(char)prefix}{value}";
             }
             return null;
         }
