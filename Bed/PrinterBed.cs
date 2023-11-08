@@ -1,19 +1,37 @@
 ﻿namespace ControllingAndManagingApp.Bed
 {
+
     /// <summary>
     /// Represents the properties of the printer's bed, such as its size and heating capability.
     /// </summary>
     public class PrinterBed
     {
+        public enum BedShapes
+        {
+            Rectangular,
+            Circular,
+            Custom
+        }
+
         /// <summary>
         /// Gets or sets a value indicating whether the printer's bed is heated.
         /// </summary>
         public bool HeatedBed { get; set; }
 
+        // Private field to store the selected shape
+        private BedShapes shapeOfBed;
+
         /// <summary>
-        /// Gets or sets the shape of the printer's bed, e.g., rectangular or circular.
+        /// Gets or sets the shape of the printer's bed.
         /// </summary>
-        public string ShapeOfBed { get; set; }
+        public BedShapes ShapeOfBed
+        {
+            get { return shapeOfBed; }
+            set
+            {
+                shapeOfBed = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the width (X-size) of the printer's bed in millimeters.
