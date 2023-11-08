@@ -1,4 +1,5 @@
 ﻿using ControllingAndManagingApp.Gcode;
+using ControllingAndManagingApp.LogErrorHistory;
 using ControllingAndManagingApp.Material;
 using ControllingAndManagingApp.SerialConnection;
 
@@ -69,12 +70,12 @@ namespace ControllingAndManagingApp.Motion
 
             if (x)
             {
-                XYZ += "X";
+                XYZ += "X ";
             }
 
             if (y)
             {
-                XYZ += "Y";
+                XYZ += "Y ";
             }
 
             if (z)
@@ -419,7 +420,7 @@ namespace ControllingAndManagingApp.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaterialPreset,
-                Parameters = new List<string>() { profiles.MaterialIndexString(), profiles.HotendTempString(), profiles.BedTempString(), profiles.FanSpeedString() }
+                Parameters = new List<string>() { profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.MaterialIndex, profiles.MaterialIndex), profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Hotend, profiles.HotendTemp), profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Bed, profiles.BedTemp), profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Fan, profiles.FanSpeed) }
             };
 
             return GCodeMethods.GCodeString(preset);
@@ -504,19 +505,18 @@ namespace ControllingAndManagingApp.Motion
                     while ((line = reader.ReadLine()) != null)
                     {
                         serial.Write(line);
-                        Console.WriteLine(line);
                     }
 
                     serial.Write(BuildStopSDWriteCommand());
                 }
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
-                Console.WriteLine("File not found.");
+                Logger.LogError($"File not found. {e.Message}");
             }
             catch (Exception e)
             {
-                Console.WriteLine("An error occurred: " + e.Message);
+                Logger.LogError($"An error occurred: {e.Message}");
             }
         }
 

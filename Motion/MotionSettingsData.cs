@@ -7,7 +7,7 @@
     /// </summary>
     public class MotionSettingsData
     {
-        public enum Axis { X = 'X', Y = 'Y', Z = 'Z', E = 'E' }
+        public enum Axis { X, Y, Z, E }
 
         /// <summary>
         /// Gets or sets the maximum feedrate for the X-axis.
