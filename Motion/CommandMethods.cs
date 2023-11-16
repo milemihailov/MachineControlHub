@@ -1,7 +1,5 @@
 ﻿using ControllingAndManagingApp.Gcode;
-using ControllingAndManagingApp.LogErrorHistory;
 using ControllingAndManagingApp.Material;
-using ControllingAndManagingApp.SerialConnection;
 
 namespace ControllingAndManagingApp.Motion
 {
@@ -12,8 +10,6 @@ namespace ControllingAndManagingApp.Motion
     /// </summary>
     public class CommandMethods
     {
-        const string GCODE_FILE_EXTENSION = ".gco";
-        const string PRINT_ABORT_MESSAGE = "Print Aborted";
         const char G_PREFIX = 'G';
         const char M_PREFIX = 'M';
 
@@ -482,57 +478,14 @@ namespace ControllingAndManagingApp.Motion
         }
 
 
-        /// <summary>
-        /// Transfers a G-code file to the SD card using a serial connection.
-        /// </summary>
-        /// <param name="GcodeFilePath">The path to the G-code file to be transferred.</param>
-        /// <param name="fileName">The name to assign to the file on the SD card.</param>
-        /// <remarks>
-        /// This method sends the G-code commands line by line to the printer's SD card via the serial connection.
-        /// It starts by writing the file name and then sends the contents of the file, followed by a stop command.
-        /// </remarks>
-        /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
-        /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
-        public static void TransferFileToSD(string GcodeFilePath, string fileName, SerialInterface serial)
+        public static string BuildReportSettings()
         {
-            try
+            var settings = new GCodeCommands
             {
-                using (StreamReader reader = new StreamReader(GcodeFilePath))
-                {
-                    string line;
-                    serial.Write($"{BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
-
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        serial.Write(line);
-                    }
-
-                    serial.Write(BuildStopSDWriteCommand());
-                }
-            }
-            catch (FileNotFoundException e)
-            {
-                Logger.LogError($"File not found. {e.Message}");
-            }
-            catch (Exception e)
-            {
-                Logger.LogError($"An error occurred: {e.Message}");
-            }
-        }
-
-
-        /// <summary>
-        /// Aborts the current print by sending necessary commands to the provided serial interface.
-        /// </summary>
-        /// <param name="serial">The serial interface used for communication.</param>
-        public static void AbortCurrentPrint(SerialInterface serial)
-        {
-            // Send commands to stop the SD print and set the LCD status.
-            serial.Write(BuildStopSDPrintCommand());
-            serial.Write(BuildSetLCDStatusCommand(PRINT_ABORT_MESSAGE));
-
-            // Print a message to the console.
-            Console.WriteLine(PRINT_ABORT_MESSAGE);
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSettings
+            };
+            return GCodeMethods.GCodeString(settings);
         }
 
     }
