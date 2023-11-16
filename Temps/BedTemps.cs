@@ -70,7 +70,7 @@ namespace ControllingAndManagingApp.Temps
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
         /// <param name="targetTemp">The target bed temperature to set.</param>
-        public void SetHotendTemp(SerialInterface serial, int targetTemp)
+        public void SetBedTemp(SerialInterface serial, int targetTemp)
         {
             // Send a command to set the target bed temperature
             serial.Write(CommandMethods.BuildSetBedTempCommand(targetTemp));
