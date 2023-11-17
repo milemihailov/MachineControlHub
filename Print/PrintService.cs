@@ -1,6 +1,6 @@
 ﻿using ControllingAndManagingApp.LogErrorHistory;
 using ControllingAndManagingApp.Motion;
-using ControllingAndManagingApp.SerialConnection;
+using ControllingAndManagingApp.PrinterConnection;
 
 namespace ControllingAndManagingApp.Print
 {
@@ -10,7 +10,7 @@ namespace ControllingAndManagingApp.Print
         const string GCODE_FILE_EXTENSION = ".gco";
         const string PRINT_ABORT_MESSAGE = "Print Aborted";
 
-        private IPrinterConnection _serialInterface = new SerialInterface();
+        private IPrinterConnection _serialInterface = new PrinterConnection.SerialConnection();
 
 
         /// <summary>

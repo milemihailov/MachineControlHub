@@ -1,21 +1,21 @@
 ﻿using ControllingAndManagingApp.LogErrorHistory;
 using System.IO.Ports;
 
-namespace ControllingAndManagingApp.SerialConnection
+namespace ControllingAndManagingApp.PrinterConnection
 {
     /// <summary>
     /// This class provides methods to open, close, read, and write data to a serial port.
     /// It also includes features for configuring serial port settings such as port name, baud rate,
     /// data bits, stop bits, rts enable, dtr enable and parity.
     /// </summary>
-    public class SerialInterface : IPrinterConnection
+    public class SerialConnection : IPrinterConnection
     {
         const string BUSY_CHECK = "echo:busy: processing\n";
         const int SLEEP_TIME_AFTER_BUSY_CHECK = 500;
 
         private SerialPort serialPort;
 
-        public SerialInterface()
+        public SerialConnection()
         {
             serialPort = new SerialPort();
             serialPort.StopBits = StopBits.One;

@@ -1,5 +1,4 @@
 ﻿using ControllingAndManagingApp.Motion;
-using ControllingAndManagingApp.SerialConnection;
 using System.Text.RegularExpressions;
 
 namespace ControllingAndManagingApp.Temps
@@ -40,7 +39,7 @@ namespace ControllingAndManagingApp.Temps
         /// <seealso cref="Proportional"/>
         /// <seealso cref="Integral"/>
         /// <seealso cref="Derivative"/>
-        public void ParsePIDValues(SerialInterface serial)
+        public void ParsePIDValues(PrinterConnection.SerialConnection serial)
         {
             // Send a command to report settings
             serial.Write(CommandMethods.BuildReportSettings());

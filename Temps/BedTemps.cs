@@ -1,5 +1,4 @@
 ﻿using ControllingAndManagingApp.Motion;
-using ControllingAndManagingApp.SerialConnection;
 using System.Text.RegularExpressions;
 
 namespace ControllingAndManagingApp.Temps
@@ -37,7 +36,7 @@ namespace ControllingAndManagingApp.Temps
         /// Parses and updates the current bed temperature from the response received from the printer.
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
-        public void ParseCurrentBedTemp(SerialInterface serial)
+        public void ParseCurrentBedTemp(PrinterConnection.SerialConnection serial)
         {
             // Send a command to request temperature information
             serial.Write(CommandMethods.BuildReportTemperaturesCommand());
@@ -70,7 +69,7 @@ namespace ControllingAndManagingApp.Temps
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
         /// <param name="targetTemp">The target bed temperature to set.</param>
-        public void SetBedTemp(SerialInterface serial, int targetTemp)
+        public void SetBedTemp(PrinterConnection.SerialConnection serial, int targetTemp)
         {
             // Send a command to set the target bed temperature
             serial.Write(CommandMethods.BuildSetBedTempCommand(targetTemp));

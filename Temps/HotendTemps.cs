@@ -1,5 +1,4 @@
 ﻿using ControllingAndManagingApp.Motion;
-using ControllingAndManagingApp.SerialConnection;
 using System.Text.RegularExpressions;
 
 namespace ControllingAndManagingApp.Temps
@@ -43,7 +42,7 @@ namespace ControllingAndManagingApp.Temps
         /// then extracts and parses the hotend temperature value from the received input string.
         /// The extracted temperature value is stored in the HotendCurrentTemp property.
         /// </remarks>
-        public void ParseCurrentHotendTemp(SerialInterface serial)
+        public void ParseCurrentHotendTemp(PrinterConnection.SerialConnection serial)
         {
             // Send a command to request temperature information
             serial.Write(CommandMethods.BuildReportTemperaturesCommand());
@@ -77,7 +76,7 @@ namespace ControllingAndManagingApp.Temps
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
         /// <param name="temp">The target temperature to set for the hotend.</param>
-        public void SetHotendTemp(SerialInterface serial, int targetTemp)
+        public void SetHotendTemp(PrinterConnection.SerialConnection serial, int targetTemp)
         {
             // Send the G-code command to set the hotend temperature
             serial.Write(CommandMethods.BuildSetHotendTempCommand(targetTemp));
