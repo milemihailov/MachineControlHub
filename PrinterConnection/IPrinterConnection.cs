@@ -1,4 +1,4 @@
-﻿namespace ControllingAndManagingApp
+﻿namespace ControllingAndManagingApp.Connection
 {
     /// <summary>
     /// Represents an interface for printer connections.
