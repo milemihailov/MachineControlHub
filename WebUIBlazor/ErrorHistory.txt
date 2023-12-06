@@ -1,0 +1,201 @@
+05/12/2023 07:56:16 - Error writing to serial port: The port is closed.
+05/12/2023 07:56:16 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 135
+05/12/2023 07:58:13 - Error writing to serial port: The port is closed.
+05/12/2023 07:58:13 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 135
+05/12/2023 07:58:17 - Error writing to serial port: The port is closed.
+05/12/2023 07:58:17 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 135
+05/12/2023 08:02:21 - Error writing to serial port: The port is closed.
+05/12/2023 08:02:21 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 135
+05/12/2023 08:47:41 - An error occurred while setting the PortName: 'PortName' cannot be set while the port is open.
+05/12/2023 08:47:41 -    at System.IO.Ports.SerialPort.set_PortName(String value)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.set_PortName(String value) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 48
+05/12/2023 11:31:37 - An error occurred while setting the PortName: 'PortName' cannot be set while the port is open.
+05/12/2023 11:31:37 -    at System.IO.Ports.SerialPort.set_PortName(String value)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.set_PortName(String value) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 48
+05/12/2023 11:31:38 - An error occurred while setting the PortName: 'PortName' cannot be set while the port is open.
+05/12/2023 11:31:38 -    at System.IO.Ports.SerialPort.set_PortName(String value)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.set_PortName(String value) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 48
+05/12/2023 11:33:28 - An error occurred while setting the PortName: 'PortName' cannot be set while the port is open.
+05/12/2023 11:33:28 -    at System.IO.Ports.SerialPort.set_PortName(String value)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.set_PortName(String value) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 48
+05/12/2023 11:33:32 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:33:32 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:33:33 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:33:33 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:33:34 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:33:34 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:35:39 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:35:39 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:35:39 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:35:39 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:35:40 - Error writing to serial port: The port is closed.
+05/12/2023 11:35:40 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 11:35:41 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:35:41 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:35:42 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:35:42 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 11:36:24 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 11:36:24 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:40:05 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:40:05 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:40:07 - Error writing to serial port: The port is closed.
+05/12/2023 12:40:07 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 12:40:07 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:40:07 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:40:08 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:40:08 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:40:39 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:40:39 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:40:40 - Error writing to serial port: The port is closed.
+05/12/2023 12:40:40 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 12:40:58 - Error writing to serial port: The port is closed.
+05/12/2023 12:40:58 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 12:40:59 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:40:59 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:41:12 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 12:41:12 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 12:41:13 - Error writing to serial port: The port is closed.
+05/12/2023 12:41:13 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 22:40:25 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 22:40:25 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 22:40:26 - Error writing to serial port: The port is closed.
+05/12/2023 22:40:26 -    at System.IO.Ports.SerialPort.Write(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 22:40:27 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 22:40:27 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 22:40:27 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 22:40:27 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+05/12/2023 22:40:28 - Error writing to serial port: The port is closed.
+05/12/2023 22:40:28 -    at System.IO.Ports.SerialPort.Write(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+05/12/2023 22:40:29 - Error opening serial port: Could not find file 'COM3'.
+05/12/2023 22:40:29 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+06/12/2023 13:11:14 - Error opening serial port: Could not find file 'COM3'.
+06/12/2023 13:11:14 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+06/12/2023 13:11:19 - Error writing to serial port: The port is closed.
+06/12/2023 13:11:19 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 134
+06/12/2023 13:41:23 - Error opening serial port: Could not find file 'COM3'.
+06/12/2023 13:41:23 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+06/12/2023 13:41:24 - Error opening serial port: Could not find file 'COM3'.
+06/12/2023 13:41:24 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+06/12/2023 13:41:25 - Error opening serial port: Could not find file 'COM3'.
+06/12/2023 13:41:25 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 93
+06/12/2023 14:20:58 - Error writing to serial port: The port is closed.
+06/12/2023 14:20:58 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data)
+06/12/2023 14:21:06 - Error writing to serial port: The port is closed.
+06/12/2023 14:21:06 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data)
+06/12/2023 14:25:10 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:25:10 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:25:11 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:25:11 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:25:17 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:25:17 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:25:26 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:25:26 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:26:03 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:26:03 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:26:22 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:26:22 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:26:28 - Error opening serial port: Access to the path 'COM3' is denied.
+06/12/2023 14:26:28 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect()
+06/12/2023 14:28:13 - Error writing to serial port: The port is closed.
+06/12/2023 14:28:13 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 133
+06/12/2023 15:04:47 - An error occurred while setting the PortName: 'PortName' cannot be set while the port is open.
+06/12/2023 15:04:47 -    at System.IO.Ports.SerialPort.set_PortName(String value)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.set_PortName(String value) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 47
+06/12/2023 15:04:49 - Error writing to serial port: The port is closed.
+06/12/2023 15:04:49 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 133
+06/12/2023 22:00:01 - Error writing to serial port: The port is closed.
+06/12/2023 22:00:01 -    at System.IO.Ports.SerialPort.Write(String text)
+   at System.IO.Ports.SerialPort.WriteLine(String text)
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Write(String data) in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 133
+06/12/2023 22:00:16 - Error opening serial port: Could not find file 'COM3'.
+06/12/2023 22:00:16 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
+   at System.IO.Ports.SerialPort.Open()
+   at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 92

@@ -1,0 +1,69 @@
+﻿@page "/controlpanel"
+
+@using MachineControlHub.Motion;
+@using MachineControlHub.PrinterConnection;
+
+<h3>ControlPanel</h3>
+<h1><button class="btn btn-info" @onclick="Connect"> Connect</button></h1>
+<h1><button class="btn btn-info" @onclick="Disconnect"> Disconnect</button></h1>
+
+
+<button class="btn-outline-secondary">X+</button>
+<button class="btn-outline-secondary">Y+</button>
+<button class="btn-outline-secondary">Z+</button>
+<br />
+<br />
+<button class="btn-outline-primary">X-</button>
+<button class="btn-outline-primary">Y-</button>
+<button class="btn-outline-primary">Z-</button>
+<br />
+<br />
+<button class="btn-outline-primary" @onclick="HomeAllAxis">HomeAll</button>
+<button class="btn-outline-primary" @onclick="HomeXYAxis">HomeXY</button>
+<button class="btn-outline-primary" @onclick="HomeZAxis">HomeZ</button>
+
+@code {
+
+    SerialConnection serialConnection = new SerialConnection();
+    public string status = "";
+
+    public void Connect()
+    {
+        try
+        {
+            serialConnection.PortName = "COM3";
+            serialConnection.Connect();
+            status = "Connected";
+        }
+        catch (Exception)
+        {
+            status = "Error opening serial port";
+        }
+    }
+
+    public void Disconnect()
+    {
+        serialConnection.Disconnect();
+        status = "Disconnected";
+    }
+
+    public void HomeAllAxis()
+    {
+        serialConnection.Write(CommandMethods.SendHomeAxes());
+    }
+
+    public void HomeXYAxis()
+    {
+        serialConnection.Write(CommandMethods.SendHomeAxes(true, true));
+    }
+
+    public void HomeZAxis()
+    {
+        serialConnection.Write(CommandMethods.SendHomeAxes(false ,false, true));
+    }
+
+    public void MoveXAxis()
+    {
+        // serialConnection.Write(CommandMethods);
+    }
+}
