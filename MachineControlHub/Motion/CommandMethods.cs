@@ -33,6 +33,17 @@ namespace MachineControlHub.Motion
         }
 
 
+        public static string BuildRelativePositionCommand()
+        {
+            var relativePosition = new GCodeCommands
+            {
+                Type = G_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.GCommands.RelativePositioning
+            };
+            return GCodeMethods.GCodeString(relativePosition);
+        }
+
+
         /// <summary>
         /// Park the nozzle at a predefined XYZ position.
         /// Requires NOZZLE_PARK_FEATURE.
@@ -60,7 +71,7 @@ namespace MachineControlHub.Motion
         /// <param name="y">true to home Y axis</param>
         /// <param name="z">true to home Z axis</param>
         /// <returns></returns>
-        public static string SendHomeAxes(bool x = false, bool y = false, bool z = false)
+        public static string BuildHomeAxesCommand(bool x = false, bool y = false, bool z = false)
         {
             string XYZ = "";
 
@@ -486,6 +497,17 @@ namespace MachineControlHub.Motion
                 Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSettings
             };
             return GCodeMethods.GCodeString(settings);
+        }
+
+
+        public static string BuildFilamentChangeCommand()
+        {
+            var filamentChange = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.FilamentChange
+            };
+            return GCodeMethods.GCodeString(filamentChange);
         }
 
     }
