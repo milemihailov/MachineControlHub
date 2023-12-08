@@ -1,0 +1,40 @@
+﻿@page "/connection"
+@using MachineControlHub.PrinterConnection
+@inject Data.SerialConnectionService service
+
+<PageTitle>Connection</PageTitle>
+
+<h1>Connection</h1>
+
+
+<button class="btn btn-info" @onclick="service.Connect"> Connect</button>
+<button class="btn btn-info" @onclick="service.Disconnect"> Disconnect</button>
+
+<br />
+<br />
+
+
+<p>
+    Port:
+    <select class="form-control" @bind="@service.portName" style="width:100px">
+        @foreach (var template in service.AvailableConnections())
+        {
+            <option value=@template>@template</option>
+        }
+    </select>
+</p>
+
+
+<p>
+    Baudrate:
+    <select class="form-control" @bind="@service.baudRate" style="width:100px">
+        <option value="115200">115200</option>
+        <option value="250000">250000</option>
+
+    </select>
+</p>
+
+@code {
+
+
+}
