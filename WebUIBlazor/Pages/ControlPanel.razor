@@ -37,26 +37,29 @@
     </label>
 </div>
 <br />
-<button class="btn-outline-primary" @onclick="() => HomeAxes()">HomeAll</button>
-<button class="btn-outline-primary" @onclick="() => HomeAxes(true,true,false)">HomeXY</button>
-<button class="btn-outline-primary" @onclick="() => HomeAxes(false,false,true)">HomeZ</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildDisableSteppersCommand())">DisableMotors</button>
+<br />
+<br />
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand())">HomeAll</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand(true,true))">HomeXY</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand(false,false,true))">HomeZ</button>
 <br />
 <br />
 <button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,true)">Extrude</button>
 <button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,false)">Retract</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="ChangeFilament">Change Filament</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFilamentChangeCommand())">Change Filament</button>
 <br />
 <br />
 
-<button class="btn-outline-primary" @onclick="() => ControlFan()">Fan Off</button>
-<button class="btn-outline-primary" @onclick="() => ControlFan(MAX_FAN_SPEED)">Fan On</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFanOffCommand())">Fan Off</button>
+<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFanSpeedCommand(MAX_FAN_SPEED))">Fan On</button>
 <br />
 <br />
 <p style="font-weight: bold">
     Fan Speed: 0%
-    <input width="400" type="range" min="0" max="255" @bind="defaultFanSpeed" @onclick="() => ControlFan(defaultFanSpeed)">100%
+    <input width="400" type="range" min="0" max="255" @bind="defaultFanSpeed" @onclick="() => service.Write(CommandMethods.BuildFanSpeedCommand(defaultFanSpeed))">100%
 </p>
 
 <br />
@@ -75,7 +78,7 @@
     const double AXIS_MOVEMENT_BY_10 = 10;
     const double AXIS_MOVEMENT_BY_100 = 100;
 
-
+    int defaultFanSpeed;
 
     double valueToMove = AXIS_MOVEMENT_BY_10;
     /// <summary>
@@ -89,18 +92,6 @@
 
         // Refresh the component to reflect changes
         StateHasChanged();
-    }
-
-
-    /// <summary>
-    /// Homing method for specified axes.
-    /// </summary>
-    /// <param name="homeX">True to home the X-axis, false otherwise.</param>
-    /// <param name="homeY">True to home the Y-axis, false otherwise.</param>
-    /// <param name="homeZ">True to home the Z-axis, false otherwise.</param>
-    public void HomeAxes(bool homeX = true, bool homeY = true, bool homeZ = true)
-    {
-        service.Write(CommandMethods.BuildHomeAxesCommand(homeX, homeY, homeZ));
     }
 
 
@@ -141,35 +132,5 @@
         service.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
     }
 
-
-    int defaultFanSpeed;
-    /// <summary>
-    /// Control the fan.
-    /// </summary>
-    /// <param name="fanSpeed">The fan speed. Use -1 for turning off the fan.</param>
-    public void ControlFan(int fanSpeed = -1)
-    {
-        if (fanSpeed == -1)
-        {
-            // Fan off
-            service.Write(CommandMethods.BuildFanOffCommand());
-        }
-        else
-        {
-            // Set fan speed
-            service.Write(CommandMethods.BuildFanSpeedCommand(fanSpeed));
-        }
-
-        // Refresh the component to reflect changes
-        StateHasChanged();
-    }
-
-
-    /// <summary>
-    /// Change the filament procedure.
-    /// </summary>
-    public void ChangeFilament()
-    {
-        service.Write(CommandMethods.BuildFilamentChangeCommand());
-    }
+    
 }
