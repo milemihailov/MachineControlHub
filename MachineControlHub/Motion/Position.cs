@@ -152,7 +152,7 @@ namespace MachineControlHub.Motion
         /// <param name="position">The coordinate position to retrieve (X, Y, Z, or E).</param>
         /// <exception cref="ArgumentException">Thrown when an invalid or unsupported coordinate position is specified.</exception>
         /// <exception cref="Exception">Thrown when matching the coordinate pattern or parsing the coordinate value fails.</exception>
-        public void ParseChosenCurrentPosition(PrinterConnection.SerialConnection serial, CurrentPositions position)
+        public void ParseChosenCurrentPosition(SerialConnection serial, CurrentPositions position)
         {
 
             // Sleep for a brief moment to ensure the input has enough time to be received and processed.
@@ -246,7 +246,7 @@ namespace MachineControlHub.Motion
         /// Parses and updates the current X, Y, and Z positions from the printer's response.
         /// </summary>
         /// <param name="serial">The SerialInterface used for communication.</param>
-        public void ParseXYZCurrentPositions(PrinterConnection.SerialConnection serial)
+        public void ParseXYZCurrentPositions(SerialConnection serial)
         {
             // Sleep for a brief moment to ensure the input has enough time to be received and processed.
             Thread.Sleep(10);
