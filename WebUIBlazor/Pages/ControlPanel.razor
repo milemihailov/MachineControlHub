@@ -1,69 +1,175 @@
 ﻿@page "/controlpanel"
+@inject Data.SerialConnectionService service
+
 
 @using MachineControlHub.Motion;
 @using MachineControlHub.PrinterConnection;
 
 <h3>ControlPanel</h3>
-<h1><button class="btn btn-info" @onclick="Connect"> Connect</button></h1>
-<h1><button class="btn btn-info" @onclick="Disconnect"> Disconnect</button></h1>
+
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.XMovePos,true)">X+</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.YMovePos,true)">Y+</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.ZMovePos,true)">Z+</button>
 
 
-<button class="btn-outline-secondary">X+</button>
-<button class="btn-outline-secondary">Y+</button>
-<button class="btn-outline-secondary">Z+</button>
 <br />
 <br />
-<button class="btn-outline-primary">X-</button>
-<button class="btn-outline-primary">Y-</button>
-<button class="btn-outline-primary">Z-</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.XMovePos,false)">X-</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.YMovePos,false)">Y-</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.ZMovePos,false)">Z-</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="HomeAllAxis">HomeAll</button>
-<button class="btn-outline-primary" @onclick="HomeXYAxis">HomeXY</button>
-<button class="btn-outline-primary" @onclick="HomeZAxis">HomeZ</button>
+<p style="font-weight: bold">Feedrate: <input type="number" @bind="@feedRate.FeedRateFreeMove" /></p>
+
+
+<div>
+    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_0_1)">
+        <input type="radio" name="options" id="option3" autocomplete="off"> 0.1 mm
+    </label>
+    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_1)">
+        <input type="radio" name="options" id="option3" autocomplete="off"> 1 mm
+    </label>
+    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_10)">
+        <input type="radio" name="options" id="option3" autocomplete="off" checked> 10 mm
+    </label>
+    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_100)">
+        <input type="radio" name="options" id="option3" autocomplete="off"> 100 mm
+    </label>
+</div>
+<br />
+<button class="btn-outline-primary" @onclick="() => HomeAxes()">HomeAll</button>
+<button class="btn-outline-primary" @onclick="() => HomeAxes(true,true,false)">HomeXY</button>
+<button class="btn-outline-primary" @onclick="() => HomeAxes(false,false,true)">HomeZ</button>
+<br />
+<br />
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,true)">Extrude</button>
+<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,false)">Retract</button>
+<br />
+<br />
+<button class="btn-outline-primary" @onclick="ChangeFilament">Change Filament</button>
+<br />
+<br />
+
+<button class="btn-outline-primary" @onclick="() => ControlFan()">Fan Off</button>
+<button class="btn-outline-primary" @onclick="() => ControlFan(MAX_FAN_SPEED)">Fan On</button>
+<br />
+<br />
+<p style="font-weight: bold">
+    Fan Speed: 0%
+    <input width="400" type="range" min="0" max="255" @bind="defaultFanSpeed" @onclick="() => ControlFan(defaultFanSpeed)">100%
+</p>
+
+<br />
+<br />
+
+
+
 
 @code {
 
-    SerialConnection serialConnection = new SerialConnection();
-    public string status = "";
+    MotionSettingsData feedRate = new();
 
-    public void Connect()
+    const int MAX_FAN_SPEED = 255;
+    const double AXIS_MOVEMENT_BY_0_1 = 0.1;
+    const double AXIS_MOVEMENT_BY_1 = 1;
+    const double AXIS_MOVEMENT_BY_10 = 10;
+    const double AXIS_MOVEMENT_BY_100 = 100;
+
+
+
+    double valueToMove = AXIS_MOVEMENT_BY_10;
+    /// <summary>
+    /// Updates the movement value used for incremental movements.
+    /// </summary>
+    /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
+    public void UpdateIncrementalMovementValue(double newValue)
     {
-        try
+        // Set the new value for the movement
+        valueToMove = newValue;
+
+        // Refresh the component to reflect changes
+        StateHasChanged();
+    }
+
+
+    /// <summary>
+    /// Homing method for specified axes.
+    /// </summary>
+    /// <param name="homeX">True to home the X-axis, false otherwise.</param>
+    /// <param name="homeY">True to home the Y-axis, false otherwise.</param>
+    /// <param name="homeZ">True to home the Z-axis, false otherwise.</param>
+    public void HomeAxes(bool homeX = true, bool homeY = true, bool homeZ = true)
+    {
+        service.Write(CommandMethods.BuildHomeAxesCommand(homeX, homeY, homeZ));
+    }
+
+
+    /// <summary>
+    /// Adjusts the specified axis position by the given value.
+    /// </summary>
+    /// <param name="position">The axis to adjust.</param>
+    /// <param name="increment">True to increment, false to decrement.</param>
+    public void AdjustAxis(MovePositions position, bool increment)
+    {
+        // Create a new Position object to store the movement values
+        Position pos = new();
+
+        // Send a command to set relative positioning
+        service.Write(CommandMethods.BuildRelativePositionCommand());
+
+        // Determine the movement value based on whether it's an increment or decrement
+        double moveValue = increment ? valueToMove : -valueToMove;
+
+        // Set the appropriate property in the Position object based on the specified axis
+        switch (position)
         {
-            serialConnection.PortName = "COM3";
-            serialConnection.Connect();
-            status = "Connected";
+            case MovePositions.XMovePos:
+                pos.XMovePosition = moveValue;
+                break;
+            case MovePositions.YMovePos:
+                pos.YMovePosition = moveValue;
+                break;
+            case MovePositions.ZMovePos:
+                pos.ZMovePosition = moveValue;
+                break;
+            case MovePositions.EMovePos:
+                pos.EMovePosition = moveValue;
+                break;
         }
-        catch (Exception)
+
+        // Send a command to perform a linear move with the specified values and feed rate
+        service.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
+    }
+
+
+    int defaultFanSpeed;
+    /// <summary>
+    /// Control the fan.
+    /// </summary>
+    /// <param name="fanSpeed">The fan speed. Use -1 for turning off the fan.</param>
+    public void ControlFan(int fanSpeed = -1)
+    {
+        if (fanSpeed == -1)
         {
-            status = "Error opening serial port";
+            // Fan off
+            service.Write(CommandMethods.BuildFanOffCommand());
         }
+        else
+        {
+            // Set fan speed
+            service.Write(CommandMethods.BuildFanSpeedCommand(fanSpeed));
+        }
+
+        // Refresh the component to reflect changes
+        StateHasChanged();
     }
 
-    public void Disconnect()
-    {
-        serialConnection.Disconnect();
-        status = "Disconnected";
-    }
 
-    public void HomeAllAxis()
+    /// <summary>
+    /// Change the filament procedure.
+    /// </summary>
+    public void ChangeFilament()
     {
-        serialConnection.Write(CommandMethods.SendHomeAxes());
-    }
-
-    public void HomeXYAxis()
-    {
-        serialConnection.Write(CommandMethods.SendHomeAxes(true, true));
-    }
-
-    public void HomeZAxis()
-    {
-        serialConnection.Write(CommandMethods.SendHomeAxes(false ,false, true));
-    }
-
-    public void MoveXAxis()
-    {
-        // serialConnection.Write(CommandMethods);
+        service.Write(CommandMethods.BuildFilamentChangeCommand());
     }
 }
