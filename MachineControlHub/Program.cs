@@ -8,7 +8,6 @@ namespace MachineControlHub
 
         static void Main(string[] args)
         {
-
         }
 
 

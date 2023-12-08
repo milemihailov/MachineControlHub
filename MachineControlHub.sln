@@ -5,7 +5,7 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MachineControlHub", "MachineControlHub\MachineControlHub.csproj", "{9CF764AE-9F7A-4F57-BD91-EF1A29F176E3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUIBlazor", "WebUIBlazor\WebUI.csproj", "{4D1B1FE0-157D-43DF-B76F-8A2B0FA09ABC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUI", "WebUIBlazor\WebUI.csproj", "{4D1B1FE0-157D-43DF-B76F-8A2B0FA09ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
