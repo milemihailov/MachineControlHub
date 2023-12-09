@@ -7,8 +7,8 @@
 <h1>Connection</h1>
 
 
-<button class="btn btn-info" @onclick="service.Connect"> Connect</button>
-<button class="btn btn-info" @onclick="service.Disconnect"> Disconnect</button>
+<button class="btn btn-info" @onclick="ConnectionConfiguration"> Connect</button>
+<button class="btn btn-info" @onclick="serialConnection.Disconnect"> Disconnect</button>
 
 <br />
 <br />
@@ -16,8 +16,8 @@
 
 <p>
     Port:
-    <select class="form-control" @bind="@service.portName" style="width:100px">
-        @foreach (var template in service.AvailableConnections())
+    <select class="form-control" @bind="@portName" style="width:100px">
+        @foreach (var template in serialConnection.AvailableConnections())
         {
             <option value=@template>@template</option>
         }
@@ -27,7 +27,7 @@
 
 <p>
     Baudrate:
-    <select class="form-control" @bind="@service.baudRate" style="width:100px">
+    <select class="form-control" @bind="@baudRate" style="width:100px">
         <option value="115200">115200</option>
         <option value="250000">250000</option>
 
@@ -36,5 +36,17 @@
 
 @code {
 
+    SerialConnection serialConnection = new();
+
+    public string portName = "";
+    public int baudRate;
+
+    public void ConnectionConfiguration()
+    {
+        serialConnection.PortName = portName;
+        serialConnection.BaudRate = baudRate;
+        serialConnection.Connect();
+        service.printerConnection = serialConnection;
+    }
 
 }
