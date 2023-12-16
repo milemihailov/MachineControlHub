@@ -10,7 +10,7 @@ namespace MachineControlHub.Print
         const string GCODE_FILE_EXTENSION = ".gco";
         const string PRINT_ABORT_MESSAGE = "Print Aborted";
 
-        private IPrinterConnection _serialInterface = new PrinterConnection.SerialConnection();
+        private IPrinterConnection _connection;
 
 
         /// <summary>
@@ -30,16 +30,16 @@ namespace MachineControlHub.Print
             {
                 using (StreamReader reader = new StreamReader(GcodeFilePath))
                 {
-                    _serialInterface.Connect();
+                    _connection.Connect();
                     string line;
-                    _serialInterface.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
+                    _connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
 
                     while ((line = reader.ReadLine()) != null)
                     {
-                        _serialInterface.Write(line);
+                        _connection.Write(line);
                     }
 
-                    _serialInterface.Write(CommandMethods.BuildStopSDWriteCommand());
+                    _connection.Write(CommandMethods.BuildStopSDWriteCommand());
                 }
             }
             catch (FileNotFoundException ex)
@@ -78,8 +78,8 @@ namespace MachineControlHub.Print
         public void AbortCurrentPrint()
         {
             // Send commands to stop the SD print and set the LCD status.
-            _serialInterface.Write(CommandMethods.BuildStopSDPrintCommand());
-            _serialInterface.Write(CommandMethods.BuildSetLCDStatusCommand(PRINT_ABORT_MESSAGE));
+            _connection.Write(CommandMethods.BuildStopSDPrintCommand());
+            _connection.Write(CommandMethods.BuildSetLCDStatusCommand(PRINT_ABORT_MESSAGE));
 
             // Print a message to the console.
             Console.WriteLine(PRINT_ABORT_MESSAGE);
