@@ -12,6 +12,12 @@ namespace MachineControlHub.Print
 
         private IPrinterConnection _connection;
 
+        public PrintService(IPrinterConnection connection)
+        {
+            _connection = connection;
+        }
+
+
 
         /// <summary>
         /// Transfers a G-code file to the SD card using a serial connection.
@@ -53,21 +59,18 @@ namespace MachineControlHub.Print
         }
 
 
-        /// <summary>
-        /// Initiates the printing process with the specified G-code file.
-        /// </summary>
-        /// <param name="gcodeFile">The path to the G-code file to be printed.</param>
-        /// <remarks>
-        /// This method prepares the printer to start printing by building and sending the necessary commands,
-        /// including selecting the specified G-code file and starting the SD card print.
-        /// </remarks>
-        public void SelectAndStartPrint(string gcodeFile)
+        
+        public void SelectPrint(string gcodeFile)
         {
             // Build and send the command to select the specified G-code file
-            CommandMethods.BuildSelectSDFileCommand(gcodeFile);
+            _connection.Write(CommandMethods.BuildSelectSDFileCommand(gcodeFile));
+        }
 
+
+        public void StartPrint()
+        {
             // Build and send the command to start the SD card print
-            CommandMethods.BuildStartSDPrintCommand();
+            _connection.Write(CommandMethods.BuildStartSDPrintCommand());
         }
 
 

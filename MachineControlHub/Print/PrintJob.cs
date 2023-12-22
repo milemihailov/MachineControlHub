@@ -1,4 +1,5 @@
 ﻿using MachineControlHub.Motion;
+using MachineControlHub.PrinterConnection;
 
 namespace MachineControlHub.Print
 {
@@ -11,6 +12,13 @@ namespace MachineControlHub.Print
         public const string DATA_SEPARATOR = "; ";
         public const char NEW_LINE = '\n';
         public const char CARRIAGE_RETURN = '\r';
+
+        private IPrinterConnection _connection;
+
+        public PrintJob(IPrinterConnection connection)
+        {
+            _connection = connection;
+        }
 
         /// <summary>
         /// Gets the name of the printed file.
@@ -62,7 +70,7 @@ namespace MachineControlHub.Print
         public void SelectAndParseSelectedFile(string filePath)
         {
             // Send a command to select the G-code file on the SD card
-            CommandMethods.BuildSelectSDFileCommand(filePath);
+            _connection.Write(CommandMethods.BuildSelectSDFileCommand(filePath));
             File = filePath;
         }
 

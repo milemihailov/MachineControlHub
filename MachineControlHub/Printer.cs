@@ -2,6 +2,7 @@
 using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
+using MachineControlHub.PrinterConnection;
 using MachineControlHub.Temps;
 
 namespace MachineControlHub
@@ -80,6 +81,9 @@ namespace MachineControlHub
         /// Gets or sets the motion settings and data for the printer.
         /// </summary>
         public MotionSettingsData MotionSettings { get; set; }
+
+
+        public IPrinterConnection PrinterConnection { get; set; }
     }
 
 }

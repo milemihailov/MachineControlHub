@@ -1,11 +1,13 @@
 ﻿@page "/controlpanel"
-@inject Data.SerialConnectionService service
+@inject Data.ConnectionServiceSerial service
+@* @inject Data.PrinterData pData *@
 
 
 @using MachineControlHub.Motion;
 @using MachineControlHub.PrinterConnection;
 
 <h3>ControlPanel</h3>
+
 
 <button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.XMovePos,true)">X+</button>
 <button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.YMovePos,true)">Y+</button>
@@ -80,6 +82,7 @@
 
     int defaultFanSpeed;
 
+
     double valueToMove = AXIS_MOVEMENT_BY_10;
     /// <summary>
     /// Updates the movement value used for incremental movements.
@@ -130,7 +133,6 @@
 
         // Send a command to perform a linear move with the specified values and feed rate
         service.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
+        service.Write(CommandMethods.BuildAbsolutePositionCommand());
     }
-
-    
 }

@@ -27,6 +27,12 @@ namespace MachineControlHub.PrinterConnection
 
         public void Initialize(string connectionString)
         {
+            string[] connectionParams = connectionString.Split(',');
+            string portName = connectionParams[0].Trim();
+            int baudRate = int.Parse(connectionParams[1].Trim());
+
+            serialPort.PortName = portName;
+            serialPort.BaudRate = baudRate;
         }
 
 
@@ -181,7 +187,7 @@ namespace MachineControlHub.PrinterConnection
         /// Checks on opened port to see if there is data left to read
         /// </summary>
         /// <returns></returns>
-        public bool HasData()
+        private  bool HasData()
         {
             if (serialPort.IsOpen && serialPort.BytesToRead > 0)
             {

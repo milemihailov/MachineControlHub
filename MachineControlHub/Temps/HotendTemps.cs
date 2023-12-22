@@ -12,6 +12,13 @@ namespace MachineControlHub.Temps
     public class HotendTemps
     {
         const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)";
+        private IPrinterConnection _connection;
+
+        public HotendTemps(IPrinterConnection connection)
+        {
+            _connection = connection;
+        }
+
 
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) values for controlling the hotend temperature.
@@ -31,29 +38,29 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Gets or sets the target temperature set for the hotend in degrees Celsius.
         /// </summary>
-        public int HotendSetTemp { get; set; }
+        public int SetHotendTemp { get; set; }
 
 
         /// <summary>
         /// Parses the current hotend temperature from a provided input string.
         /// </summary>
-        /// <param name="serial">The serial interface for communication.</param>
         /// <remarks>
         /// This method sends a command to report temperatures to the provided serial interface,
         /// then extracts and parses the hotend temperature value from the received input string.
         /// The extracted temperature value is stored in the HotendCurrentTemp property.
         /// </remarks>
-        public void ParseCurrentHotendTemp(SerialConnection serial)
+        public void ParseCurrentHotendTemperature()
         {
-            // Send a command to request temperature information
-            serial.Write(CommandMethods.BuildReportTemperaturesCommand());
+            Thread.Sleep(200);  // Simulating the initial delay asynchronously
 
-            // Sleep for a brief moment to ensure the input has enough time to be received and processed.
-            // This sleep is used to account for potential delays in serial communication.
+            // Send a command to request temperature information
+            _connection.Write(CommandMethods.BuildReportTemperaturesCommand());
+
+            // Simulate the delay asynchronously
             Thread.Sleep(200);
 
             // Read the printer's response
-            string input = serial.Read();
+            string input = _connection.Read();
 
             // Define a regular expression pattern to match the bed temperature
             string pattern = HOTEND_TEMP_PARSE_PATTERN;
@@ -75,15 +82,11 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Sets the target temperature for the hotend and sends the corresponding G-code command to the printer.
         /// </summary>
-        /// <param name="serial">The serial interface used for communication with the printer.</param>
         /// <param name="temp">The target temperature to set for the hotend.</param>
-        public void SetHotendTemp(SerialConnection serial, int targetTemp)
+        public void SetHotendTemperature()
         {
             // Send the G-code command to set the hotend temperature
-            serial.Write(CommandMethods.BuildSetHotendTempCommand(targetTemp));
-
-            // Update the HotendSetTemp property with the new target temperature
-            HotendSetTemp = targetTemp;
+            _connection.Write(CommandMethods.BuildSetHotendTempCommand(SetHotendTemp));
         }
     }
 
