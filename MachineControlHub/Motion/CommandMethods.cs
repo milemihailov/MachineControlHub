@@ -33,14 +33,39 @@ namespace MachineControlHub.Motion
         }
 
 
+        /// <summary>
+        /// Builds a G-code command for relative positioning.
+        /// </summary>
+        /// <returns>A string representing the G-code command for relative positioning.</returns>
         public static string BuildRelativePositionCommand()
         {
+            // Create a GCodeCommands object for relative positioning
             var relativePosition = new GCodeCommands
             {
                 Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.RelativePositioning
             };
+
+            // Convert the GCodeCommands object to a G-code string
             return GCodeMethods.GCodeString(relativePosition);
+        }
+
+
+        /// <summary>
+        /// Builds a G-code command for absolute positioning.
+        /// </summary>
+        /// <returns>A string representing the G-code command for absolute positioning.</returns>
+        public static string BuildAbsolutePositionCommand()
+        {
+            // Create a GCodeCommands object for absolute positioning
+            var absolutePosition = new GCodeCommands
+            {
+                Type = G_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.GCommands.AbsolutePositioning
+            };
+
+            // Convert the GCodeCommands object to a G-code string
+            return GCodeMethods.GCodeString(absolutePosition);
         }
 
 
@@ -275,28 +300,40 @@ namespace MachineControlHub.Motion
         }
 
 
+        /// <summary>
+        /// Builds a G-code command to retrieve the current position of the 3D printer.
+        /// </summary>
+        /// <returns>A string representing the G-code command to get the current position.</returns>
         public static string BuildGetCurrentPositionCommand()
         {
+            // Create a GCodeCommands object for retrieving the current position
             var currentPosition = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.GetCurrentPosition
             };
 
+            // Convert the GCodeCommands object to a G-code string
             return GCodeMethods.GCodeString(currentPosition);
         }
 
 
+        /// <summary>
+        /// Builds a G-code command to set the LCD status with a custom message.
+        /// </summary>
+        /// <param name="message">The custom message to be displayed on the LCD.</param>
+        /// <returns>A string representing the G-code command to set the LCD status.</returns>
         public static string BuildSetLCDStatusCommand(string message)
         {
+            // Create a GCodeCommands object for setting LCD status
             var setLCDStatus = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetLCDStatus,
             };
 
+            // Convert the GCodeCommands object to a G-code string, including the custom message
             return GCodeMethods.GCodeString(setLCDStatus, message);
-
         }
 
 
@@ -372,13 +409,20 @@ namespace MachineControlHub.Motion
         }
 
 
+        /// <summary>
+        /// Builds a G-code command to request a report of temperatures from the 3D printer.
+        /// </summary>
+        /// <returns>A string representing the G-code command to request temperature reports.</returns>
         public static string BuildReportTemperaturesCommand()
         {
+            // Create a GCodeCommands object for reporting temperatures
             var tempReport = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.ReportTemperatures
             };
+
+            // Convert the GCodeCommands object to a G-code string
             return GCodeMethods.GCodeString(tempReport);
         }
 
@@ -489,24 +533,38 @@ namespace MachineControlHub.Motion
         }
 
 
+        /// <summary>
+        /// Builds a G-code command to request a report of current settings from the 3D printer.
+        /// </summary>
+        /// <returns>A string representing the G-code command to request settings reports.</returns>
         public static string BuildReportSettings()
         {
+            // Create a GCodeCommands object for reporting settings
             var settings = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSettings
             };
+
+            // Convert the GCodeCommands object to a G-code string
             return GCodeMethods.GCodeString(settings);
         }
 
 
+        /// <summary>
+        /// Builds a G-code command to initiate a filament change on the 3D printer.
+        /// </summary>
+        /// <returns>A string representing the G-code command to initiate filament change.</returns>
         public static string BuildFilamentChangeCommand()
         {
+            // Create a GCodeCommands object for filament change
             var filamentChange = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.FilamentChange
             };
+
+            // Convert the GCodeCommands object to a G-code string
             return GCodeMethods.GCodeString(filamentChange);
         }
 
