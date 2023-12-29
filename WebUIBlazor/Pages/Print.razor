@@ -1,0 +1,34 @@
+﻿@page "/print"
+@inject Data.PrintingService print
+@inject Data.ConnectionServiceSerial serial
+
+@using MachineControlHub.Motion;
+
+<h3>Print</h3>
+
+<button @onclick = "() => print.StartPrint(fileToPrint)">Start Print</button>
+<button @onclick = "print.PausePrint">Pause Print</button>
+<button @onclick = "print.StopPrint">Stop Print</button>
+<br />
+<br />
+
+<p>Choose a file:</p>
+
+<select @bind=fileToPrint>
+    @foreach (var file in files)
+    {
+        <option value=@file>@file</option>
+    }
+</select>
+
+@code {
+    public string fileToPrint = "";
+
+    public List<string> files;
+
+    protected override void OnInitialized()
+    {
+        files = print.ListSDFiles();
+        base.OnInitialized();
+    }
+}
