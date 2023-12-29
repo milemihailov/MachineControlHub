@@ -1,6 +1,7 @@
 ﻿using MachineControlHub.LogErrorHistory;
 using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
+using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Print
 {
@@ -36,7 +37,6 @@ namespace MachineControlHub.Print
             {
                 using (StreamReader reader = new StreamReader(GcodeFilePath))
                 {
-                    _connection.Connect();
                     string line;
                     _connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
 
@@ -59,16 +59,10 @@ namespace MachineControlHub.Print
         }
 
 
-        
-        public void SelectPrint(string gcodeFile)
+        public void StartPrint(string gcodeFile)
         {
             // Build and send the command to select the specified G-code file
             _connection.Write(CommandMethods.BuildSelectSDFileCommand(gcodeFile));
-        }
-
-
-        public void StartPrint()
-        {
             // Build and send the command to start the SD card print
             _connection.Write(CommandMethods.BuildStartSDPrintCommand());
         }
@@ -86,6 +80,38 @@ namespace MachineControlHub.Print
 
             // Print a message to the console.
             Console.WriteLine(PRINT_ABORT_MESSAGE);
+        }
+
+        
+
+
+        public List<string> ListSDFiles()
+        {
+
+            string pattern = @"Begin file list([\s\S]+?)End file list";
+
+            _connection.Write(CommandMethods.BuildListSDCardCommand());
+            Thread.Sleep(100);
+            string inputText = _connection.Read();
+
+            Match match = Regex.Match(inputText, pattern, RegexOptions.None);
+
+            string parsedString = "";
+
+            if (match.Success)
+            {
+                parsedString = match.Groups[1].Value.Trim();
+            }
+
+            List<string> files = new List<string>();
+
+            string[] extractedSdFiles = parsedString.Split('\n');
+
+            foreach (string sdFile in extractedSdFiles)
+            {
+                files.Add(sdFile);
+            }
+            return files;
         }
     }
 }
