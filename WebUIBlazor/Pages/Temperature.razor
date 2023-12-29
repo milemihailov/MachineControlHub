@@ -1,7 +1,56 @@
 ﻿@page "/temperature"
+@using MachineControlHub.Temps
+@using MachineControlHub.Motion
+@inject Data.ConnectionServiceSerial service
+@inject Data.PrinterData printerData
+@inject Data.HotendTemperatureService hotend
+@inject Data.BedTemperatureService bed
+@implements IDisposable
 
 <h3>Temperature</h3>
+<div>
+    <p>Current Hotend Temperature</p>
+    <p>@hotend.hotend.HotendCurrentTemp</p>
+    <br />
+    <p>Current Bed Temperature</p>
+    <p>@bed.bed.CurrentBedTemp</p>
+    <input type="number" @bind="@hotend.hotend.SetHotendTemp" />
+    <button class="btn-outline-primary" @onclick="() => hotend.SetHotendTemperature() ">Set Hotend Temperature</button>
+    <input type="number" @bind="@bed.bed.SetBedTemp" />
+    <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature() ">Set Bed Temperature</button>
+    <br />
+    <br />
+    <button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFilamentChangeCommand()) ">Change Filament</button>
+
+
+</div>
 
 @code {
+
+    private Timer timer;
+    protected override void OnInitialized()
+    {
+            // Initialize the timer to update values every 2 seconds
+            timer = new Timer(UpdateTemperatureValues, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            base.OnInitialized();
+    }
+
+    private async void UpdateTemperatureValues(object state)
+    {
+        if (service.inititalized)
+        {
+            // Update the temperature values here asynchronously if needed
+            hotend.ParseCurrentHotendTemperature();
+            bed.ParseCurrentBedTemperature();
+
+            // Trigger a re-render of the component
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        timer.Dispose();
+    }
 
 }
