@@ -1,4 +1,5 @@
 ﻿using MachineControlHub.Print;
+using MachineControlHub.Motion;
 
 namespace WebUI.Data
 {
@@ -9,13 +10,33 @@ namespace WebUI.Data
 
         public PrintingService()
         {
-            printService = new PrintService(Data.ConnectionServiceSerial.printerConnection);
-            printJob = new PrintJob(Data.ConnectionServiceSerial.printerConnection);
+            printService = new PrintService(ConnectionServiceSerial.printerConnection);
+            printJob = new PrintJob(ConnectionServiceSerial.printerConnection);
         }
 
-        public void SelectFile(string fileName)
+        public void StartPrint(string fileName)
         {
-            printService.SelectPrint(fileName);
+            printService.StartPrint(fileName);
+        }
+
+        public void PausePrint()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
+        }
+
+        public void StopPrint()
+        { 
+            printService.AbortCurrentPrint();
+        }
+
+        public List<string> ListSDFiles() 
+        {
+            return printService.ListSDFiles();
+        }
+
+        public void StartSDPrint(string gcode, string fileName)
+        {
+            printService.TransferFileToSD(gcode, fileName);
         }
     }
 }
