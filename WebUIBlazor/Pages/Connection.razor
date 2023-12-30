@@ -1,6 +1,6 @@
 ﻿@page "/connection"
 @using MachineControlHub.PrinterConnection
-@inject Data.ConnectionServiceSerial service
+@inject Data.ConnectionServiceSerial serial
 @inject Data.PrinterData printer
 
 <PageTitle>Connection</PageTitle>
@@ -9,10 +9,11 @@
 
 
 <button class="btn btn-info" @onclick="ConnectionConfiguration"> Connect</button>
-<button class="btn btn-info" @onclick="service.Disconnect"> Disconnect</button>
+<button class="btn btn-info" @onclick="serial.Disconnect"> Disconnect</button>
 <br />
 <br />
-@if(service.inititalized){
+@if (serial.inititalized)
+{
     <p><strong>Connected</strong></p>
 }else{<p><strong>Disconnected</strong></p>}
 <br />
@@ -20,7 +21,7 @@
 <p>
     Port:
     <select class="form-control" @bind="@portName" style="width:100px">
-        @foreach (var template in service.GetPorts())
+        @foreach (var template in serial.GetPorts())
         {
             <option value=@template>@template</option>
         }
@@ -48,9 +49,9 @@
     {
         try
         {
-            service.Initialize($"{portName},{baudRate}");
-            service.inititalized = true;
-            service.Connect();
+            serial.Initialize($"{portName},{baudRate}");
+            serial.inititalized = true;
+            serial.Connect();
         }
         catch (Exception e)
         {
