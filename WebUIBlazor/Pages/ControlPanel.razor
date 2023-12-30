@@ -1,7 +1,8 @@
 ﻿@page "/controlpanel"
-@inject Data.ConnectionServiceSerial service
-@* @inject Data.PrinterData pData *@
+@inject Data.ConnectionServiceSerial serial
+@inject Data.ControlPanelService control
 
+@implements IDisposable
 
 @using MachineControlHub.Motion;
 @using MachineControlHub.PrinterConnection;
@@ -9,130 +10,96 @@
 <h3>ControlPanel</h3>
 
 
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.XMovePos,true)">X+</button>
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.YMovePos,true)">Y+</button>
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.ZMovePos,true)">Z+</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</button>
 
 
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.XMovePos,false)">X-</button>
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.YMovePos,false)">Y-</button>
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.ZMovePos,false)">Z-</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</button>
 <br />
 <br />
-<p style="font-weight: bold">Feedrate: <input type="number" @bind="@feedRate.FeedRateFreeMove" /></p>
+<p style="font-weight: bold">Feedrate: <input type="number" @bind="@control.feedRate.FeedRateFreeMove" /></p>
 
 
 <div>
-    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_0_1)">
+    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_0_1)">
         <input type="radio" name="options" id="option3" autocomplete="off"> 0.1 mm
     </label>
-    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_1)">
+    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_1)">
         <input type="radio" name="options" id="option3" autocomplete="off"> 1 mm
     </label>
-    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_10)">
+    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_10)">
         <input type="radio" name="options" id="option3" autocomplete="off" checked> 10 mm
     </label>
-    <label class="btn btn-secondary" @onclick="() => UpdateIncrementalMovementValue(AXIS_MOVEMENT_BY_100)">
+    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_100)">
         <input type="radio" name="options" id="option3" autocomplete="off"> 100 mm
     </label>
 </div>
 <br />
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildDisableSteppersCommand())">DisableMotors</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildDisableSteppersCommand())">DisableMotors</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand())">HomeAll</button>
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand(true,true))">HomeXY</button>
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildHomeAxesCommand(false,false,true))">HomeZ</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand())">HomeAll</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand(true,true))">HomeXY</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand(false,false,true))">HomeZ</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,true)">Extrude</button>
-<button class="btn-outline-primary" @onclick="() => AdjustAxis(MovePositions.EMovePos,false)">Retract</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</button>
+<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFilamentChangeCommand())">Change Filament</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFilamentChangeCommand())">Change Filament</button>
 <br />
 <br />
 
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFanOffCommand())">Fan Off</button>
-<button class="btn-outline-primary" @onclick="() => service.Write(CommandMethods.BuildFanSpeedCommand(MAX_FAN_SPEED))">Fan On</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFanOffCommand())">Fan Off</button>
+<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFanSpeedCommand(Data.ControlPanelService.MAX_FAN_SPEED))">Fan On</button>
 <br />
 <br />
 <p style="font-weight: bold">
     Fan Speed: 0%
-    <input width="400" type="range" min="0" max="255" @bind="defaultFanSpeed" @onclick="() => service.Write(CommandMethods.BuildFanSpeedCommand(defaultFanSpeed))">100%
+    <input width="400" type="range" min="0" max="255" @bind="control.defaultFanSpeed" @onclick="() => serial.Write(CommandMethods.BuildFanSpeedCommand(control.defaultFanSpeed))">100%
 </p>
 
 <br />
 <br />
+<div>
+    <textarea style="width:100%" readonly rows="10" cols="50">@output</textarea>
+</div>
+<input style="width:95%" type="text" placeholder="Send G-Code Commands" @bind="control.sendCommand" />
+<button @onclick="() => control.SendGcodeViaTerminal(control.sendCommand,serial)">Send</button>
 
-
-
-
+<br />
+<br />
+<br />
+<br />
 @code {
+    public string output;
 
-    MotionSettingsData feedRate = new();
-
-    const int MAX_FAN_SPEED = 255;
-    const double AXIS_MOVEMENT_BY_0_1 = 0.1;
-    const double AXIS_MOVEMENT_BY_1 = 1;
-    const double AXIS_MOVEMENT_BY_10 = 10;
-    const double AXIS_MOVEMENT_BY_100 = 100;
-
-    int defaultFanSpeed;
-
-
-    double valueToMove = AXIS_MOVEMENT_BY_10;
-    /// <summary>
-    /// Updates the movement value used for incremental movements.
-    /// </summary>
-    /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
-    public void UpdateIncrementalMovementValue(double newValue)
+    private Timer timer;
+    protected override void OnInitialized()
     {
-        // Set the new value for the movement
-        valueToMove = newValue;
-
-        // Refresh the component to reflect changes
-        StateHasChanged();
+        timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        base.OnInitialized();
     }
 
-
-    /// <summary>
-    /// Adjusts the specified axis position by the given value.
-    /// </summary>
-    /// <param name="position">The axis to adjust.</param>
-    /// <param name="increment">True to increment, false to decrement.</param>
-    public void AdjustAxis(MovePositions position, bool increment)
+    private async void UpdateParagraph(object state)
     {
-        // Create a new Position object to store the movement values
-        Position pos = new();
-
-        // Send a command to set relative positioning
-        service.Write(CommandMethods.BuildRelativePositionCommand());
-
-        // Determine the movement value based on whether it's an increment or decrement
-        double moveValue = increment ? valueToMove : -valueToMove;
-
-        // Set the appropriate property in the Position object based on the specified axis
-        switch (position)
+        if (serial.inititalized)
         {
-            case MovePositions.XMovePos:
-                pos.XMovePosition = moveValue;
-                break;
-            case MovePositions.YMovePos:
-                pos.YMovePosition = moveValue;
-                break;
-            case MovePositions.ZMovePos:
-                pos.ZMovePosition = moveValue;
-                break;
-            case MovePositions.EMovePos:
-                pos.EMovePosition = moveValue;
-                break;
-        }
+            Thread.Sleep(50);
+            output += serial.Read();
 
-        // Send a command to perform a linear move with the specified values and feed rate
-        service.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
-        service.Write(CommandMethods.BuildAbsolutePositionCommand());
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        timer.Dispose();
     }
 }
