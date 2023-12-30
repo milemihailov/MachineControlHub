@@ -13,6 +13,8 @@ builder.Services.AddSingleton<PrinterData>();
 builder.Services.AddSingleton<HotendTemperatureService>();
 builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddSingleton<PrintingService>();
+builder.Services.AddSingleton<ControlPanelService>();
+
 
 
 var app = builder.Build();
