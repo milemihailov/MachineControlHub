@@ -32,6 +32,11 @@ namespace WebUI.Data
             printerConnection.Write(value);
         }
 
+        public string Read() 
+        {
+            return printerConnection.Read();
+        }
+
         public void Disconnect()
         {
             printerConnection.Disconnect();
