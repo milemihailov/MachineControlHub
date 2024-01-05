@@ -6,7 +6,7 @@
 
 <h3>Print</h3>
 
-<button @onclick = "() => print.StartPrint(fileToPrint)">Start Print</button>
+<button @onclick = "() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);}">Start Print</button>
 <button @onclick = "print.PausePrint">Pause Print</button>
 <button @onclick = "print.StopPrint">Stop Print</button>
 <br />
@@ -20,6 +20,15 @@
         <option value=@file>@file</option>
     }
 </select>
+<br />
+<br />
+
+<p>File printing: <strong>@print.printName</strong></p>
+<p>Estimated print time:</p>
+<p>Elapsed print time:</p>
+<p>Start time: <strong>@print.startTimeOfPrint</strong></p>
+<p>File Size: <strong>@print.fileSize MB</strong></p>
+
 
 @code {
     public string fileToPrint = "";
