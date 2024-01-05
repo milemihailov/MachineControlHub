@@ -6,12 +6,18 @@ namespace WebUI.Data
     public class PrintingService
     {
         public PrintService printService;
-        public PrintJob printJob;
+        public PrintJobHistory printJob;
+        public PrintProgress printProgress;
+
+        public string printName;
+        public DateTime startTimeOfPrint;
+        public double fileSize;
 
         public PrintingService()
         {
             printService = new PrintService(ConnectionServiceSerial.printerConnection);
-            printJob = new PrintJob(ConnectionServiceSerial.printerConnection);
+            printJob = new PrintJobHistory(ConnectionServiceSerial.printerConnection);
+            printProgress = new PrintProgress();
         }
 
         public void StartPrint(string fileName)
@@ -37,6 +43,19 @@ namespace WebUI.Data
         public void StartSDPrint(string gcode, string fileName)
         {
             printService.TransferFileToSD(gcode, fileName);
+        }
+
+        public void StartTimeOfPrint()
+        {
+            printJob.ParseStartTimeOfPrint();
+            startTimeOfPrint = (DateTime)printJob.StartTimeOfPrint;
+        }
+
+        public void GetFileNameAndSize(string input)
+        {
+            printProgress.ParseFileName(input);
+            printName = printProgress.PrintingFileName;
+            fileSize = Math.Round(printProgress.FileSizeInMB,2);
         }
     }
 }
