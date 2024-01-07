@@ -7,6 +7,10 @@
 @using MachineControlHub.Motion;
 @using MachineControlHub.PrinterConnection;
 
+<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
+<br />
+<br />
+
 <h3>ControlPanel</h3>
 
 
@@ -84,12 +88,11 @@
     protected override void OnInitialized()
     {
         timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
-        base.OnInitialized();
     }
 
     private async void UpdateParagraph(object state)
     {
-        if (serial.inititalized)
+        if (serial.initialized)
         {
             Thread.Sleep(50);
             output += serial.Read();

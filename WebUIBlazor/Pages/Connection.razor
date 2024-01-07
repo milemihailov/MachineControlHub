@@ -3,19 +3,18 @@
 @inject Data.ConnectionServiceSerial serial
 @inject Data.PrinterData printer
 
-<PageTitle>Connection</PageTitle>
+<PageTitle>Serial Connection</PageTitle>
 
-<h1>Connection</h1>
+<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
+<br />
+<br />
+
+<h1>Serial Connection</h1>
 
 
 <button class="btn btn-info" @onclick="ConnectionConfiguration"> Connect</button>
 <button class="btn btn-info" @onclick="serial.Disconnect"> Disconnect</button>
 <br />
-<br />
-@if (serial.inititalized)
-{
-    <p><strong>Connected</strong></p>
-}else{<p><strong>Disconnected</strong></p>}
 <br />
 
 <p>
@@ -40,7 +39,6 @@
 
 @code {
 
-
     public string portName = "";
     public int baudRate;
 
@@ -50,7 +48,7 @@
         try
         {
             serial.Initialize($"{portName},{baudRate}");
-            serial.inititalized = true;
+            serial.initialized = true;
             serial.Connect();
         }
         catch (Exception e)

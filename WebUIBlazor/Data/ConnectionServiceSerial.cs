@@ -9,8 +9,8 @@ namespace WebUI.Data
 
         public static SerialConnection printerConnection;
 
-        public bool inititalized = false;
-
+        public bool initialized = false;
+        public string isConnected => initialized? "Connected" : "Disconnected";
 
         public ConnectionServiceSerial()
         {
@@ -40,7 +40,7 @@ namespace WebUI.Data
         public void Disconnect()
         {
             printerConnection.Disconnect();
-            inititalized = false;
+            initialized = false;
         }
 
         public List<string> GetPorts()
