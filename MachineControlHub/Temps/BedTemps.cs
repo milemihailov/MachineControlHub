@@ -10,7 +10,7 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class BedTemps
     {
-        const string BED_TEMP_PARSE_PATTERN = @"B:(\d+)";
+        const string BED_TEMP_PARSE_PATTERN = @"B:(\d+)\.\d+\s*/(\d+)\.\d+";
 
         private IPrinterConnection _connection;
 
@@ -38,6 +38,8 @@ namespace MachineControlHub.Temps
         /// Gets or sets the target temperature set for the heated bed in degrees Celsius.
         /// </summary>
         public int SetBedTemp { get; set; }
+
+        public int TargetBedTemp { get; set; }
 
 
         /// <summary>
@@ -68,8 +70,8 @@ namespace MachineControlHub.Temps
             foreach (Match match in matches)
             {
                 // The temperature value is captured in the first group (index 1)
-                string temperature = match.Groups[1].Value;
-                CurrentBedTemp = int.Parse(temperature);
+                CurrentBedTemp = int.Parse(match.Groups[1].Value);
+                TargetBedTemp = int.Parse(match.Groups[2].Value);
             }
         }
 
@@ -78,10 +80,10 @@ namespace MachineControlHub.Temps
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
         /// <param name="targetTemp">The target bed temperature to set.</param>
-        public void SetBedTemperature()
+        public void SetBedTemperature(int setTemp)
         {
             // Send a command to set the target bed temperature
-            _connection.Write(CommandMethods.BuildSetBedTempCommand(SetBedTemp));
+            _connection.Write(CommandMethods.BuildSetBedTempCommand(setTemp));
         }
 
     }

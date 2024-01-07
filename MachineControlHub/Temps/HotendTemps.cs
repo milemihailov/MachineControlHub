@@ -11,7 +11,7 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class HotendTemps
     {
-        const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)";
+        const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)\.\d+\s*/(\d+)\.\d+";
         private IPrinterConnection _connection;
 
         public HotendTemps(IPrinterConnection connection)
@@ -39,6 +39,8 @@ namespace MachineControlHub.Temps
         /// Gets or sets the target temperature set for the hotend in degrees Celsius.
         /// </summary>
         public int SetHotendTemp { get; set; }
+
+        public int TargetHotendTemp { get; set; }
 
 
         /// <summary>
@@ -73,8 +75,8 @@ namespace MachineControlHub.Temps
             foreach (Match match in matches)
             {
                 // The temperature value is captured in the first group (index 1)
-                string temperature = match.Groups[1].Value;
-                HotendCurrentTemp = int.Parse(temperature);
+                HotendCurrentTemp = int.Parse(match.Groups[1].Value);
+                TargetHotendTemp = int.Parse(match.Groups[2].Value);
             }
         }
 
@@ -83,10 +85,10 @@ namespace MachineControlHub.Temps
         /// Sets the target temperature for the hotend and sends the corresponding G-code command to the printer.
         /// </summary>
         /// <param name="temp">The target temperature to set for the hotend.</param>
-        public void SetHotendTemperature()
+        public void SetHotendTemperature(int setTemp)
         {
             // Send the G-code command to set the hotend temperature
-            _connection.Write(CommandMethods.BuildSetHotendTempCommand(SetHotendTemp));
+            _connection.Write(CommandMethods.BuildSetHotendTempCommand(setTemp));
         }
     }
 
