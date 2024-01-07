@@ -10,9 +10,9 @@ namespace WebUI.Data
             bed = new BedTemps(Data.ConnectionServiceSerial.printerConnection);
         }
 
-        public void SetBedTemperature() 
+        public void SetBedTemperature(int setTemp) 
         {
-            bed.SetBedTemperature();
+            bed.SetBedTemperature(setTemp);
         }
 
         public void ParseCurrentBedTemperature()

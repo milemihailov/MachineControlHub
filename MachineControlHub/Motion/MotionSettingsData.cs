@@ -97,7 +97,7 @@
         /// <summary>
         /// Gets or sets the feedrate for free moves.
         /// </summary>
-        public int? FeedRateFreeMove { get; set; }
+        public int FeedRateFreeMove { get; set; }
 
         /// <summary>
         /// Gets or sets the print speed.

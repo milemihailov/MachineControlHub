@@ -10,9 +10,9 @@ namespace WebUI.Data
         {
             hotend = new HotendTemps(Data.ConnectionServiceSerial.printerConnection);
         }
-        public void SetHotendTemperature()
+        public void SetHotendTemperature(int setTemp)
         {
-            hotend.SetHotendTemperature();
+            hotend.SetHotendTemperature(setTemp);
         }
         public void ParseCurrentHotendTemperature()
         {
