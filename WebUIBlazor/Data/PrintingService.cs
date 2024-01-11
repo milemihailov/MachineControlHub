@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Print;
 using MachineControlHub.Motion;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace WebUI.Data
 {
@@ -10,8 +11,8 @@ namespace WebUI.Data
         public PrintProgress printProgress;
 
         public string printName;
-        public DateTime startTimeOfPrint;
         public double fileSize;
+        public string formatedStartTime;
 
         public PrintingService()
         {
@@ -40,20 +41,16 @@ namespace WebUI.Data
             return printService.ListSDFiles();
         }
 
-        public void StartSDPrint(string gcode, string fileName)
-        {
-            printService.TransferFileToSD(gcode, fileName);
-        }
-
         public void StartTimeOfPrint()
         {
             printJob.ParseStartTimeOfPrint();
-            startTimeOfPrint = (DateTime)printJob.StartTimeOfPrint;
+            formatedStartTime = printJob.FormattedStartTime;
+            
         }
 
         public void GetFileNameAndSize(string input)
         {
-            printProgress.ParseFileName(input);
+            printProgress.ParseFileNameAndSize(input);
             printName = printProgress.PrintingFileName;
             fileSize = Math.Round(printProgress.FileSizeInMB,2);
         }
