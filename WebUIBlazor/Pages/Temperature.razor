@@ -15,24 +15,24 @@
 
 <div>
     <p>Current Hotend Temperature</p>
-    <p>@hotend.hotend.HotendCurrentTemp</p>
+    <p>@hotend.currentHotendTemperature</p>
     <p>Target Hotend Temperature</p>
-    <p>@hotend.hotend.TargetHotendTemp</p>
+    <p>@hotend.targetHotendTemperature</p>
     <br />
     <p>Current Bed Temperature</p>
-    <p>@bed.bed.CurrentBedTemp</p>
+    <p>@bed.currentBedTemperature</p>
     <p>Target Bed Temperature</p>
-    <p>@bed.bed.TargetBedTemp</p>
+    <p>@bed.targetBedTemperature</p>
 
-    <input type="number" @bind="@hotend.hotend.SetHotendTemp" />
-    <button class="btn-outline-primary" @onclick="() => hotend.SetHotendTemperature(hotend.hotend.SetHotendTemp)">Set Hotend Temperature</button>
+    <input type="number" @bind="@hotend.setHotendTemperature" />
+    <button class="btn-outline-primary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Hotend Temperature</button>
     <button class="btn-danger" @onclick="() => hotend.SetHotendTemperature(0)">Turn Hotend Off</button>
-    <input type="number" @bind="@bed.bed.SetBedTemp" />
-    <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature(bed.bed.SetBedTemp)">Set Bed Temperature</button>
+    <input type="number" @bind="@bed.setBedTemperature" />
+    <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</button>
     <button class="btn-danger" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</button>
     <br />
     <br />
-    <button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFilamentChangeCommand()) ">Change Filament</button>
+    <button class="btn-outline-primary" @onclick="() => hotend.ChangeFilament()">Change Filament</button>
 
 
 </div>
@@ -49,11 +49,9 @@
     {
         if (serial.initialized)
         {
-            // Update the temperature values here asynchronously if needed
             hotend.ParseCurrentHotendTemperature();
             bed.ParseCurrentBedTemperature();
 
-            // Trigger a re-render of the component
             await InvokeAsync(StateHasChanged);
         }
     }
