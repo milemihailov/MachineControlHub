@@ -87,5 +87,25 @@ namespace WebUI.Data
             // Implementation details
             serial.Write(command.ToLower());
         }
+
+        public void SetFanSpeed(int value)
+        {
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+        }
+
+        public void SetFanOff()
+        {
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
+        }
+
+        public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
+        {
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x,y,z));
+        }
+
+        public void DisableSteppers()
+        {
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+        }
     }
 }
