@@ -46,7 +46,7 @@ namespace MachineControlHub.Print
         /// Parses the file name and calculates the size in megabytes.
         /// </summary>
         /// <param name="input">The input string containing the file name and size.</param>
-        public void ParseFileName(string input)
+        public void ParseFileNameAndSize(string input)
         {
             Match match = Regex.Match(input, PATTERN, RegexOptions.IgnoreCase);
             PrintingFileName = match.Groups[1].Value;
