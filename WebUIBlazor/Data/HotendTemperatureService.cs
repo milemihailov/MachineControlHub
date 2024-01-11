@@ -1,14 +1,19 @@
-﻿using MachineControlHub.Temps;
+﻿using MachineControlHub.Motion;
+using MachineControlHub.Temps;
 
 namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
         public HotendTemps hotend;
+        public int currentHotendTemperature;
+        public int setHotendTemperature;
+        public int targetHotendTemperature;
 
         public HotendTemperatureService()
         {
-            hotend = new HotendTemps(Data.ConnectionServiceSerial.printerConnection);
+            hotend = new HotendTemps(ConnectionServiceSerial.printerConnection);
+            
         }
         public void SetHotendTemperature(int setTemp)
         {
@@ -17,6 +22,14 @@ namespace WebUI.Data
         public void ParseCurrentHotendTemperature()
         {
             hotend.ParseCurrentHotendTemperature();
+            currentHotendTemperature = hotend.HotendCurrentTemp;
+            setHotendTemperature = hotend.SetHotendTemp;
+            targetHotendTemperature = hotend.TargetHotendTemp;
+        }
+
+        public void ChangeFilament()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFilamentChangeCommand());
         }
     }
 }
