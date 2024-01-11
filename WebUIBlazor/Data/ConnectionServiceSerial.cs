@@ -8,6 +8,8 @@ namespace WebUI.Data
     {
 
         public static SerialConnection printerConnection;
+        public string portName = "";
+        public int baudRate;
 
         public bool initialized = false;
         public string isConnected => initialized? "Connected" : "Disconnected";
