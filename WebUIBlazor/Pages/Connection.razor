@@ -19,7 +19,7 @@
 
 <p>
     Port:
-    <select class="form-control" @bind="@portName" style="width:100px">
+    <select class="form-control" @bind="@serial.portName" style="width:100px">
         @foreach (var template in serial.GetPorts())
         {
             <option value=@template>@template</option>
@@ -30,7 +30,7 @@
 
 <p>
     Baudrate:
-    <select class="form-control" @bind="@baudRate" style="width:100px">
+    <select class="form-control" @bind="@serial.baudRate" style="width:100px">
         <option value="115200">115200</option>
         <option value="250000">250000</option>
 
@@ -39,15 +39,11 @@
 
 @code {
 
-    public string portName = "";
-    public int baudRate;
-
-
     public void ConnectionConfiguration()
     {
         try
         {
-            serial.Initialize($"{portName},{baudRate}");
+            serial.Initialize($"{serial.portName},{serial.baudRate}");
             serial.initialized = true;
             serial.Connect();
         }
