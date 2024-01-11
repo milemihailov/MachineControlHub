@@ -34,14 +34,13 @@
 <p>File printing: <strong>@print.printName</strong></p>
 <p>Estimated print time:</p>
 <p>Elapsed print time:</p>
-<p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
+<p>Start time: <strong>@print.formatedStartTime</strong></p>
 <p>File Size: <strong>@print.fileSize MB</strong></p>
 
 
 @code {
     public string fileToPrint = "";
     public List<string> files;
-    // private IBrowserFile file;
 
     protected override void OnInitialized()
     {
