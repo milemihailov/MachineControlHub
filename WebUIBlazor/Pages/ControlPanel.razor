@@ -44,29 +44,26 @@
     </label>
 </div>
 <br />
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildDisableSteppersCommand())">DisableMotors</button>
+<button class="btn-outline-primary" @onclick="control.DisableSteppers">DisableMotors</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand())">HomeAll</button>
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand(true,true))">HomeXY</button>
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildHomeAxesCommand(false,false,true))">HomeZ</button>
+<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand()">HomeAll</button>
+<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand(true,true)">HomeXY</button>
+<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand(false,false,true)">HomeZ</button>
 <br />
 <br />
 <button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</button>
 <button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</button>
 <br />
 <br />
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFilamentChangeCommand())">Change Filament</button>
-<br />
-<br />
 
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFanOffCommand())">Fan Off</button>
-<button class="btn-outline-primary" @onclick="() => serial.Write(CommandMethods.BuildFanSpeedCommand(Data.ControlPanelService.MAX_FAN_SPEED))">Fan On</button>
+<button class="btn-outline-primary" @onclick="() => control.SetFanOff()">Fan Off</button>
+<button class="btn-outline-primary" @onclick="() => control.SetFanSpeed(Data.ControlPanelService.MAX_FAN_SPEED)">Fan On</button>
 <br />
 <br />
 <p style="font-weight: bold">
     Fan Speed: 0%
-    <input width="400" type="range" min="0" max="255" @bind="control.defaultFanSpeed" @onclick="() => serial.Write(CommandMethods.BuildFanSpeedCommand(control.defaultFanSpeed))">100%
+    <input width="400" type="range" min="0" max="255" @bind="control.defaultFanSpeed" @onclick="() => control.SetFanSpeed(control.defaultFanSpeed)">100%
 </p>
 
 <br />
@@ -82,7 +79,7 @@
 <br />
 <br />
 @code {
-    public string output;
+    private string output;
 
     private Timer timer;
     protected override void OnInitialized()
