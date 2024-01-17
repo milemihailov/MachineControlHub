@@ -23,7 +23,7 @@ namespace MachineControlHub.Print
         /// <summary>
         /// Transfers a G-code file to the SD card using a serial connection.
         /// </summary>
-        /// <param name="GcodeFilePath">The path to the G-code file to be transferred.</param>
+        /// <param name="GcodeFile">The path to the G-code file to be transferred.</param>
         /// <param name="fileName">The name to assign to the file on the SD card.</param>
         /// <remarks>
         /// This method sends the G-code commands line by line to the printer's SD card via the serial connection.
@@ -31,11 +31,11 @@ namespace MachineControlHub.Print
         /// </remarks>
         /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
         /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
-        public void TransferFileToSD(string GcodeFilePath, string fileName)
+        public void TransferFileToSD(string GcodeFile, string fileName)
         {
             try
             {
-                using (StreamReader reader = new StreamReader(GcodeFilePath))
+                using (StreamReader reader = new StreamReader(GcodeFile))
                 {
                     string line;
                     _connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
