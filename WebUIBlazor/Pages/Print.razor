@@ -11,13 +11,15 @@
 <h3>Print</h3>
 
 
-<button @onclick = "() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);}">Start Print</button>
-<button @onclick = "print.PausePrint">Pause Print</button>
-<button @onclick = "print.StopPrint">Stop Print</button>
+<button @onclick="() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);}">Start Print</button>
+<button @onclick="print.PausePrint">Pause Print</button>
+<button @onclick="print.StopPrint">Stop Print</button>
 <br />
 <br />
-
 <p>SD files:</p>
+
+
+<InputFile OnChange="@LoadFiles" multiple />
 
 <select @bind=fileToPrint>
     @if (serial.initialized)
@@ -34,13 +36,15 @@
 <p>File printing: <strong>@print.printName</strong></p>
 <p>Estimated print time:</p>
 <p>Elapsed print time:</p>
-<p>Start time: <strong>@print.formatedStartTime</strong></p>
+<p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
 <p>File Size: <strong>@print.fileSize MB</strong></p>
+
 
 
 @code {
     public string fileToPrint = "";
     public List<string> files;
+    public string file;
 
     protected override void OnInitialized()
     {
@@ -48,5 +52,12 @@
         {
             files = print.ListSDFiles();
         }
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        print.ExtractPrintingSettings(file);
+        StateHasChanged();
     }
 }
