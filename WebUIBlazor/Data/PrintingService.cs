@@ -6,13 +6,15 @@ namespace WebUI.Data
 {
     public class PrintingService
     {
+        public const int MAX_FILE_SIZE = (1024 * 1024 * 30);
+
         public PrintService printService;
         public PrintJobHistory printJob;
         public PrintProgress printProgress;
 
         public string printName;
         public double fileSize;
-        public string formatedStartTime;
+        public string extractedSettings;
 
         public PrintingService()
         {
@@ -44,8 +46,17 @@ namespace WebUI.Data
         public void StartTimeOfPrint()
         {
             printJob.ParseStartTimeOfPrint();
-            formatedStartTime = printJob.FormattedStartTime;
-            
+        }
+
+        public void ExtractPrintingSettings(string file)
+        {
+            printJob.ParseExtractedSettingsFromPrintedFile(file);
+            extractedSettings = printJob.ExtractedSettingsFromPrintedFile;
+        }
+
+        public void StartPCPrint(string file, string fileName)
+        {
+            printService.TransferFileToSD(file,fileName);
         }
 
         public void GetFileNameAndSize(string input)
