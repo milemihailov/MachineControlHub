@@ -1,12 +1,14 @@
 ﻿@page "/bedlevel"
+@inject Data.BedLevelingService bed
 
-<h3>BedLeveling</h3>
+<div class="center-div">
+<h1>BedLeveling</h1>
 <script src='https://cdn.plot.ly/plotly-2.27.0.min.js'></script>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
 <div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
 
 <script type="text/javascript">
-    d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs/mt_bruno_elevation.csv', function (err, rows) {
+    d3.csv('@bed.CSVData', function (err, rows) {
         function unpack(rows, key) {
             return rows.map(function (row) { return row[key]; });
         }
@@ -36,7 +38,9 @@
         Plotly.newPlot('myDiv', data, layout);
     });
 </script>
-
+<pre>@bed.CSVData</pre>
+<button @onclick="() => bed.CalibrateBed()">Calibrate</button>
+</div>
 @code {
 
 }
