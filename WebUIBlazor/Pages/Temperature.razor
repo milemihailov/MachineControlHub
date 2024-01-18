@@ -7,11 +7,11 @@
 @inject Data.BedTemperatureService bed
 @implements IDisposable
 
+<div class="center-div">
 <h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
-<br />
-<br />
 
-<h3>Temperature</h3>
+
+<h1>Temperature</h1>
 
 <div>
     <p>Current Hotend Temperature</p>
@@ -30,13 +30,11 @@
     <input type="number" @bind="@bed.setBedTemperature" />
     <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</button>
     <button class="btn-danger" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</button>
-    <br />
-    <br />
     <button class="btn-outline-primary" @onclick="() => hotend.ChangeFilament()">Change Filament</button>
 
 
 </div>
-
+</div>
 @code {
 
     private Timer timer;

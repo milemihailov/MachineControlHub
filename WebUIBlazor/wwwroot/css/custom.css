@@ -1,11 +1,12 @@
 ﻿* {
     font-family: 'Lemon', serif;
-    font-size:1em;
+    font-size: 1em;
+    
 }
 
 p, label {
     font-weight: 700;
-    color: #C6D8D3;
+    color: #FCDEBE;
 }
 
 .button-30 {
@@ -126,16 +127,13 @@ p, label {
 .center-div {
     margin: auto;
     width: 100%;
-    /*border: 3px solid green;*/
     padding: 10px;
     text-align: center;
 }
 
 h1 {
     margin: 40px 0px;
-    background-image: linear-gradient(#f8f5f5 50%,#0880ac);
-    color: transparent;
-    background-clip: text;
+    color: #D4D2A5;
 }
 
 .connect-buttons {

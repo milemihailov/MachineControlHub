@@ -4,39 +4,28 @@
 @inject Data.PrinterData printer
 
 <PageTitle>Serial Connection</PageTitle>
+<div class="center-div">
+    <h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
 
-<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
-<br />
-<br />
-
-<h1>Serial Connection</h1>
+    <h1>Serial Connection</h1>
 
 
-<button class="btn btn-info" @onclick="ConnectionConfiguration"> Connect</button>
-<button class="btn btn-info" @onclick="serial.Disconnect"> Disconnect</button>
-<br />
-<br />
+    <button class="button-30" @onclick="ConnectionConfiguration"> Connect</button>
+    <button class="button-30" @onclick="serial.Disconnect"> Disconnect</button>
 
-<p>
-    Port:
-    <select class="form-control" @bind="@serial.portName" style="width:100px">
+    <p>Port:</p>
+    <select class="center-div" @bind="@serial.portName" style="width:100px">
         @foreach (var template in serial.GetPorts())
         {
             <option value=@template>@template</option>
         }
     </select>
-</p>
-
-
-<p>
-    Baudrate:
-    <select class="form-control" @bind="@serial.baudRate" style="width:100px">
+    <p>Baudrate:</p>
+    <select class="center-div" @bind="@serial.baudRate" style="width:100px">
         <option value="115200">115200</option>
         <option value="250000">250000</option>
-
     </select>
-</p>
-
+</div>
 @code {
 
     public void ConnectionConfiguration()
