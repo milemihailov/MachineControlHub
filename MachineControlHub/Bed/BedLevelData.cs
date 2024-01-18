@@ -5,7 +5,7 @@
     /// </summary>
     public class BedLevelData
     {
-        public const int LINES_TO_EXCLUDE = 4;
+        public const int LINES_TO_EXCLUDE = 2;
 
         public string BedLevelGridData;
 
@@ -14,21 +14,31 @@
         /// Get's the data from autobedlevel "G29" command
         /// </summary>
         /// <param name="input"></param>
-        /// <returns></returns>
-        public static string GetGrid(string input)
+        /// <returns>csv Grid</returns>
+        public string GetGrid(string input)
         {
-
             char[] delimiters = new char[] { '\r', '\n' };
 
-            string[] splitedString = input.Split(delimiters);
+            string[] rows = input.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
 
-            string grid = "";
+            string csv = "";
 
-            for (int i = 0; i < splitedString.Length - LINES_TO_EXCLUDE; i++)
+            for (int i = 0; i < rows.Length - LINES_TO_EXCLUDE; i++)
             {
-                grid += $"{splitedString[i]}\n";
+                string[] columns = rows[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                for (int j = 0; j < columns.Length; j++)
+                {
+                    csv += columns[j];
+
+                    if (j < columns.Length - 1)
+                    {
+                        csv += ",";
+                    }
+                }
+                csv += "\n";
             }
-            return grid;
+            return csv;
         }
     }
 }
