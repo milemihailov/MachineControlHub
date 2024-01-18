@@ -61,7 +61,7 @@ namespace MachineControlHub.Print
             catch (Exception ex)
             {
                 // Handle exceptions, log, or return an error message
-                //return $"Error: {ex.Message}";
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
 
