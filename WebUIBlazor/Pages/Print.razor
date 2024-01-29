@@ -17,7 +17,7 @@
 <p>SD files:</p>
 
 
-<InputFile OnChange="@LoadFiles" multiple />
+<InputFile OnChange="@LoadFiles" multiple accept=".gcode,.gco,.txt"/>
 
 <select @bind=fileToPrint>
     @if (serial.initialized)

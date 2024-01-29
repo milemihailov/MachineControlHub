@@ -1,46 +1,140 @@
 ﻿@page "/bedlevel"
-@inject Data.BedLevelingService bed
+@using Plotly.Blazor.LayoutLib
+@inject Data.BedLevelingService levelBed
+@using System.Globalization
+@using Plotly.Blazor.Interop
+@inject NavigationManager MyNavigationManager
 
-<div class="center-div">
-<h1>BedLeveling</h1>
-<script src='https://cdn.plot.ly/plotly-2.27.0.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
-<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+@if (!IsInitialized)
+{
+    <MudPaper>
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    </MudPaper>
+}
+<PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" 
+             ClickAction="ClickAction" HoverAction="HoverAction"  />
 
-<script type="text/javascript">
-    d3.csv('@bed.CSVData', function (err, rows) {
-        function unpack(rows, key) {
-            return rows.map(function (row) { return row[key]; });
-        }
+<button @onclick="Calibrate">Calibrate</button>
+@code
+{
+    [CascadingParameter]
+    private MudTheme Theme { get; set; }
 
-        var z_data = []
-        for (i = 0; i < 24; i++) {
-            z_data.push(unpack(rows, i));
-        }
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
 
-        var data = [{
-            z: z_data,
-            type: 'surface'
-        }];
+    private IEnumerable<EventDataPoint> ClickInfos { get; set; }
+    private IEnumerable<EventDataPoint> HoverInfos { get; set; }
 
-        var layout = {
-            title: 'Mt Bruno Elevation',
-            autosize: false,
-            width: 500,
-            height: 500,
-            margin: {
-                l: 65,
-                r: 50,
-                b: 65,
-                t: 90,
+    private bool IsInitialized { get; set; }
+
+
+    private void Calibrate()
+    {
+        levelBed.CalibrateBed();
+        LoadData();
+    }
+
+    protected override void OnInitialized()
+    {
+        config = new Config
+            {
+                ShowLink = false,
+                Responsive = true,
+                DisplayLogo = true
+            };
+
+        layout = new Layout
+            {
+                Title = new Title
+                {
+                    Text = "Mt Bruno Elevation"
+                },
+                PaperBgColor = "white",
+                PlotBgColor = "white",
+                Font = new Font
+                {
+                    Color = "black"
+                },
+                Margin = new Plotly.Blazor.LayoutLib.Margin
+                {
+                    L = 65,
+                    R = 50,
+                    B = 65,
+                    T = 90
+                }
+            };
+
+        data = new List<ITrace>();
+
+        base.OnInitialized();
+    }
+
+    private void LoadData()
+    {
+        Task.Run(async () =>
+        {
+            foreach (var trace in await GetSurfaceData())
+            {
+                await InvokeAsync(async () => await chart.AddTrace(trace));
+                // Add the delay to keep the UI responsive
+                await Task.Delay(100);
             }
-        };
-        Plotly.newPlot('myDiv', data, layout);
-    });
-</script>
-<pre>@bed.CSVData</pre>
-<button @onclick="() => bed.CalibrateBed()">Calibrate</button>
-</div>
-@code {
+            IsInitialized = true;
+            await chart.SubscribeHoverEvent();
+            await chart.SubscribeClickEvent();
+            await InvokeAsync(StateHasChanged);
+        });
+    }
 
+    public void ClickAction(IEnumerable<EventDataPoint> eventData)
+    {
+        ClickInfos = eventData;
+        StateHasChanged();
+    }
+
+    public void HoverAction(IEnumerable<EventDataPoint> eventData)
+    {
+        HoverInfos = eventData;
+        StateHasChanged();
+    }
+
+    async Task<IList<ITrace>> GetSurfaceData()
+    {
+        IList<ITrace> mapData = new List<ITrace>();
+
+        using var client = new HttpClient
+            {
+                BaseAddress = new Uri(MyNavigationManager.BaseUri)
+            };
+
+        var csv = levelBed.CSVData
+            .Split("\n")
+            .Skip(1)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Split(",").ToList()).ToList();
+
+        var z = new List<decimal[]>();
+
+        foreach (var row in csv)
+        {
+            var currentValues = new List<decimal>();
+
+            for (var i = 1; i < row.Count; i++)
+            {
+                currentValues.Add(decimal.Parse(row[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+            }
+
+            z.Add(currentValues.ToArray());
+        }
+
+        mapData.Add(new Surface
+            {
+                Z = z.Cast<object>().ToList()
+            });
+
+        return mapData;
+    }
 }

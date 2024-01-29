@@ -16,9 +16,9 @@ namespace WebUI.Data
 
         public void CalibrateBed()
         {
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
-            Data.ConnectionServiceSerial.printerConnection.CheckForBusy();
-            string input = Data.ConnectionServiceSerial.printerConnection.Read();
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
+            ConnectionServiceSerial.printerConnection.CheckForBusy();
+            string input = ConnectionServiceSerial.printerConnection.Read();
             CSVData = bedData.GetGrid(input);
         }
     }
