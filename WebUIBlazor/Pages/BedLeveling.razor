@@ -31,9 +31,9 @@
     private bool IsInitialized { get; set; }
 
 
-    private void Calibrate()
+    private async Task Calibrate()
     {
-        levelBed.CalibrateBed();
+        await Task.Run(() => levelBed.CalibrateBed());
         LoadData();
     }
 
@@ -50,7 +50,7 @@
             {
                 Title = new Title
                 {
-                    Text = "Mt Bruno Elevation"
+                    Text = "Bed Mesh"
                 },
                 PaperBgColor = "white",
                 PlotBgColor = "white",
@@ -79,7 +79,6 @@
             foreach (var trace in await GetSurfaceData())
             {
                 await InvokeAsync(async () => await chart.AddTrace(trace));
-                // Add the delay to keep the UI responsive
                 await Task.Delay(100);
             }
             IsInitialized = true;
@@ -110,11 +109,11 @@
                 BaseAddress = new Uri(MyNavigationManager.BaseUri)
             };
 
-        var csv = levelBed.CSVData
+        var csv = await Task.Run(() => levelBed.CSVData
             .Split("\n")
             .Skip(1)
             .Where(s => !string.IsNullOrWhiteSpace(s))
-            .Select(s => s.Split(",").ToList()).ToList();
+            .Select(s => s.Split(",").ToList()).ToList());
 
         var z = new List<decimal[]>();
 
