@@ -1,7 +1,8 @@
-﻿* {
+﻿*,body,html {
     font-family: 'Lemon', serif;
     font-size: 1em;
-    
+    padding:0;
+    margin:0;
 }
 
 p, label {

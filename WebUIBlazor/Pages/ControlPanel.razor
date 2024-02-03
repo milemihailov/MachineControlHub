@@ -1,17 +1,31 @@
 ﻿@page "/controlpanel"
 @inject Data.ConnectionServiceSerial serial
 @inject Data.ControlPanelService control
-
+@using Plotly.Blazor.Interop
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Traces.ScatterLib
+@using MachineControlHub.Motion
 @implements IDisposable
 
-@using MachineControlHub.Motion;
-@using MachineControlHub.PrinterConnection;
+
 <div class="center-div">
 <h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
 <br />
 <br />
 
     <h1>ControlPanel</h1>
+
+    <PlotlyChart style="height: 60vh; width:40%; min-height: 350px"
+                 @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
+                 ClickAction="ClickAction" AfterRender="SubscribeEvents" />
+
+    @if (ClickInfos != null && ClickInfos.Any())
+    {
+        <MudText>
+            Current X: @ClickInfos.First().X
+        </MudText>
+        <MudText>Current Y: @ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y</MudText>
+    }
 
 
 <button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</button>
@@ -64,13 +78,48 @@
 <input style="width:95%" type="text" placeholder="Send G-Code Commands" @bind="control.sendCommand" />
 <button @onclick="() => control.SendGcodeViaTerminal(control.sendCommand,serial)">Send</button>
 </div>
+
 @code {
     private string output;
+    [CascadingParameter]
+    private MudTheme Theme { get; set; }
 
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
+    private IEnumerable<EventDataPoint> ClickInfos { get; set; }
     private Timer timer;
+
     protected override void OnInitialized()
     {
         timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+        config = new Config
+            {
+                Responsive = true
+            };
+
+        layout = new Layout
+            {
+                Title = new Title
+                {
+                    Text = "Interactive Bed"
+                },
+                PaperBgColor = "#FDF0D5",
+                PlotBgColor = "#AAAFB5"
+            };
+
+        data = new List<ITrace>
+        {
+            new Scatter
+            {
+                Name = "ScatterTrace",
+                Mode = ModeFlag.None,
+                X = Enumerable.Range(0, 201).SelectMany(_ => Enumerable.Range(0, 201)).Cast<object>().ToList(),
+                Y = Enumerable.Range(0, 201).SelectMany(y => Enumerable.Repeat(y, 201)).Cast<object>().ToList()
+            }
+        };
     }
 
     private async void UpdateParagraph(object state)
@@ -83,6 +132,35 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+
+        public void ClickAction(IEnumerable<EventDataPoint> eventData)
+        {
+            ClickInfos = eventData;
+            StoreClickedValues();
+            StateHasChanged();
+        }
+
+        public async void SubscribeEvents()
+        {
+            await chart.SubscribeClickEvent();
+        }
+
+        MachineControlHub.Motion.Position pos = new();
+        MotionSettingsData feedrate = new();
+
+        private void StoreClickedValues()
+        {
+            if (ClickInfos != null && ClickInfos.Any())
+            {
+                string x = ClickInfos.First().X.ToString();
+                string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
+                pos.XMovePosition = double.Parse(x);
+                pos.YMovePosition = double.Parse(y);
+                Console.WriteLine(pos.YMovePosition);
+                serial.Write(CommandMethods.BuildAbsolutePositionCommand());
+                serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedrate));
+            }
+        }
 
     void IDisposable.Dispose()
     {
