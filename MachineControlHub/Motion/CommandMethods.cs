@@ -568,5 +568,27 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(filamentChange);
         }
 
+        public static string BuildLoadFilamentCommand() 
+        {
+            var loadFilament = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.LoadFilament
+            };
+
+            return GCodeMethods.GCodeString(loadFilament);
+        }
+
+        public static string BuildUnloadFilamentCommand()
+        {
+            var unloadFilament = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.UnloadFilament
+            };
+
+            return GCodeMethods.GCodeString(unloadFilament);
+        }
+
     }
 }
