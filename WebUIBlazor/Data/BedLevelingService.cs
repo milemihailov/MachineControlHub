@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Bed;
 using MachineControlHub.Motion;
+using Plotly.Blazor;
 using WebUI.Pages;
 
 namespace WebUI.Data
@@ -8,6 +9,7 @@ namespace WebUI.Data
     {
         public static BedLevelData bedData;
         public string CSVData;
+        public Task<IList<ITrace>> meshData;
 
         public BedLevelingService() 
         {

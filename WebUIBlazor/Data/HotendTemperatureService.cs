@@ -31,5 +31,15 @@ namespace WebUI.Data
         {
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFilamentChangeCommand());
         }
+        
+        public void LoadFilament()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLoadFilamentCommand());
+        }
+
+        public void UnloadFilament()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
+        }
     }
 }
