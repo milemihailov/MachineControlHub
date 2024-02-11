@@ -10,7 +10,7 @@
 <h1>Print</h1>
 
 
-<button class="button-30" @onclick="() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);}">Start Print</button>
+<button class="button-30" @onclick="() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);StartClock();}">Start Print</button>
 <button class="button-30" @onclick="print.PausePrint">Pause Print</button>
 <button class="button-30" @onclick="print.StopPrint">Stop Print</button>
 
@@ -31,7 +31,7 @@
 
 <p>File printing: <strong>@print.printName</strong></p>
 <p>Estimated print time:</p>
-<p>Elapsed print time:</p>
+<p>Elapsed print time:  @string.Format("{0}h {1}m {2}s", hours, minutes, seconds)</p>
 <p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
 <p>File Size: <strong>@print.fileSize MB</strong></p>
 
@@ -41,6 +41,11 @@
     public string fileToPrint = "";
     public List<string> files;
     public string file;
+
+    private int hours;
+    private int minutes;
+    private int seconds;
+    private System.Timers.Timer timer;
 
     protected override void OnInitialized()
     {
@@ -55,5 +60,39 @@
         file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
         print.ExtractPrintingSettings(file);
         StateHasChanged();
+    }
+
+    private void StartClock()
+    {
+        hours = 0;
+        minutes = 0;
+        seconds = 0;
+
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += (sender, e) => UpdateClock();
+        timer.AutoReset = true;
+        timer.Enabled = true;
+    }
+
+    private void UpdateClock()
+    {
+        seconds++;
+        if (seconds == 60)
+        {
+            seconds = 0;
+            minutes++;
+
+            if (minutes == 60)
+            {
+                minutes = 0;
+                hours++;
+            }
+        }
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
     }
 }

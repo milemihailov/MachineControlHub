@@ -1,6 +1,5 @@
 ﻿using MachineControlHub.Print;
 using MachineControlHub.Motion;
-using Microsoft.AspNetCore.Components.Forms;
 
 namespace WebUI.Data
 {
@@ -15,6 +14,7 @@ namespace WebUI.Data
         public string printName;
         public double fileSize;
         public string extractedSettings;
+        public string timeElapsed;
 
         public PrintingService()
         {
