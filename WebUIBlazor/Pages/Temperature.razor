@@ -30,7 +30,10 @@
     <input type="number" @bind="@bed.setBedTemperature" />
     <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</button>
     <button class="btn-danger" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</button>
+    <br />
     <button class="btn-outline-primary" @onclick="() => hotend.ChangeFilament()">Change Filament</button>
+    <button class="btn-outline-primary" @onclick="() => hotend.LoadFilament()">Load Filament</button>
+    <button class="btn-outline-primary" @onclick="() => hotend.UnloadFilament()">Unload Filament</button>
 
 
 </div>
