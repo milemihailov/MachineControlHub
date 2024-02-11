@@ -73,14 +73,13 @@
     <input width="400" type="range" min="0" max="255" @bind="control.defaultFanSpeed" @onclick="() => control.SetFanSpeed(control.defaultFanSpeed)">100%
 </p>
 <div>
-    <textarea style="width:100%" readonly rows="10" cols="50">@output</textarea>
+    <textarea style="width:100%" readonly rows="10" cols="50">@control.consoleOutput</textarea>
 </div>
 <input style="width:95%" type="text" placeholder="Send G-Code Commands" @bind="control.sendCommand" />
 <button @onclick="() => control.SendGcodeViaTerminal(control.sendCommand,serial)">Send</button>
 </div>
 
 @code {
-    private string output;
     [CascadingParameter]
     private MudTheme Theme { get; set; }
 
@@ -93,25 +92,25 @@
 
     protected override void OnInitialized()
     {
-        timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
-        config = new Config
-            {
-                Responsive = true
-            };
-
-        layout = new Layout
-            {
-                Title = new Title
+            config = new Config
                 {
-                    Text = "Interactive Bed"
-                },
-                PaperBgColor = "#FDF0D5",
-                PlotBgColor = "#AAAFB5"
-            };
+                    Responsive = true
+                };
 
-        data = new List<ITrace>
-        {
+            layout = new Layout
+                {
+                    Title = new Title
+                    {
+                        Text = "Interactive Bed"
+                    },
+                    PaperBgColor = "#FDF0D5",
+                    PlotBgColor = "#AAAFB5"
+                };
+
+            data = new List<ITrace>
+            {
             new Scatter
             {
                 Name = "ScatterTrace",
@@ -119,7 +118,8 @@
                 X = Enumerable.Range(0, 201).SelectMany(_ => Enumerable.Range(0, 201)).Cast<object>().ToList(),
                 Y = Enumerable.Range(0, 201).SelectMany(y => Enumerable.Repeat(y, 201)).Cast<object>().ToList()
             }
-        };
+            };
+        
     }
 
     private async void UpdateParagraph(object state)
@@ -127,7 +127,7 @@
         if (serial.initialized)
         {
             Thread.Sleep(50);
-            output += serial.Read();
+            control.consoleOutput += serial.Read();
 
             await InvokeAsync(StateHasChanged);
         }
@@ -156,9 +156,9 @@
                 string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
                 pos.XMovePosition = double.Parse(x);
                 pos.YMovePosition = double.Parse(y);
-                Console.WriteLine(pos.YMovePosition);
                 serial.Write(CommandMethods.BuildAbsolutePositionCommand());
                 serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedrate));
+                serial.Write(CommandMethods.BuildRelativePositionCommand());
             }
         }
 

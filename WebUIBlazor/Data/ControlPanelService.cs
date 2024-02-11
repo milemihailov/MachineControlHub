@@ -22,6 +22,7 @@ namespace WebUI.Data
 
         public int defaultFanSpeed;
         public string sendCommand = "";
+        public string consoleOutput;
 
         double valueToMove = AXIS_MOVEMENT_BY_10;
         /// <summary>
