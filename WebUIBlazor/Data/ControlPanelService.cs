@@ -1,11 +1,22 @@
 ﻿using MachineControlHub.Motion;
+using System.Text.RegularExpressions;
 
 namespace WebUI.Data
 {
-
-
     public class ControlPanelService
     {
+        public const double AXIS_MOVEMENT_BY_0_1 = 0.1;
+        public const double AXIS_MOVEMENT_BY_1 = 1;
+        public const double AXIS_MOVEMENT_BY_10 = 10;
+        public const double AXIS_MOVEMENT_BY_100 = 100;
+        public const int MAX_FAN_SPEED = 255;
+        public const string FAN_PATTERN = @"M106 P0 S(\d+)";
+
+        public string consoleOutput;
+        public int defaultFanSpeed;
+        public double fanSpeedInPercentage;
+        public string sendCommand = "";
+        private double valueToMove = AXIS_MOVEMENT_BY_10;
 
         public MotionSettingsData feedRate;
 
@@ -13,28 +24,6 @@ namespace WebUI.Data
         {
             feedRate = new MotionSettingsData();
         }
-
-        public const int MAX_FAN_SPEED = 255;
-        public const double AXIS_MOVEMENT_BY_0_1 = 0.1;
-        public const double AXIS_MOVEMENT_BY_1 = 1;
-        public const double AXIS_MOVEMENT_BY_10 = 10;
-        public const double AXIS_MOVEMENT_BY_100 = 100;
-
-        public int defaultFanSpeed;
-        public string sendCommand = "";
-        public string consoleOutput;
-
-        double valueToMove = AXIS_MOVEMENT_BY_10;
-        /// <summary>
-        /// Updates the movement value used for incremental movements.
-        /// </summary>
-        /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
-        public void UpdateIncrementalMovementValue(double newValue)
-        {
-            // Set the new value for the movement
-            valueToMove = newValue;
-        }
-
 
 
         /// <summary>
@@ -59,21 +48,48 @@ namespace WebUI.Data
                 case MovePositions.XMovePos:
                     pos.XMovePosition = moveValue;
                     break;
+
                 case MovePositions.YMovePos:
                     pos.YMovePosition = moveValue;
                     break;
+
                 case MovePositions.ZMovePos:
                     pos.ZMovePosition = moveValue;
                     break;
+
                 case MovePositions.EMovePos:
                     pos.EMovePosition = moveValue;
                     break;
             }
 
             // Send a command to perform a linear move with the specified values and feed rate
-            serial.Write(CommandMethods.BuildLinearMoveCommand(pos,feedRate));
+            serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
             serial.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
+
+
+        /// <summary>
+        /// Sends a command to disable the steppers of the 3D printer.
+        /// </summary>
+        public void DisableSteppers()
+        {   
+            // Send the command to disable the steppers to the printer
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+        }
+
+
+        /// <summary>
+        /// Sends a command to home one or more axes of the 3D printer.
+        /// </summary>
+        /// <param name="x">Indicates whether to home the X-axis. Default is false.</param>
+        /// <param name="y">Indicates whether to home the Y-axis. Default is false.</param>
+        /// <param name="z">Indicates whether to home the Z-axis. Default is false.</param>
+        public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
+        {
+            // Send the command to turn off the fan to the printer
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+        }
+
 
         /// <summary>
         /// Sends a Gcode command via the terminal connection.
@@ -85,28 +101,49 @@ namespace WebUI.Data
         /// </remarks>
         public void SendGcodeViaTerminal(string command, ConnectionServiceSerial serial)
         {
-            // Implementation details
             serial.Write(command.ToLower());
         }
 
-        public void SetFanSpeed(int value)
-        {
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
-        }
 
+        /// <summary>
+        /// Turns off the fan by sending the corresponding command to the printer.
+        /// </summary>
         public void SetFanOff()
         {
+            // Send the fan speed command to the printer
             Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
         }
 
-        public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
-        {
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x,y,z));
+
+        /// <summary>
+        /// Sets the fan speed by sending a command to the printer.
+        /// </summary>
+        /// <param name="value">The fan speed value (0 to 255).</param>
+        public void SetFanSpeed(int value)
+        {   
+            // Send the fan speed command to the printer
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
         }
 
-        public void DisableSteppers()
+
+        /// <summary>
+        /// Updates the movement value used for incremental movements.
+        /// </summary>
+        /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
+        public void UpdateIncrementalMovementValue(double newValue)
         {
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            // Set the new value for the movement
+            valueToMove = newValue;
+        }
+
+
+        /// <summary>
+        /// Calculates the fan speed as a percentage based on the provided value.
+        /// </summary>
+        /// <param name="value">The fan speed value (0 to 255).</param>
+        public void CalculateFanSpeedIntoPercentage(double value)
+        {
+            fanSpeedInPercentage = Math.Round(value / 255 * 100);
         }
     }
 }
