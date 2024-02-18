@@ -30,7 +30,7 @@
 </select>
 
 <p>File printing: <strong>@print.printName</strong></p>
-<p>Estimated print time:</p>
+<p>Estimated print time: @print.estimatedTime</p>
 <p>Elapsed print time:  @string.Format("{0}h {1}m {2}s", hours, minutes, seconds)</p>
 <p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
 <p>File Size: <strong>@print.fileSize MB</strong></p>
@@ -81,7 +81,10 @@
         {
             seconds = 0;
             minutes++;
-
+            if (minutes == 2)
+            {
+                print.EstimatedPrintTime();
+            }
             if (minutes == 60)
             {
                 minutes = 0;

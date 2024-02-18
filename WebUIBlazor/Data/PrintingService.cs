@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Print;
 using MachineControlHub.Motion;
+using System.Text.RegularExpressions;
 
 namespace WebUI.Data
 {
@@ -12,6 +13,7 @@ namespace WebUI.Data
         public PrintProgress printProgress;
 
         public string printName;
+        public string estimatedTime;
         public double fileSize;
         public string extractedSettings;
         public string timeElapsed;
@@ -64,6 +66,18 @@ namespace WebUI.Data
             printProgress.ParseFileNameAndSize(input);
             printName = printProgress.PrintingFileName;
             fileSize = Math.Round(printProgress.FileSizeInMB,2);
+        }
+
+        public void EstimatedPrintTime()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPrintProgressCommand());
+            Thread.Sleep(500);
+            string timeLeft = ConnectionServiceSerial.printerConnection.Read();
+            string pattern = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
+
+            Match match = Regex.Match(timeLeft, pattern,RegexOptions.IgnoreCase);
+
+            estimatedTime = match.Groups[1].Value;
         }
     }
 }

@@ -590,5 +590,16 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(unloadFilament);
         }
 
+        public static string BuildPrintProgressCommand()
+        {
+            var printTime = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetPrintProgress
+            };
+
+            return GCodeMethods.GCodeString(printTime);
+        }
+
     }
 }
