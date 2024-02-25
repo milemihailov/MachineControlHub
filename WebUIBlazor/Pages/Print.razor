@@ -3,7 +3,6 @@
 @inject Data.ConnectionServiceSerial serial
 @inject Data.BedLevelingService levelBed
 @inject NavigationManager MyNavigationManager
-@inject Data.PrinterData printerData
 @inject Data.HotendTemperatureService hotend
 @inject Data.BedTemperatureService bed
 @inject IDialogService DialogService
@@ -31,7 +30,7 @@ else
         <MudPaper MinHeight="600px" Width="100%" Elevation="0">
             <MudCardContent>
                 <MudButton class="button-30" @onclick="() => {Confirm();}">Start Print</MudButton>
-                <MudButton class="button-30" @onclick="Confirm">Pause Print</MudButton>
+                <MudButton class="button-30" @onclick="print.PausePrint">Pause Print</MudButton>
                 <MudButton class="button-30" @onclick="print.StopPrint">Stop Print</MudButton>
 
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">

@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<ConnectionServiceSerial>();
-builder.Services.AddSingleton<PrinterData>();
 builder.Services.AddSingleton<HotendTemperatureService>();
 builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddSingleton<PrintingService>();
