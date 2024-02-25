@@ -7,6 +7,7 @@ namespace WebUI.Data
     public class PrintingService
     {
         public const int MAX_FILE_SIZE = (1024 * 1024 * 30);
+        const string PATTERN = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
 
         public PrintService printService;
         public PrintJobHistory printJob;
@@ -17,7 +18,6 @@ namespace WebUI.Data
         public double fileSize;
         public string extractedSettings;
         public string timeElapsed;
-
         public PrintingService()
         {
             printService = new PrintService(ConnectionServiceSerial.printerConnection);
@@ -73,10 +73,7 @@ namespace WebUI.Data
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPrintProgressCommand());
             Thread.Sleep(500);
             string timeLeft = ConnectionServiceSerial.printerConnection.Read();
-            string pattern = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
-
-            Match match = Regex.Match(timeLeft, pattern,RegexOptions.IgnoreCase);
-
+            Match match = Regex.Match(timeLeft, PATTERN,RegexOptions.IgnoreCase);
             estimatedTime = match.Groups[1].Value;
         }
     }

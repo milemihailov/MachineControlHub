@@ -5,18 +5,13 @@ namespace WebUI.Data
 {
     public class ControlPanelService
     {
-        public const double AXIS_MOVEMENT_BY_0_1 = 0.1;
-        public const double AXIS_MOVEMENT_BY_1 = 1;
-        public const double AXIS_MOVEMENT_BY_10 = 10;
-        public const double AXIS_MOVEMENT_BY_100 = 100;
-        public const int MAX_FAN_SPEED = 255;
         public const string FAN_PATTERN = @"M106 P0 S(\d+)";
 
         public string consoleOutput;
         public int defaultFanSpeed;
         public double fanSpeedInPercentage;
         public string sendCommand = "";
-        private double valueToMove = AXIS_MOVEMENT_BY_10;
+        public double valueToMove = 10;
 
         public MotionSettingsData feedRate;
 
@@ -102,6 +97,7 @@ namespace WebUI.Data
         public void SendGcodeViaTerminal(string command, ConnectionServiceSerial serial)
         {
             serial.Write(command.ToLower());
+            sendCommand = null;
         }
 
 
@@ -123,17 +119,6 @@ namespace WebUI.Data
         {   
             // Send the fan speed command to the printer
             Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
-        }
-
-
-        /// <summary>
-        /// Updates the movement value used for incremental movements.
-        /// </summary>
-        /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
-        public void UpdateIncrementalMovementValue(double newValue)
-        {
-            // Set the new value for the movement
-            valueToMove = newValue;
         }
 
 

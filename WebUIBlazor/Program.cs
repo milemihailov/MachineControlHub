@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using MudBlazor.Services;
 using WebUI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<ConnectionServiceSerial>();
 builder.Services.AddSingleton<PrinterData>();
 builder.Services.AddSingleton<HotendTemperatureService>();
@@ -15,7 +15,7 @@ builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddSingleton<PrintingService>();
 builder.Services.AddSingleton<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
-
+builder.Services.AddMudServices();
 
 
 var app = builder.Build();

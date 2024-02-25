@@ -8,35 +8,46 @@
 @implements IDisposable
 
 <div class="center-div">
-<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
+    <h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
 
 
-<h1>Temperature</h1>
+    <h1>Temperature</h1>
 
-<div>
-    <p>Current Hotend Temperature</p>
-    <p>@hotend.currentHotendTemperature</p>
-    <p>Target Hotend Temperature</p>
-    <p>@hotend.targetHotendTemperature</p>
-    <br />
-    <p>Current Bed Temperature</p>
-    <p>@bed.currentBedTemperature</p>
-    <p>Target Bed Temperature</p>
-    <p>@bed.targetBedTemperature</p>
+    <div>
+        <p>Current Hotend Temperature</p>
+        <p>@hotend.currentHotendTemperature</p>
+        <p>Target Hotend Temperature</p>
+        <p>@hotend.targetHotendTemperature</p>
+        <br />
+        <p>Current Bed Temperature</p>
+        <p>@bed.currentBedTemperature</p>
+        <p>Target Bed Temperature</p>
+        <p>@bed.targetBedTemperature</p>
 
-    <input type="number" @bind="@hotend.setHotendTemperature" />
-    <button class="btn-outline-primary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Hotend Temperature</button>
-    <button class="btn-danger" @onclick="() => hotend.SetHotendTemperature(0)">Turn Hotend Off</button>
-    <input type="number" @bind="@bed.setBedTemperature" />
-    <button class="btn-outline-primary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</button>
-    <button class="btn-danger" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</button>
-    <br />
-    <button class="btn-outline-primary" @onclick="() => hotend.ChangeFilament()">Change Filament</button>
-    <button class="btn-outline-primary" @onclick="() => hotend.LoadFilament()">Load Filament</button>
-    <button class="btn-outline-primary" @onclick="() => hotend.UnloadFilament()">Unload Filament</button>
+        <MudNumericField @bind-Value="hotend.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Outlined" Min="0" />
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Hotend Temperature</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => hotend.SetHotendTemperature(0)">Turn Hotend Off</MudButton>
 
+        <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Outlined" Min="0" />
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</MudButton>
 
-</div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
+        <div>
+            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.body1" Class="py-3">Selected: @(Index < 0 ? "None" : Series[Index].Name)</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSlider @bind-Value="Options.LineStrokeWidth" Min="1" Max="10" Color="Color.Info">Line Width: @Options.LineStrokeWidth.ToString()</MudSlider>
+                </MudItem>
+            </MudGrid>
+        </div>
+
+    </div>
 </div>
 @code {
 
@@ -45,21 +56,32 @@
     {
         timer = new Timer(UpdateTemperatureValues, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     }
+    public static List<double> hote = new List<double> { };
 
     private async void UpdateTemperatureValues(object state)
     {
         if (serial.initialized)
         {
             hotend.ParseCurrentHotendTemperature();
+            hote.Add(hotend.currentHotendTemperature);
             bed.ParseCurrentBedTemperature();
 
             await InvokeAsync(StateHasChanged);
         }
     }
 
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    public ChartOptions Options = new ChartOptions();
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Hotend", Data = hote.ToArray() },
+        new ChartSeries() { Name = "Bed", Data = new double[] { 10, 41, 35, 51, 49, 62, 69, 91, 148 } },
+    };
+    public string[] XAxisLabels = { };
+
     void IDisposable.Dispose()
     {
         timer.Dispose();
     }
-
 }

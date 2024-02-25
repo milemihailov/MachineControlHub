@@ -14,7 +14,18 @@
 <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" 
              ClickAction="ClickAction" HoverAction="HoverAction"  />
 
-<button @onclick="Calibrate">Calibrate</button>
+
+<MudButton Disabled="@_processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
+    @if (_processing)
+    {
+        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+        <MudText Class="ms-2">Processing</MudText>
+    }
+    else
+    {
+        <MudText>Calibrate</MudText>
+    }
+</MudButton>
 @code
 {
     [CascadingParameter]
@@ -29,13 +40,15 @@
     private IEnumerable<EventDataPoint> HoverInfos { get; set; }
 
     private bool IsInitialized { get; set; }
-
+    private bool _processing = false;
 
     private async Task Calibrate()
     {
+        _processing = true;
         await Task.Run(() => levelBed.CalibrateBed());
         levelBed.meshData = GetSurfaceData();
         LoadData();
+        _processing = false;
     }
 
     protected override void OnInitialized()

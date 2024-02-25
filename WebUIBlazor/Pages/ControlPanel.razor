@@ -9,82 +9,85 @@
 @implements IDisposable
 
 
-<div class="center-div">
-<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
-<br />
-<br />
+@if (serial.isConnected == "Connected")
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@serial.isConnected</MudAlert>
+}
+else
+{
+    <MudAlert Severity="Severity.Error" Class="sticky-lg-top" Variant="Variant.Filled">@serial.isConnected</MudAlert>
+}
+<MudGrid>
+    <MudItem xs="4">
+        <MudPaper Elevation="4">
+            <PlotlyChart style="height: 60vh; width:100%; min-height: 350px"
+                         @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
+                         ClickAction="ClickAction" AfterRender="SubscribeEvents" />
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="4" Class="px-0">
+        <MudPaper Height="100%" Width="100%" Elevation="0">
+            <MudContainer MaxWidth="MaxWidth.Small" Class="px-0">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</MudButton>
+                    <MudNumericField Margin="MudBlazor.Margin.None" @bind-Value="control.feedRate.FeedRateFreeMove" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                </MudStack>
 
-    <h1>ControlPanel</h1>
-
-    <PlotlyChart style="height: 60vh; width:40%; min-height: 350px"
-                 @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
-                 ClickAction="ClickAction" AfterRender="SubscribeEvents" />
-
-    @if (ClickInfos != null && ClickInfos.Any())
-    {
-        <MudText>
-            Current X: @ClickInfos.First().X
-        </MudText>
-        <MudText>Current Y: @ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y</MudText>
-    }
-
-
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</button>
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</button>
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</button>
-
-
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</button>
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</button>
-<button class="button-30" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</button>
-
-<p style="font-weight: bold">Feedrate: <input type="number" @bind="@control.feedRate.FeedRateFreeMove" /></p>
-
-
-<div>
-    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_0_1)">
-        <input type="radio" name="options" id="option3" autocomplete="off"> 0.1 mm
-    </label>
-    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_1)">
-        <input type="radio" name="options" id="option3" autocomplete="off"> 1 mm
-    </label>
-    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_10)">
-        <input type="radio" name="options" id="option3" autocomplete="off" checked> 10 mm
-    </label>
-    <label class="btn btn-secondary" @onclick="() => control.UpdateIncrementalMovementValue(Data.ControlPanelService.AXIS_MOVEMENT_BY_100)">
-        <input type="radio" name="options" id="option3" autocomplete="off"> 100 mm
-    </label>
-</div>
-
-<button class="btn-outline-primary" @onclick="control.DisableSteppers">DisableMotors</button>
-
-<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand()">HomeAll</button>
-<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand(true,true)">HomeXY</button>
-<button class="btn-outline-primary" @onclick="() => control.HomeAxisCommand(false,false,true)">HomeZ</button>
-
-<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</button>
-<button class="btn-outline-primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</button>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary">Set Feedrate</MudButton>
+                </MudStack>
 
 
-<button class="btn-outline-primary" @onclick="() => control.SetFanOff()">Fan Off</button>
-<button class="btn-outline-primary" @onclick="() => control.SetFanSpeed(Data.ControlPanelService.MAX_FAN_SPEED)">Fan On</button>
+                <MudStack Class="mb-2 flex-none" Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudText Align="Align.Center" Typo="Typo.subtitle2">Set A Moving Value:</MudText>
+                    <MudChipSet @bind-SelectedChip="selected" Filter="true" Mandatory="true">
+                        <MudChip Text="0.1" Color="Color.Success" Value="@((double)0.1)">0.1 mm</MudChip>
+                        <MudChip Text="1" Color="Color.Success" Value="@((double)1)">1 mm</MudChip>
+                        <MudChip Text="10" Color="Color.Success" Value="@((double)10)">10 mm</MudChip>
+                        <MudChip Text="100" Color="Color.Success" Value="@((double)100)">100 mm</MudChip>
+                    </MudChipSet>
+                    @if (selected != null)
+                    {
+                        control.valueToMove = double.Parse(@selected.Text);
+                    }
+                </MudStack>
 
-<p style="font-weight: bold">
-    Fan Speed: 0%
-    <input width="400" type="range" min="0" max="255" @bind="control.defaultFanSpeed" @onclick="() => control.SetFanSpeed(control.defaultFanSpeed)">100%
-</p>
-<p>@control.fanSpeedInPercentage%</p>
-<div>
-    <textarea style="width:100%" readonly rows="10" cols="50">@control.consoleOutput</textarea>
-</div>
-<input style="width:95%" type="text" placeholder="Send G-Code Commands" @bind="control.sendCommand" />
-<button @onclick="() => control.SendGcodeViaTerminal(control.sendCommand,serial)">Send</button>
-</div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="control.DisableSteppers">Disable Motors</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand()">HomeAll</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(true,true)">HomeXY</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(false,false,true)">HomeZ</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</MudButton>
+
+                <MudSwitch @onclick="() => {control.SetFanSpeed(fanSpeed);ToggleValue();}" @bind-Value="@SwitchValue" Color="Color.Primary" Class="mr-n2 mb-6" />
+
+                <MudSlider Class="d-inline-block" @bind-Value="@control.defaultFanSpeed" Vertical="true" Min="0" Max="255" @onchange="() => control.SetFanSpeed(control.defaultFanSpeed)" />
+                <MudText>@control.fanSpeedInPercentage%</MudText>
+            </MudContainer>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="4">
+        <MudPaper Class="d-flex mud-height-full">
+            <textarea style="width:100%" readonly rows="10" cols="50">@control.consoleOutput</textarea>
+        </MudPaper>
+        <MudTextField T="string" Label="Send G-Code Commands" Variant="Variant.Outlined" Clearable="true" @bind-Value="control.sendCommand" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send" FullWidth="true" @onclick="() => control.SendGcodeViaTerminal(control.sendCommand,serial)">Send</MudButton>
+    </MudItem>
+</MudGrid>
+
 
 @code {
     [CascadingParameter]
     private MudTheme Theme { get; set; }
-
+    MudChip selected;
     private PlotlyChart chart;
     private Config config;
     private Layout layout;
@@ -92,24 +95,35 @@
     private IEnumerable<EventDataPoint> ClickInfos { get; set; }
     private Timer timer;
 
+    public int fanSpeed;
+    public bool SwitchValue = false;
+    private void ToggleValue()
+    {
+        if (SwitchValue)
+            fanSpeed = 255;
+        else
+            fanSpeed = 0;
+        SwitchValue = !SwitchValue;
+    }
+
     protected override void OnInitialized()
     {
         timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
         config = new Config
-                {
-                    Responsive = true
-                };
+            {
+                Responsive = true
+            };
 
         layout = new Layout
+            {
+                Title = new Title
                 {
-                    Title = new Title
-                    {
-                        Text = "Interactive Bed"
-                    },
-                    PaperBgColor = "#FDF0D5",
-                    PlotBgColor = "#AAAFB5"
-                };
+                    Text = "Interactive Bed"
+                },
+                PaperBgColor = "#FDF0D5",
+                PlotBgColor = "#AAAFB5"
+            };
 
         data = new List<ITrace>
             {
@@ -133,7 +147,7 @@
 
             double value;
             Match match = Regex.Match(message, Data.ControlPanelService.FAN_PATTERN);
-            if(match.Success)
+            if (match.Success)
             {
                 value = double.Parse(match.Groups[1].Value);
                 control.CalculateFanSpeedIntoPercentage(value);
@@ -145,34 +159,42 @@
         }
     }
 
-        public void ClickAction(IEnumerable<EventDataPoint> eventData)
-        {
-            ClickInfos = eventData;
-            StoreClickedValues();
-            StateHasChanged();
-        }
+    public void ClickAction(IEnumerable<EventDataPoint> eventData)
+    {
+        ClickInfos = eventData;
+        StoreClickedValues();
+        StateHasChanged();
+    }
 
-        public async void SubscribeEvents()
-        {
-            await chart.SubscribeClickEvent();
-        }
+    public async void SubscribeEvents()
+    {
+        await chart.SubscribeClickEvent();
+    }
 
-        MachineControlHub.Motion.Position pos = new();
-        MotionSettingsData feedrate = new();
+    MachineControlHub.Motion.Position pos = new();
+    MotionSettingsData feedrate = new();
 
-        private void StoreClickedValues()
+    private void StoreClickedValues()
+    {
+        if (ClickInfos != null && ClickInfos.Any())
         {
-            if (ClickInfos != null && ClickInfos.Any())
-            {
-                string x = ClickInfos.First().X.ToString();
-                string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
-                pos.XMovePosition = double.Parse(x);
-                pos.YMovePosition = double.Parse(y);
-                serial.Write(CommandMethods.BuildAbsolutePositionCommand());
-                serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedrate));
-                serial.Write(CommandMethods.BuildRelativePositionCommand());
-            }
+            string x = ClickInfos.First().X.ToString();
+            string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
+            pos.XMovePosition = double.Parse(x);
+            pos.YMovePosition = double.Parse(y);
+            serial.Write(CommandMethods.BuildAbsolutePositionCommand());
+            serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedrate));
+            serial.Write(CommandMethods.BuildRelativePositionCommand());
         }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Key == "Enter")
+        {
+            control.SendGcodeViaTerminal(control.sendCommand, serial);
+        }
+    }
 
     void IDisposable.Dispose()
     {

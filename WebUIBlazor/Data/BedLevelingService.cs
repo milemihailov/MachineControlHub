@@ -1,7 +1,10 @@
 ﻿using MachineControlHub.Bed;
 using MachineControlHub.Motion;
+using Microsoft.AspNetCore.Components;
 using Plotly.Blazor;
+using System.Globalization;
 using WebUI.Pages;
+using static MudBlazor.CategoryTypes;
 
 namespace WebUI.Data
 {

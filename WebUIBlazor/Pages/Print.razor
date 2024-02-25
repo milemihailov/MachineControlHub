@@ -1,41 +1,137 @@
 ﻿@page "/print"
 @inject Data.PrintingService print
 @inject Data.ConnectionServiceSerial serial
+@inject Data.BedLevelingService levelBed
+@inject NavigationManager MyNavigationManager
+@inject Data.PrinterData printerData
+@inject Data.HotendTemperatureService hotend
+@inject Data.BedTemperatureService bed
+@inject IDialogService DialogService
+@inject IDialogService DialogService
 
+@implements IDisposable
+
+@using MachineControlHub.Temps
+@using System.Globalization
+@using Plotly.Blazor.Interop
+@using Plotly.Blazor.LayoutLib
 @using MachineControlHub.Motion;
 @using MachineControlHub.Print;
-<div class="center-div">
-<h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
 
-<h1>Print</h1>
+@if (serial.isConnected == "Connected")
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@serial.isConnected</MudAlert>
+}
+else
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@serial.isConnected</MudAlert>
+}
+<MudGrid>
+    <MudItem xs="4">
+        <MudPaper MinHeight="600px" Width="100%" Elevation="0">
+            <MudCardContent>
+                <MudButton class="button-30" @onclick="() => {Confirm();}">Start Print</MudButton>
+                <MudButton class="button-30" @onclick="Confirm">Pause Print</MudButton>
+                <MudButton class="button-30" @onclick="print.StopPrint">Stop Print</MudButton>
+
+                <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
+                    <ButtonTemplate>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                   for="@context.Id">
+                            Upload Files
+                        </MudButton>
+                    </ButtonTemplate>
+                </MudFileUpload>
+
+                <MudSelect @bind-Value="@fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                    @if (serial.initialized)
+                    {
+                        @foreach (var file in files)
+                        {
+                            <MudSelectItem Value="@file" />
+                        }
+                    }
+                </MudSelect>
+
+                <p>File printing: <strong>@print.printName</strong></p>
+                <p>Estimated print time: @print.estimatedTime</p>
+                <p>Elapsed print time:  @string.Format("{0}h {1}m {2}s", hours, minutes, seconds)</p>
+                <p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
+                <p>File Size: <strong>@print.fileSize MB</strong></p>
+            </MudCardContent>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="8">
+        <MudPaper Height="100%" Width="100%" Elevation="2">
+            <MudCardContent>
+                @if (!IsInitialized)
+                {
+                    <MudPaper>
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                    </MudPaper>
+                }
+                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
+                             ClickAction="ClickAction" HoverAction="HoverAction" />
 
 
-<button class="button-30" @onclick="() => {print.StartPrint(fileToPrint);print.StartTimeOfPrint();print.GetFileNameAndSize(fileToPrint);StartClock();}">Start Print</button>
-<button class="button-30" @onclick="print.PausePrint">Pause Print</button>
-<button class="button-30" @onclick="print.StopPrint">Stop Print</button>
+                <MudButton FullWidth="true" Disabled="@_processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
+                    @if (_processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Processing</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Calibrate</MudText>
+                    }
+                </MudButton>
+            </MudCardContent>
+        </MudPaper>
+    </MudItem>
 
-<p>SD files:</p>
 
+    <MudItem xs="4">
+        <MudPaper Width="100%" Square="true">
+            <MudList>
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText>Current Hotend Temperature: @hotend.currentHotendTemperature</MudText>
+                        <MudText>Target Hotend Temperature: @hotend.targetHotendTemperature</MudText>
+                    </MudStack>
+                </MudListItem>
+                <MudDivider DividerType="DividerType.FullWidth" />
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText>Current Bed Temperature: @hotend.currentHotendTemperature</MudText>
+                        <MudText>Target Bed Temperature: @bed.targetBedTemperature</MudText>
+                    </MudStack>
+                </MudListItem>
+                <MudDivider DividerType="DividerType.FullWidth" />
+            </MudList>
+        </MudPaper>
 
-<InputFile OnChange="@LoadFiles" multiple accept=".gcode,.gco,.txt"/>
+        <MudNumericField @bind-Value="hotend.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Hotend Temperature</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => hotend.SetHotendTemperature(0)">Turn Hotend Off</MudButton>
 
-<select @bind=fileToPrint>
-    @if (serial.initialized)
-    {
-        @foreach (var file in files)
-        {
-            <option value=@file>@file</option>
-        }
-    }
-</select>
+        <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</MudButton>
 
-<p>File printing: <strong>@print.printName</strong></p>
-<p>Estimated print time: @print.estimatedTime</p>
-<p>Elapsed print time:  @string.Format("{0}h {1}m {2}s", hours, minutes, seconds)</p>
-<p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
-<p>File Size: <strong>@print.fileSize MB</strong></p>
-
-</div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
+    </MudItem>
+    <MudItem xs="8">
+        <MudPaper Height="100%" Width="100%" Elevation="0">
+            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     public string fileToPrint = "";
@@ -45,15 +141,7 @@
     private int hours;
     private int minutes;
     private int seconds;
-    private System.Timers.Timer timer;
-
-    protected override void OnInitialized()
-    {
-        if (serial.initialized)
-        {
-            files = print.ListSDFiles();
-        }
-    }
+    private Timer timer;
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -62,17 +150,17 @@
         StateHasChanged();
     }
 
-    private void StartClock()
-    {
-        hours = 0;
-        minutes = 0;
-        seconds = 0;
+    // private void StartClock()
+    // {
+    //     hours = 0;
+    //     minutes = 0;
+    //     seconds = 0;
 
-        timer = new System.Timers.Timer(1000);
-        timer.Elapsed += (sender, e) => UpdateClock();
-        timer.AutoReset = true;
-        timer.Enabled = true;
-    }
+    //     timer = new System.Timers.Timer(1000);
+    //     timer.Elapsed += (sender, e) => UpdateClock();
+    //     timer.AutoReset = true;
+    //     timer.Enabled = true;
+    // }
 
     private void UpdateClock()
     {
@@ -94,7 +182,175 @@
         InvokeAsync(() => StateHasChanged());
     }
 
-    public void Dispose()
+    [CascadingParameter]
+    private MudTheme Theme { get; set; }
+
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
+
+    private IEnumerable<EventDataPoint> ClickInfos { get; set; }
+    private IEnumerable<EventDataPoint> HoverInfos { get; set; }
+
+    private bool IsInitialized { get; set; }
+    private bool _processing = false;
+
+    private async Task Calibrate()
+    {
+        _processing = true;
+        await Task.Run(() => levelBed.CalibrateBed());
+        levelBed.meshData = GetSurfaceData();
+        LoadData();
+        _processing = false;
+    }
+
+    protected override void OnInitialized()
+    {
+        timer = new Timer(UpdateTemperatureValues, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        if (serial.initialized)
+        {
+            files = print.ListSDFiles();
+        }
+        config = new Config
+            {
+                ShowLink = false,
+                Responsive = true,
+                DisplayLogo = true
+            };
+
+        layout = new Layout
+            {
+                Title = new Title
+                {
+                    Text = "Bed Mesh"
+                },
+                PaperBgColor = "white",
+                PlotBgColor = "white",
+                Font = new Font
+                {
+                    Color = "black"
+                },
+                Margin = new Plotly.Blazor.LayoutLib.Margin
+                {
+                    L = 65,
+                    R = 50,
+                    B = 65,
+                    T = 90
+                }
+            };
+
+        data = new List<ITrace>();
+        LoadData();
+        base.OnInitialized();
+    }
+
+    private void LoadData()
+    {
+        Task.Run(async () =>
+        {
+            foreach (var trace in await levelBed.meshData)
+            {
+                await InvokeAsync(async () => await chart.AddTrace(trace));
+                await Task.Delay(100);
+            }
+            IsInitialized = true;
+            await chart.SubscribeHoverEvent();
+            await chart.SubscribeClickEvent();
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void ClickAction(IEnumerable<EventDataPoint> eventData)
+    {
+        ClickInfos = eventData;
+        StateHasChanged();
+    }
+
+    public void HoverAction(IEnumerable<EventDataPoint> eventData)
+    {
+        HoverInfos = eventData;
+        StateHasChanged();
+    }
+
+    async Task<IList<ITrace>> GetSurfaceData()
+    {
+        IList<ITrace> mapData = new List<ITrace>();
+
+        using var client = new HttpClient
+            {
+                BaseAddress = new Uri(MyNavigationManager.BaseUri)
+            };
+
+        var csv = await Task.Run(() => levelBed.CSVData
+            .Split("\n")
+            .Skip(1)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Split(",").ToList()).ToList());
+
+        var z = new List<decimal[]>();
+
+        foreach (var row in csv)
+        {
+            var currentValues = new List<decimal>();
+
+            for (var i = 1; i < row.Count; i++)
+            {
+                currentValues.Add(decimal.Parse(row[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+            }
+
+            z.Add(currentValues.ToArray());
+        }
+
+        mapData.Add(new Surface
+            {
+                Z = z.Cast<object>().ToList()
+            });
+
+        return mapData;
+    }
+
+    public static List<double> hote = new List<double> { };
+
+    private async void UpdateTemperatureValues(object state)
+    {
+        if (serial.initialized)
+        {
+            hotend.ParseCurrentHotendTemperature();
+            hote.Add(hotend.currentHotendTemperature);
+            bed.ParseCurrentBedTemperature();
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    public ChartOptions Options = new ChartOptions();
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Hotend", Data = hote.ToArray() },
+        new ChartSeries() { Name = "Bed", Data = new double[] { 10, 41, 35, 51, 49, 62, 69, 91, 148 } },
+    };
+    public string[] XAxisLabels = { };
+
+    [Parameter] public bool ste { get; set; }
+
+    private void Confirm()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Start Print ?");
+        parameters.Add(x => x.ButtonText, "Yes");
+        parameters.Add(x => x.Color, Color.Success);
+
+        DialogService.Show<Dialog>("Confirm", parameters);
+
+        print.StartPrint(fileToPrint);
+        print.StartTimeOfPrint(); 
+        print.GetFileNameAndSize(fileToPrint);
+    }
+
+    void IDisposable.Dispose()
     {
         timer?.Dispose();
     }
