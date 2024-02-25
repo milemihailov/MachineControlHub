@@ -1,49 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">WebUI</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="connection">
-                <span class="oi oi-account-login" aria-hidden="true"></span> Connection
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="temperature">
-                <span class="oi oi-dashboard" aria-hidden="true"></span> Temperature
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="controlpanel">
-                <span class="oi oi-clipboard" aria-hidden="true"></span> Control Panel
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="print">
-                <span class="oi oi-print" aria-hidden="true"></span> Print
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="bedlevel">
-                <span class="oi oi-aperture" aria-hidden="true"></span> Bed Leveling
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Connection</MudNavLink>
+    <MudNavLink Href="/controlpanel" Match="NavLinkMatch.Prefix">Control Panel</MudNavLink>
+    <MudNavLink Href="/print" Match="NavLinkMatch.Prefix">Print</MudNavLink>
+    <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">About</MudNavLink>
+</MudNavMenu>
