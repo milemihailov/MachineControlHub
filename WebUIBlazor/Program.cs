@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<ConnectionServiceSerial>();
-builder.Services.AddSingleton<PrinterData>();
+builder.Services.AddSingleton<PrinterDataService>();
 builder.Services.AddSingleton<HotendTemperatureService>();
 builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddSingleton<PrintingService>();
