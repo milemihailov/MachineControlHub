@@ -68,7 +68,7 @@ else
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</MudButton>
 
-                <MudSwitch @onclick="() => {control.SetFanSpeed(control.fanSpeed);control.ToggleValue();}" @bind-Value="@control.SwitchValue" Color="Color.Primary" Class="mr-n2 mb-6" />
+                <MudSwitch @bind-Value="@control.SwitchValue" @onclick="() => {control.ToggleValue();control.SetFanSpeed(control.fanSpeed);}" ThumbIcon="@(@control.SwitchValue==true ? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(@control.SwitchValue==true ? Color.Success : Color.Error)" Class="mr-n2 mb-6" />
 
                 <MudSlider Class="d-inline-block" @bind-Value="@control.defaultFanSpeed" Vertical="true" Min="0" Max="255" @onchange="() => control.SetFanSpeed(control.defaultFanSpeed)" />
                 <MudText>@control.fanSpeedInPercentage%</MudText>

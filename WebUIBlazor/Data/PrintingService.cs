@@ -3,6 +3,8 @@ using MachineControlHub.Motion;
 using System.Text.RegularExpressions;
 using MudBlazor;
 using WebUI.Pages;
+using Microsoft.AspNetCore.Components;
+using System;
 
 namespace WebUI.Data
 {
@@ -14,6 +16,8 @@ namespace WebUI.Data
         public PrintService printService;
         public PrintJobHistory printJob;
         public PrintProgress printProgress;
+        private readonly IDialogService _dialogService;
+        private readonly ISnackbar _snackbar;
 
         public string printName;
         public string estimatedTime;
@@ -25,18 +29,22 @@ namespace WebUI.Data
         public string fileToPrint = "";
         public bool _processing = false;
 
-        public int hours;
-        public int minutes;
-        public int seconds;
+        public static List<double> hotendGraph = new List<double> { };
+        public static List<double> bedGraph = new List<double> { };
+        public ChartOptions Options = new ChartOptions();
+        public string[] XAxisLabels = { };
+        public int Index = -1;
 
 
 
-
-        public PrintingService()
+        public PrintingService(IDialogService dialogService, ISnackbar snackbar)
         {
             printService = new PrintService(ConnectionServiceSerial.printerConnection);
             printJob = new PrintJobHistory(ConnectionServiceSerial.printerConnection);
             printProgress = new PrintProgress();
+            _dialogService = dialogService;
+            _snackbar = snackbar;
+            _snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomLeft;
         }
 
         public void StartPrint(string fileName)
@@ -47,17 +55,24 @@ namespace WebUI.Data
         public void PausePrint()
         {
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
+            _snackbar.Add("Print Paused", Severity.Info);
+        }
+
+        public void ResumePrint()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildStartSDPrintCommand());
+            _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
         public void StopPrint()
         {
             printService.AbortCurrentPrint();
+            _snackbar.Add("Print Stopped", Severity.Error);
         }
 
         public void ListSDFiles()
         {
             files = printService.ListSDFiles();
-
         }
 
         public void StartTimeOfPrint()
@@ -91,53 +106,44 @@ namespace WebUI.Data
             estimatedTime = match.Groups[1].Value;
         }
 
-
-
-        public void Confirm(IDialogService dialogService)
+        public async Task ConfirmStartAsync()
         {
-            var parameters = new DialogParameters<Dialog>
+            bool? result = await _dialogService.ShowMessageBox(
+            "Start Print",
+            "Do you want to start a print job?",
+            yesText: "Start!", cancelText: "Cancel");
+
+            if (result == true)
             {
-                { x => x.ContentText, "Start Print ?" },
-                { x => x.ButtonText, "Yes" },
-                { x => x.Color, Color.Success }
-            };
-
-            IDialogReference dialogReference = dialogService.Show<Dialog>("Confirm", parameters);
-
-            StartPrint(fileToPrint);
-            StartTimeOfPrint();
-            GetFileNameAndSize(fileToPrint);
+                if (fileToPrint == "")
+                {
+                    _snackbar.Add("No file selected", Severity.Error);
+                }
+                else
+                {
+                    StartPrint(fileToPrint);
+                    StartTimeOfPrint();
+                    GetFileNameAndSize(fileToPrint);
+                    _snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {fileToPrint} </li></ul>", Severity.Success);
+                }
+            }
         }
 
-        // private void StartClock()
-        // {
-        //     hours = 0;
-        //     minutes = 0;
-        //     seconds = 0;
+        public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
+        new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+    };
 
-        //     timer = new System.Timers.Timer(1000);
-        //     timer.Elapsed += (sender, e) => UpdateClock();
-        //     timer.AutoReset = true;
-        //     timer.Enabled = true;
-        // }
+        public void UpdateGraphData()
+        {
+            var new_series = new List<ChartSeries>()
+        {
+            new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
+            new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+        };
+            Series = new_series;
 
-        //private void UpdateClock()
-        //{
-        //    seconds++;
-        //    if (seconds == 60)
-        //    {
-        //        seconds = 0;
-        //        minutes++;
-        //        if (minutes == 2)
-        //        {
-        //            EstimatedPrintTime();
-        //        }
-        //        if (minutes == 60)
-        //        {
-        //            minutes = 0;
-        //            hours++;
-        //        }
-        //    }
-        //}
+        }
     }
 }

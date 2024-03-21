@@ -6,7 +6,6 @@
 @inject Data.HotendTemperatureService hotend
 @inject Data.BedTemperatureService bed
 @inject Data.BackgroundTimer background
-@inject IDialogService DialogService
 
 @implements IDisposable
 @using MachineControlHub.Temps
@@ -28,8 +27,9 @@ else
     <MudItem xs="4">
         <MudPaper MinHeight="600px" Width="100%" Elevation="0">
             <MudCardContent>
-                <MudButton class="button-30" @onclick="() => {print.Confirm(DialogService);}">Start Print</MudButton>
+                <MudButton class="button-30" OnClick="print.ConfirmStartAsync">Start Print</MudButton>
                 <MudButton class="button-30" @onclick="print.PausePrint">Pause Print</MudButton>
+                <MudButton class="button-30" @onclick="print.ResumePrint">Resume Print</MudButton>
                 <MudButton class="button-30" @onclick="print.StopPrint">Stop Print</MudButton>
 
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
@@ -56,7 +56,7 @@ else
 
                 <MudText>File printing: <strong>@print.printName</strong></MudText>
                 <MudText>Estimated print time: @print.estimatedTime</MudText>
-                <MudText>Elapsed print time:  @string.Format($"{print.hours}h {print.minutes}m {print.seconds}s")</MudText>
+                <MudText>Elapsed print time:  @string.Format($"")</MudText>
                 <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
                 <MudText>File Size: <strong>@print.fileSize MB</strong></MudText>
             </MudCardContent>
@@ -125,26 +125,17 @@ else
     </MudItem>
     <MudItem xs="8">
         <MudPaper Height="100%" Width="100%" Elevation="0">
-            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="Options" />
+            <MudChart ChartType="ChartType.Line" ChartSeries="@print.Series" @bind-SelectedIndex="print.Index" XAxisLabels="@print.XAxisLabels" Width="100%" Height="350px" ChartOptions="print.Options" />
         </MudPaper>
     </MudItem>
 </MudGrid>
 
 @code {
 
-    [CascadingParameter]
-    private MudTheme Theme { get; set; }
-
     private PlotlyChart chart;
     private Config config;
     private Layout layout;
     private IList<ITrace> data;
-
-    public static List<double> hotendGraph = new List<double> { };
-    public static List<double> bedGraph = new List<double> { };
-    public ChartOptions Options = new ChartOptions();
-    public string[] XAxisLabels = { };
-    public int Index = -1;
 
 
     protected override void OnInitialized()
@@ -156,7 +147,6 @@ else
         }
 
         background.SecondElapsed += OnTemperatureChange;
-
 
         config = new Config
             {
@@ -197,9 +187,9 @@ else
             {
                 hotend.ParseCurrentHotendTemperature();
                 bed.ParseCurrentBedTemperature();
-                hotendGraph.Add(hotend.currentHotendTemperature);
-                bedGraph.Add(bed.currentBedTemperature);
-                UpdateGraphData();
+                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
+                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+                print.UpdateGraphData();
                 InvokeAsync(StateHasChanged);
             });
         }
@@ -236,23 +226,6 @@ else
             }
             levelBed._isInitialized = true;
         });
-    }
-
-    public List<ChartSeries> Series = new List<ChartSeries>()
-    {
-        new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
-        new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
-    };
-
-    public void UpdateGraphData()
-    {
-            var new_series = new List<ChartSeries>()
-        {
-            new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
-            new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
-        };
-            Series = new_series;
-        
     }
 
     public void Dispose()

@@ -73,7 +73,7 @@ namespace WebUI.Data
         public void DisableSteppers()
         {   
             // Send the command to disable the steppers to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
         }
 
 
@@ -86,7 +86,7 @@ namespace WebUI.Data
         public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
         {
             // Send the command to turn off the fan to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
         }
 
 
@@ -111,7 +111,7 @@ namespace WebUI.Data
         public void SetFanOff()
         {
             // Send the fan speed command to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
         }
 
 
@@ -122,7 +122,7 @@ namespace WebUI.Data
         public void SetFanSpeed(int value)
         {   
             // Send the fan speed command to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
         }
 
 
@@ -154,11 +154,11 @@ namespace WebUI.Data
 
         public void ToggleValue()
         {
+            SwitchValue = !SwitchValue;
             if (SwitchValue)
                 fanSpeed = 255;
             else
                 fanSpeed = 0;
-            SwitchValue = !SwitchValue;
         }
     }
 }

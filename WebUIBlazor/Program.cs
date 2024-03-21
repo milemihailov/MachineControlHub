@@ -12,7 +12,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<ConnectionServiceSerial>();
 builder.Services.AddSingleton<HotendTemperatureService>();
 builder.Services.AddSingleton<BedTemperatureService>();
-builder.Services.AddSingleton<PrintingService>();
+builder.Services.AddScoped<PrintingService>();
 builder.Services.AddSingleton<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
