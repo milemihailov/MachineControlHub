@@ -5,24 +5,23 @@ namespace WebUI.Data
 {
     public class ControlPanelService
     {
-        public const double AXIS_MOVEMENT_BY_0_1 = 0.1;
-        public const double AXIS_MOVEMENT_BY_1 = 1;
-        public const double AXIS_MOVEMENT_BY_10 = 10;
-        public const double AXIS_MOVEMENT_BY_100 = 100;
-        public const int MAX_FAN_SPEED = 255;
         public const string FAN_PATTERN = @"M106 P0 S(\d+)";
 
         public string consoleOutput;
         public int defaultFanSpeed;
         public double fanSpeedInPercentage;
         public string sendCommand = "";
-        private double valueToMove = AXIS_MOVEMENT_BY_10;
+        public double valueToMove = 10;
+        public bool SwitchValue = false;
+        public int fanSpeed;
 
         public MotionSettingsData feedRate;
+        public Position positionToMove;
 
         public ControlPanelService()
         {
             feedRate = new MotionSettingsData();
+            positionToMove = new Position();
         }
 
 
@@ -74,7 +73,7 @@ namespace WebUI.Data
         public void DisableSteppers()
         {   
             // Send the command to disable the steppers to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
         }
 
 
@@ -87,7 +86,7 @@ namespace WebUI.Data
         public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
         {
             // Send the command to turn off the fan to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
         }
 
 
@@ -102,6 +101,7 @@ namespace WebUI.Data
         public void SendGcodeViaTerminal(string command, ConnectionServiceSerial serial)
         {
             serial.Write(command.ToLower());
+            sendCommand = null;
         }
 
 
@@ -111,7 +111,7 @@ namespace WebUI.Data
         public void SetFanOff()
         {
             // Send the fan speed command to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
         }
 
 
@@ -122,18 +122,7 @@ namespace WebUI.Data
         public void SetFanSpeed(int value)
         {   
             // Send the fan speed command to the printer
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
-        }
-
-
-        /// <summary>
-        /// Updates the movement value used for incremental movements.
-        /// </summary>
-        /// <param name="newValue">The new value for the movement. Should be a positive numeric value.</param>
-        public void UpdateIncrementalMovementValue(double newValue)
-        {
-            // Set the new value for the movement
-            valueToMove = newValue;
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
         }
 
 
@@ -144,6 +133,32 @@ namespace WebUI.Data
         public void CalculateFanSpeedIntoPercentage(double value)
         {
             fanSpeedInPercentage = Math.Round(value / 255 * 100);
+        }
+
+        public void UpdateParagraph(ConnectionServiceSerial serial)
+        {
+            Thread.Sleep(50);
+            string message = serial.Read();
+
+            double value;
+            Match match = Regex.Match(message, Data.ControlPanelService.FAN_PATTERN);
+            if (match.Success)
+            {
+                value = double.Parse(match.Groups[1].Value);
+                CalculateFanSpeedIntoPercentage(value);
+            }
+
+            string filteredOutput = message.Replace("ok", " ");
+            consoleOutput += filteredOutput;
+        }
+
+        public void ToggleValue()
+        {
+            SwitchValue = !SwitchValue;
+            if (SwitchValue)
+                fanSpeed = 255;
+            else
+                fanSpeed = 0;
         }
     }
 }

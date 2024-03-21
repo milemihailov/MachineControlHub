@@ -55,7 +55,6 @@ namespace MachineControlHub.PrinterConnection
                 catch (Exception ex)
                 {
                     Logger.LogError($"An error occurred while setting the PortName: {ex.Message}");
-                    Logger.LogError(ex.StackTrace);
                 }
             }
         }
@@ -79,7 +78,6 @@ namespace MachineControlHub.PrinterConnection
                 catch (Exception ex)
                 {
                     Logger.LogError($"An error occurred while setting the BaudRate: {ex.Message}");
-                    Logger.LogError(ex.StackTrace);
                 }
             }
         }
@@ -120,7 +118,6 @@ namespace MachineControlHub.PrinterConnection
             catch (Exception ex)
             {
                 Logger.LogError($"Error closing serial port: {ex.Message}");
-                Logger.LogError(ex.StackTrace);
             }
 
         }
@@ -141,7 +138,6 @@ namespace MachineControlHub.PrinterConnection
             catch (Exception ex)
             {
                 Logger.LogError($"Error writing to serial port: {ex.Message}");
-                Logger.LogError(ex.StackTrace);
             }
         }
 
@@ -162,7 +158,6 @@ namespace MachineControlHub.PrinterConnection
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
-                Logger.LogError(ex.StackTrace);
                 return null;
             }
         }
