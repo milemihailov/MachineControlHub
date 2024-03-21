@@ -1,6 +1,8 @@
 ﻿using MachineControlHub.Print;
 using MachineControlHub.Motion;
 using System.Text.RegularExpressions;
+using MudBlazor;
+using WebUI.Pages;
 
 namespace WebUI.Data
 {
@@ -18,6 +20,18 @@ namespace WebUI.Data
         public double fileSize;
         public string extractedSettings;
         public string timeElapsed;
+        public List<string> files;
+        public string file;
+        public string fileToPrint = "";
+        public bool _processing = false;
+
+        public int hours;
+        public int minutes;
+        public int seconds;
+
+
+
+
         public PrintingService()
         {
             printService = new PrintService(ConnectionServiceSerial.printerConnection);
@@ -36,13 +50,14 @@ namespace WebUI.Data
         }
 
         public void StopPrint()
-        { 
+        {
             printService.AbortCurrentPrint();
         }
 
-        public List<string> ListSDFiles() 
+        public void ListSDFiles()
         {
-            return printService.ListSDFiles();
+            files = printService.ListSDFiles();
+
         }
 
         public void StartTimeOfPrint()
@@ -58,23 +73,71 @@ namespace WebUI.Data
 
         public void StartPCPrint(string file, string fileName)
         {
-            printService.TransferFileToSD(file,fileName);
+            printService.TransferFileToSD(file, fileName);
         }
 
         public void GetFileNameAndSize(string input)
         {
             printProgress.ParseFileNameAndSize(input);
             printName = printProgress.PrintingFileName;
-            fileSize = Math.Round(printProgress.FileSizeInMB,2);
+            fileSize = Math.Round(printProgress.FileSizeInMB, 2);
         }
 
         public void EstimatedPrintTime()
         {
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPrintProgressCommand());
-            Thread.Sleep(500);
             string timeLeft = ConnectionServiceSerial.printerConnection.Read();
-            Match match = Regex.Match(timeLeft, PATTERN,RegexOptions.IgnoreCase);
+            Match match = Regex.Match(timeLeft, PATTERN, RegexOptions.IgnoreCase);
             estimatedTime = match.Groups[1].Value;
         }
+
+
+
+        public void Confirm(IDialogService dialogService)
+        {
+            var parameters = new DialogParameters<Dialog>
+            {
+                { x => x.ContentText, "Start Print ?" },
+                { x => x.ButtonText, "Yes" },
+                { x => x.Color, Color.Success }
+            };
+
+            IDialogReference dialogReference = dialogService.Show<Dialog>("Confirm", parameters);
+
+            StartPrint(fileToPrint);
+            StartTimeOfPrint();
+            GetFileNameAndSize(fileToPrint);
+        }
+
+        // private void StartClock()
+        // {
+        //     hours = 0;
+        //     minutes = 0;
+        //     seconds = 0;
+
+        //     timer = new System.Timers.Timer(1000);
+        //     timer.Elapsed += (sender, e) => UpdateClock();
+        //     timer.AutoReset = true;
+        //     timer.Enabled = true;
+        // }
+
+        //private void UpdateClock()
+        //{
+        //    seconds++;
+        //    if (seconds == 60)
+        //    {
+        //        seconds = 0;
+        //        minutes++;
+        //        if (minutes == 2)
+        //        {
+        //            EstimatedPrintTime();
+        //        }
+        //        if (minutes == 60)
+        //        {
+        //            minutes = 0;
+        //            hours++;
+        //        }
+        //    }
+        //}
     }
 }

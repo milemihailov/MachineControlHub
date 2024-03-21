@@ -5,11 +5,10 @@
 @inject NavigationManager MyNavigationManager
 @inject Data.HotendTemperatureService hotend
 @inject Data.BedTemperatureService bed
-@inject IDialogService DialogService
+@inject Data.BackgroundTimer background
 @inject IDialogService DialogService
 
 @implements IDisposable
-
 @using MachineControlHub.Temps
 @using System.Globalization
 @using Plotly.Blazor.Interop
@@ -29,7 +28,7 @@ else
     <MudItem xs="4">
         <MudPaper MinHeight="600px" Width="100%" Elevation="0">
             <MudCardContent>
-                <MudButton class="button-30" @onclick="() => {Confirm();}">Start Print</MudButton>
+                <MudButton class="button-30" @onclick="() => {print.Confirm(DialogService);}">Start Print</MudButton>
                 <MudButton class="button-30" @onclick="print.PausePrint">Pause Print</MudButton>
                 <MudButton class="button-30" @onclick="print.StopPrint">Stop Print</MudButton>
 
@@ -45,21 +44,21 @@ else
                     </ButtonTemplate>
                 </MudFileUpload>
 
-                <MudSelect @bind-Value="@fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                     @if (serial.initialized)
                     {
-                        @foreach (var file in files)
+                        @foreach (var file in print.files)
                         {
                             <MudSelectItem Value="@file" />
                         }
                     }
                 </MudSelect>
 
-                <p>File printing: <strong>@print.printName</strong></p>
-                <p>Estimated print time: @print.estimatedTime</p>
-                <p>Elapsed print time:  @string.Format("{0}h {1}m {2}s", hours, minutes, seconds)</p>
-                <p>Start time: <strong>@print.printJob.FormattedStartTime</strong></p>
-                <p>File Size: <strong>@print.fileSize MB</strong></p>
+                <MudText>File printing: <strong>@print.printName</strong></MudText>
+                <MudText>Estimated print time: @print.estimatedTime</MudText>
+                <MudText>Elapsed print time:  @string.Format($"{print.hours}h {print.minutes}m {print.seconds}s")</MudText>
+                <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
+                <MudText>File Size: <strong>@print.fileSize MB</strong></MudText>
             </MudCardContent>
         </MudPaper>
     </MudItem>
@@ -67,25 +66,24 @@ else
     <MudItem xs="8">
         <MudPaper Height="100%" Width="100%" Elevation="2">
             <MudCardContent>
-                @if (!IsInitialized)
+                @if (!levelBed._isInitialized)
                 {
                     <MudPaper>
                         <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
                     </MudPaper>
                 }
-                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
-                             ClickAction="ClickAction" HoverAction="HoverAction" />
+                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
 
 
-                <MudButton FullWidth="true" Disabled="@_processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
-                    @if (_processing)
+                <MudButton FullWidth="true" Disabled="@print._processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
+                    @if (print._processing)
                     {
                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                        <MudText Class="ms-2">Processing</MudText>
+                        <MudText Class="ms-2">Measuring Bed</MudText>
                     }
                     else
                     {
-                        <MudText>Calibrate</MudText>
+                        <MudText>CALIBRATE BED</MudText>
                     }
                 </MudButton>
             </MudCardContent>
@@ -105,7 +103,7 @@ else
                 <MudDivider DividerType="DividerType.FullWidth" />
                 <MudListItem>
                     <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText>Current Bed Temperature: @hotend.currentHotendTemperature</MudText>
+                        <MudText>Current Bed Temperature: @bed.currentBedTemperature</MudText>
                         <MudText>Target Bed Temperature: @bed.targetBedTemperature</MudText>
                     </MudStack>
                 </MudListItem>
@@ -127,20 +125,39 @@ else
     </MudItem>
     <MudItem xs="8">
         <MudPaper Height="100%" Width="100%" Elevation="0">
-            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
+            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="Options" />
         </MudPaper>
     </MudItem>
 </MudGrid>
 
 @code {
 
+    [CascadingParameter]
+    private MudTheme Theme { get; set; }
+
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
+
+    public static List<double> hotendGraph = new List<double> { };
+    public static List<double> bedGraph = new List<double> { };
+    public ChartOptions Options = new ChartOptions();
+    public string[] XAxisLabels = { };
+    public int Index = -1;
+
+
     protected override void OnInitialized()
     {
-        timer = new Timer(UpdateTemperatureValues, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
         if (serial.initialized)
         {
-            files = print.ListSDFiles();
+            print.ListSDFiles();
         }
+
+        background.SecondElapsed += OnTemperatureChange;
+
+
         config = new Config
             {
                 ShowLink = false,
@@ -168,9 +185,78 @@ else
                     T = 90
                 }
             };
-
         data = new List<ITrace>();
         LoadData();
-        base.OnInitialized();
+    }
+
+    private void OnTemperatureChange()
+    {
+        if (serial.initialized)
+        {
+            Task.Run(() =>
+            {
+                hotend.ParseCurrentHotendTemperature();
+                bed.ParseCurrentBedTemperature();
+                hotendGraph.Add(hotend.currentHotendTemperature);
+                bedGraph.Add(bed.currentBedTemperature);
+                UpdateGraphData();
+                InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        print.file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        print.ExtractPrintingSettings(print.file);
+        StateHasChanged();
+    }
+
+    private async Task Calibrate()
+    {
+        background.SecondElapsed -= OnTemperatureChange;
+        print._processing = true;
+        await Task.Run(() => levelBed.CalibrateBed());
+        levelBed.meshData = levelBed.GetSurfaceData();
+        LoadData();
+        print._processing = false;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1000);
+        background.SecondElapsed += OnTemperatureChange;
+    }
+
+    private void LoadData()
+    {
+        Task.Run(async () =>
+        {
+            foreach (var trace in await levelBed.meshData)
+            {
+                await InvokeAsync(async () => await chart.AddTrace(trace));
+                await Task.Delay(100);
+            }
+            levelBed._isInitialized = true;
+        });
+    }
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
+        new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+    };
+
+    public void UpdateGraphData()
+    {
+            var new_series = new List<ChartSeries>()
+        {
+            new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
+            new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+        };
+            Series = new_series;
+        
+    }
+
+    public void Dispose()
+    {
+        background.SecondElapsed -= OnTemperatureChange;
     }
 }

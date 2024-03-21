@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using WebUI.Data;
 
@@ -14,6 +15,7 @@ builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddSingleton<PrintingService>();
 builder.Services.AddSingleton<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
+builder.Services.AddSingleton(BackgroundTimer.Instance);
 builder.Services.AddMudServices();
 
 

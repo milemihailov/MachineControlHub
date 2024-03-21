@@ -12,12 +12,16 @@ namespace WebUI.Data
         public double fanSpeedInPercentage;
         public string sendCommand = "";
         public double valueToMove = 10;
+        public bool SwitchValue = false;
+        public int fanSpeed;
 
         public MotionSettingsData feedRate;
+        public Position positionToMove;
 
         public ControlPanelService()
         {
             feedRate = new MotionSettingsData();
+            positionToMove = new Position();
         }
 
 
@@ -129,6 +133,32 @@ namespace WebUI.Data
         public void CalculateFanSpeedIntoPercentage(double value)
         {
             fanSpeedInPercentage = Math.Round(value / 255 * 100);
+        }
+
+        public void UpdateParagraph(ConnectionServiceSerial serial)
+        {
+            Thread.Sleep(50);
+            string message = serial.Read();
+
+            double value;
+            Match match = Regex.Match(message, Data.ControlPanelService.FAN_PATTERN);
+            if (match.Success)
+            {
+                value = double.Parse(match.Groups[1].Value);
+                CalculateFanSpeedIntoPercentage(value);
+            }
+
+            string filteredOutput = message.Replace("ok", " ");
+            consoleOutput += filteredOutput;
+        }
+
+        public void ToggleValue()
+        {
+            if (SwitchValue)
+                fanSpeed = 255;
+            else
+                fanSpeed = 0;
+            SwitchValue = !SwitchValue;
         }
     }
 }

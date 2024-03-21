@@ -1,6 +1,8 @@
 ﻿@page "/controlpanel"
 @inject Data.ConnectionServiceSerial serial
 @inject Data.ControlPanelService control
+@inject Data.BackgroundTimer background
+
 @using Plotly.Blazor.Interop
 @using Plotly.Blazor.LayoutLib
 @using Plotly.Blazor.Traces.ScatterLib
@@ -66,7 +68,7 @@ else
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</MudButton>
 
-                <MudSwitch @onclick="() => {control.SetFanSpeed(fanSpeed);ToggleValue();}" @bind-Value="@SwitchValue" Color="Color.Primary" Class="mr-n2 mb-6" />
+                <MudSwitch @onclick="() => {control.SetFanSpeed(control.fanSpeed);control.ToggleValue();}" @bind-Value="@control.SwitchValue" Color="Color.Primary" Class="mr-n2 mb-6" />
 
                 <MudSlider Class="d-inline-block" @bind-Value="@control.defaultFanSpeed" Vertical="true" Min="0" Max="255" @onchange="() => control.SetFanSpeed(control.defaultFanSpeed)" />
                 <MudText>@control.fanSpeedInPercentage%</MudText>
@@ -86,9 +88,19 @@ else
 
 @code {
 
+    [CascadingParameter]
+    private MudTheme Theme { get; set; }
+    MudChip selected;
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
+    private IEnumerable<EventDataPoint> ClickInfos { get; set; }
+
+
     protected override void OnInitialized()
     {
-        timer = new Timer(UpdateParagraph, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        background.SecondElapsed += OnUpdate;
 
         config = new Config
             {
@@ -116,5 +128,50 @@ else
             }
             };
 
+    }
+
+    public void OnUpdate()
+    {
+        if(serial.initialized)
+        {
+            Task.Run(() =>
+            {
+                control.UpdateParagraph(serial);
+                InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+
+    public void ClickAction(IEnumerable<EventDataPoint> eventData)
+    {
+        ClickInfos = eventData;
+        StoreClickedValues();
+        StateHasChanged();
+    }
+
+    public async void SubscribeEvents()
+    {
+        await chart.SubscribeClickEvent();
+    }
+
+    MachineControlHub.Motion.Position pos = new();
+
+    private void StoreClickedValues()
+    {
+        if (ClickInfos != null && ClickInfos.Any())
+        {
+            string x = ClickInfos.First().X.ToString();
+            string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
+            control.positionToMove.XMovePosition = double.Parse(x);
+            control.positionToMove.YMovePosition = double.Parse(y);
+            serial.Write(CommandMethods.BuildAbsolutePositionCommand());
+            serial.Write(CommandMethods.BuildLinearMoveCommand(control.positionToMove, control.feedRate));
+            serial.Write(CommandMethods.BuildRelativePositionCommand());
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        background.SecondElapsed -= OnUpdate;
     }
 }
