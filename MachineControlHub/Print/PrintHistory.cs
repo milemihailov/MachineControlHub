@@ -8,7 +8,7 @@
         /// <summary>
         /// Gets or sets the list of printed jobs.
         /// </summary>
-        public List<PrintJobHistory> Prints { get; set; }
+        public List<CurrentPrintJob> Prints { get; set; }
     }
 
 }

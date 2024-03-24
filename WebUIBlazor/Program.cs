@@ -15,6 +15,7 @@ builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddScoped<PrintingService>();
 builder.Services.AddSingleton<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
+builder.Services.AddScoped<PrinterDataServiceTest>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
 builder.Services.AddMudServices();
 

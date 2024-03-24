@@ -1,10 +1,19 @@
-﻿namespace MachineControlHub.Temps
+﻿using MachineControlHub.PrinterConnection;
+
+namespace MachineControlHub.Temps
 {
     /// <summary>
     /// Represents temperature-related information for the printer's chamber.
     /// </summary>
     public class ChamberTemps
     {
+        private IPrinterConnection _printerConnection;
+
+        public ChamberTemps(IPrinterConnection printerConnection)
+        {
+            _printerConnection = printerConnection;
+        }
+
         /// <summary>
         /// Gets or sets the current temperature of the chamber in degrees Celsius.
         /// </summary>

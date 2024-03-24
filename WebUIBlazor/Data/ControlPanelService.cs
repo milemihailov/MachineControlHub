@@ -14,6 +14,7 @@ namespace WebUI.Data
         public double valueToMove = 10;
         public bool SwitchValue = false;
         public int fanSpeed;
+        public int? freeMoveFeedRate;
 
         public MotionSettingsData feedRate;
         public Position positionToMove;
@@ -24,6 +25,8 @@ namespace WebUI.Data
             positionToMove = new Position();
         }
 
+
+ 
 
         /// <summary>
         /// Adjusts the specified axis position by the given value.
@@ -66,6 +69,11 @@ namespace WebUI.Data
             serial.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
 
+
+        public void AdjustFreeMoveFeedRate()
+        {
+            freeMoveFeedRate = feedRate.FeedRateFreeMove;
+        }
 
         /// <summary>
         /// Sends a command to disable the steppers of the 3D printer.
@@ -141,7 +149,7 @@ namespace WebUI.Data
             string message = serial.Read();
 
             double value;
-            Match match = Regex.Match(message, Data.ControlPanelService.FAN_PATTERN);
+            Match match = Regex.Match(message, FAN_PATTERN);
             if (match.Success)
             {
                 value = double.Parse(match.Groups[1].Value);

@@ -34,14 +34,14 @@ else
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</MudButton>
-                    <MudNumericField Margin="MudBlazor.Margin.None" @bind-Value="control.feedRate.FeedRateFreeMove" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                    <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="control.feedRate.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                 </MudStack>
 
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary">Set Feedrate</MudButton>
+                    <MudText Typo="Typo.overline"><b>CURRENT FEEDRATE: </b> @control.feedRate.FeedRateFreeMove (mm/min)</MudText>
                 </MudStack>
 
 
@@ -123,8 +123,8 @@ else
             {
                 Name = "ScatterTrace",
                 Mode = ModeFlag.None,
-                X = Enumerable.Range(0, 201).SelectMany(_ => Enumerable.Range(0, 201)).Cast<object>().ToList(),
-                Y = Enumerable.Range(0, 201).SelectMany(y => Enumerable.Repeat(y, 201)).Cast<object>().ToList()
+                X = Enumerable.Range(0, printer.Printer.Bed.XSize + 1).SelectMany(_ => Enumerable.Range(0, printer.Printer.Bed.XSize + 1)).Cast<object>().ToList(),
+                Y = Enumerable.Range(0, printer.Printer.Bed.YSize + 1).SelectMany(y => Enumerable.Repeat(y, printer.Printer.Bed.YSize + 1)).Cast<object>().ToList()
             }
             };
 

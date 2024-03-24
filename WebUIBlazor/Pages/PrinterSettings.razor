@@ -1,0 +1,47 @@
+﻿@page "/printersettings"
+@using MachineControlHub.Material
+<h3>PrinterSettings</h3>
+
+<MudSelect T="string" Label="Select bed shape" @bind-Value="printer.selectedShape" Variant="Variant.Outlined">
+    <MudSelectItem Value="@("Rectangular")" />
+    <MudSelectItem Value="@("Circular")" />
+    <MudSelectItem Value="@("Custom")" />
+</MudSelect>
+
+<MudNumericField Label="Y Axis in mm" @bind-Value="printer.Printer.Bed.YSize" Immediate="true" Variant="Variant.Outlined" />
+<MudNumericField Label="X Axis in mm" @bind-Value="printer.Printer.Bed.XSize" Immediate="true" Variant="Variant.Outlined" />
+<MudNumericField Label="Z Axis in mm" @bind-Value="printer.Printer.ZMaxBuildVolume" Immediate="true" Variant="Variant.Outlined" />
+
+<MudNumericField @bind-Value="printer.Printer.NumberOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
+
+<EditForm Model="printer.Printer.PreheatingProfiles" OnValidSubmit="printer.HandleValidSubmit">
+    <MudTextField @bind-Value="printer.Printer.PreheatingProfiles.MaterialName" Label="Material" Variant="Variant.Outlined" />
+    <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.HotendTemp" Label="Hotend Temperature" Variant="Variant.Outlined" />
+    <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.BedTemp" Label="Bed Temperature" Variant="Variant.Outlined" />
+    <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.FanSpeed" Label="Fan Speed" Variant="Variant.Outlined" />
+    <MudButton Type="submit" OnClick="printer.HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary">Submit</MudButton>
+</EditForm>
+
+<MudTable Items="@printer.profiles" Height="350px" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
+    <HeaderContent>
+        <MudTh>Material</MudTh>
+        <MudTh>Hotend Temperature</MudTh>
+        <MudTh>Bed Temperature</MudTh>
+        <MudTh>Fan Speed</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Material">@context.MaterialName</MudTd>
+        <MudTd DataLabel="Hotend Temperature">@context.HotendTemp</MudTd>
+        <MudTd DataLabel="Bed Temperature">@context.BedTemp</MudTd>
+        <MudTd DataLabel="Fan Speed">@context.FanSpeed</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+
+
+    protected override void OnParametersSet()
+    {
+        printer.SelectBedShape(printer.selectedShape);
+    }
+}

@@ -36,11 +36,11 @@
         /// <summary>
         /// Gets or sets the width (X-size) of the printer's bed in millimeters.
         /// </summary>
-        public double XSize { get; set; }
+        public int XSize { get; set; }
 
         /// <summary>
         /// Gets or sets the length (Y-size) of the printer's bed in millimeters.
         /// </summary>
-        public double YSize { get; set; }
+        public int YSize { get; set; }
     }
 }

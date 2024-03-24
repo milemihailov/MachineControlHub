@@ -8,7 +8,7 @@ namespace MachineControlHub.Print
     /// <summary>
     /// Represents a 3D printing job.
     /// </summary>
-    public class PrintJobHistory
+    public class CurrentPrintJob
     {
         public const string DATA_SEPARATOR = "; ";
         public const char NEW_LINE = '\n';
@@ -16,7 +16,7 @@ namespace MachineControlHub.Print
 
         private IPrinterConnection _connection;
 
-        public PrintJobHistory(IPrinterConnection connection)
+        public CurrentPrintJob(IPrinterConnection connection)
         {
             _connection = connection;
         }

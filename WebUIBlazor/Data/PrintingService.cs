@@ -14,7 +14,7 @@ namespace WebUI.Data
         const string PATTERN = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
 
         public PrintService printService;
-        public PrintJobHistory printJob;
+        public CurrentPrintJob printJob;
         public PrintProgress printProgress;
         private readonly IDialogService _dialogService;
         private readonly ISnackbar _snackbar;
@@ -40,7 +40,7 @@ namespace WebUI.Data
         public PrintingService(IDialogService dialogService, ISnackbar snackbar)
         {
             printService = new PrintService(ConnectionServiceSerial.printerConnection);
-            printJob = new PrintJobHistory(ConnectionServiceSerial.printerConnection);
+            printJob = new CurrentPrintJob(ConnectionServiceSerial.printerConnection);
             printProgress = new PrintProgress();
             _dialogService = dialogService;
             _snackbar = snackbar;

@@ -2,6 +2,7 @@
 using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
+using MachineControlHub.Print;
 using MachineControlHub.PrinterConnection;
 using MachineControlHub.Temps;
 
@@ -16,6 +17,8 @@ namespace MachineControlHub
         /// Gets or sets the model of the 3D printer.
         /// </summary>
         public string Model { get; set; }
+
+        public int NumberOfExtruders { get; set; }
 
         /// <summary>
         /// Gets or sets the firmware version installed on the printer.
@@ -53,6 +56,11 @@ namespace MachineControlHub
         public PrinterHead Head { get; set; }
 
         /// <summary>
+        /// Gets or sets the camera configuration and properties of the printer.
+        /// </summary>
+        public Camera Camera { get; set; }
+
+        /// <summary>
         /// Gets or sets the bed temperatures data for the printer.
         /// </summary>
         public BedTemps BedTemperatures { get; set; }
@@ -70,12 +78,27 @@ namespace MachineControlHub
         /// <summary>
         /// Gets or sets the properties of the filament used by the printer.
         /// </summary>
-        public FilamentProperties FilamentUsed { get; set; }
+        public FilamentProperties FilamentProperties { get; set; }
+
+        /// <summary>
+        /// Gets or sets the preheating profiles for the printer.
+        /// </summary>
+        public PreheatingProfiles PreheatingProfiles { get; set; }
 
         /// <summary>
         /// Gets or sets the touchscreen configuration and properties of the printer.
         /// </summary>
         public TouchScreen TouchScreen { get; set; }
+
+        /// <summary>
+        /// Gets or sets the print history of the printer.
+        /// </summary>
+        public PrintHistory PrintHistory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current print job of the printer.
+        /// </summary>
+        public CurrentPrintJob CurrentPrintJob { get; set; }
 
         /// <summary>
         /// Gets or sets the motion settings and data for the printer.

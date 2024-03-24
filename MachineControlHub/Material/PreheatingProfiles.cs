@@ -12,7 +12,7 @@
             Fan = 'F',
             MaterialIndex = 'S'
         }
-
+        public string MaterialName { get; set; }
         /// <summary>
         /// Gets or sets the hotend temperature in degrees Celsius.
         /// </summary>
