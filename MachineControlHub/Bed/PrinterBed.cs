@@ -42,5 +42,7 @@
         /// Gets or sets the length (Y-size) of the printer's bed in millimeters.
         /// </summary>
         public int YSize { get; set; }
+
+        public int Diameter { get; set; }
     }
 }
