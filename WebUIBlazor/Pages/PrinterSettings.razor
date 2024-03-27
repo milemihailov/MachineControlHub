@@ -1,6 +1,5 @@
 ﻿@page "/printersettings"
 @using MachineControlHub.Material
-<h3>PrinterSettings</h3>
 
 
 <MudCard>
@@ -41,7 +40,7 @@
 
 <MudCard>
     <MudCardHeader>
-        <MudText Typo="Typo.h6">Preheating Profiles</MudText>
+        <MudText Typo="Typo.h6">Create Preheating Profiles</MudText>
     </MudCardHeader>
     <MudCardContent>
         <EditForm Model="printer.Printer.PreheatingProfiles" OnValidSubmit="printer.HandleValidSubmit">
@@ -49,28 +48,33 @@
             <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.HotendTemp" Label="Hotend Temperature" Variant="Variant.Outlined" />
             <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.BedTemp" Label="Bed Temperature" Variant="Variant.Outlined" />
             <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.FanSpeed" Label="Fan Speed" Variant="Variant.Outlined" />
-            <MudButton Type="submit" OnClick="printer.HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary">Add Profile</MudButton>
+            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.MaterialIndex" Label="Index" Variant="Variant.Outlined" />
+            <MudButton Type="submit" OnClick="printer.HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary">Make Presets</MudButton>
+            <MudButton OnClick="printer.SendPreheatingProfiles">Send Presets To Printer</MudButton>
         </EditForm>
-
-        <MudTable Items="@printer.profiles" Height="350px" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
-            <HeaderContent>
-                <MudTh>Material</MudTh>
-                <MudTh>Hotend Temperature</MudTh>
-                <MudTh>Bed Temperature</MudTh>
-                <MudTh>Fan Speed</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Material">@context.MaterialName</MudTd>
-                <MudTd DataLabel="Hotend Temperature">@context.HotendTemp</MudTd>
-                <MudTd DataLabel="Bed Temperature">@context.BedTemp</MudTd>
-                <MudTd DataLabel="Fan Speed">@context.FanSpeed</MudTd>
-            </RowTemplate>
-        </MudTable>
     </MudCardContent>
 </MudCard>
+<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">Set Offsets</MudText>
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.XHomeOffset" Label="X Offset" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.YHomeOffset" Label="Y Offset" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.ZHomeOffset" Label="Z Offset" Variant="Variant.Outlined" />
+    </MudCardHeader>
+
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">Set Max Feedrates</MudText>
+        <MudNumericField @bind-Value="printer.XMaxFeedrate" Label="X Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.YMaxFeedrate" Label="Y Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.ZMaxFeedrate" Label="Z Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.EMaxFeedrate" Label="E Maximum Feedrate" Variant="Variant.Outlined" />
+    </MudCardHeader>
+
+    <MudButton OnClick="printer.SetMaxFeedrates">Set Feedrates to printer</MudButton>
+</MudCard>
+
 
 @code {
-
 
     protected override void OnParametersSet()
     {

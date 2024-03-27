@@ -87,7 +87,7 @@
         /// <summary>
         /// Gets or sets the default acceleration for the extruder (E-axis).
         /// </summary>
-        public int EDefaultAcceleration { get; set; }
+        public int? EDefaultAcceleration { get; set; }
 
         /// <summary>
         /// Gets or sets the number of steps per unit.

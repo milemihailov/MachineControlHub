@@ -23,7 +23,7 @@ else
 {
     <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@serial.isConnected</MudAlert>
 }
-<MudGrid>
+<MudGrid id="unique_id_scroll_section">
     <MudItem xs="4">
         <MudPaper MinHeight="600px" Width="100%" Elevation="0">
             <MudCardContent>
@@ -93,7 +93,11 @@ else
 
     <MudItem xs="4">
         <MudPaper Width="100%" Square="true">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Set Temperatures</MudText>
+            </MudCardHeader>
             <MudList>
+                <MudDivider DividerType="DividerType.FullWidth" />
                 <MudListItem>
                     <MudStack Row="true" AlignItems="AlignItems.Center">
                         <MudText>Current Hotend Temperature: @hotend.currentHotendTemperature</MudText>
@@ -128,6 +132,50 @@ else
             <MudChart ChartType="ChartType.Line" ChartSeries="@print.Series" @bind-SelectedIndex="print.Index" XAxisLabels="@print.XAxisLabels" Width="100%" Height="350px" ChartOptions="print.Options" />
         </MudPaper>
     </MudItem>
+    <MudItem xs="4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">Preheating Profiles</MudText>
+        </MudCardHeader>
+        <MudCard>
+            <MudExpansionPanels>
+                @foreach (var profile in printer.preheatingProfiles)
+                {
+                    <MudExpansionPanel Text="@profile.MaterialName">
+                        <MudItem xs="12" Style="display: flex; justify-content: space-between;">
+                            <div>
+                                <MudText Typo="Typo.overline"><b>Hotend:</b> @(profile.HotendTemp)°C</MudText>
+                                <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
+                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeed)%</MudText>
+                            </div>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" OnClick="() => printer.DeletePreheatingProfile(profile)">Delete</MudButton>
+                        </MudItem>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">HOTEND PID Autotune and Store To Printer</MudText>
+        </MudCardHeader>
+        <MudCard>
+            <MudNumericField @bind-Value="hotend.PIDHotendTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudNumericField @bind-Value="hotend.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => hotend.SetHotendPIDValues()">Set PID Values</MudButton>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">BED PID Autotune and Store To Printer</MudText>
+        </MudCardHeader>
+        <MudCard>
+            <MudNumericField @bind-Value="bed.PIDBedTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudNumericField @bind-Value="bed.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => bed.SetBedPIDValues()">Set PID Values</MudButton>
+        </MudCard>
+    </MudItem>
+
 </MudGrid>
 
 @code {

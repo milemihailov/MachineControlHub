@@ -199,3 +199,4 @@
 06/12/2023 22:00:16 -    at System.IO.Ports.SerialStream..ctor(String portName, Int32 baudRate, Parity parity, Int32 dataBits, StopBits stopBits, Int32 readTimeout, Int32 writeTimeout, Handshake handshake, Boolean dtrEnable, Boolean rtsEnable, Boolean discardNull, Byte parityReplace)
    at System.IO.Ports.SerialPort.Open()
    at ControllingAndManagingApp.PrinterConnection.SerialConnection.Connect() in C:\Users\milem\source\repos\milemihailov\MachineControlHub\PrinterConnection\SerialConnection.cs:line 92
+3/27/2024 3:55:32 PM - Error writing to serial port: The port is closed.

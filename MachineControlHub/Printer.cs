@@ -30,6 +30,10 @@ namespace MachineControlHub
         /// </summary>
         public bool HasAutoBedLevel { get; set; }
 
+        public bool HasChamber { get; set; }
+
+        public bool HasHeatedBed { get; set; }
+
         /// <summary>
         /// Gets or sets a value indicating whether the printer has a filament runout sensor.
         /// </summary>

@@ -477,6 +477,18 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(preset);
         }
 
+        public static string BuildPIDAutoTuneCommand(int index, int temp, int cycles, bool useCycle)
+        {
+            var pidAutoTune = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.PIDAutoTune,
+                Parameters = new List<string>() { $"E{index} C{cycles} S{temp} U={useCycle}" }
+            };
+
+            return GCodeMethods.GCodeString(pidAutoTune);
+        }
+
 
         /// <summary>
         /// Set the filament’s current diameter
@@ -511,6 +523,17 @@ namespace MachineControlHub.Motion
             };
 
             return GCodeMethods.GCodeString(maxFeedrate);
+        }
+
+        public static string BuildSaveToEEPROMCommand()
+        {
+            var saveToEEPROM = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SaveSettings
+            };
+
+            return GCodeMethods.GCodeString(saveToEEPROM);
         }
 
 

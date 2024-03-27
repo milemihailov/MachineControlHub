@@ -16,22 +16,22 @@
         /// <summary>
         /// Gets or sets the hotend temperature in degrees Celsius.
         /// </summary>
-        public int? HotendTemp { get; set; }
+        public int HotendTemp { get; set; }
 
         /// <summary>
         /// Gets or sets the bed temperature in degrees Celsius.
         /// </summary>
-        public int? BedTemp { get; set; }
+        public int BedTemp { get; set; }
 
         /// <summary>
         /// Gets or sets the fan speed as a percentage.
         /// </summary>
-        public int? FanSpeed { get; set; }
+        public int FanSpeed { get; set; }
 
         /// <summary>
         /// Gets or sets the material index.
         /// </summary>
-        public int? MaterialIndex { get; set; }
+        public int MaterialIndex { get; set; }
 
 
         /// <summary>

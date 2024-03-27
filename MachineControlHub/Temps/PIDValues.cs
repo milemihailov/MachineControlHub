@@ -1,4 +1,5 @@
 ﻿using MachineControlHub.Motion;
+using MachineControlHub.PrinterConnection;
 using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Temps
@@ -8,7 +9,14 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class PIDValues
     {
-        const string PARSE_PID_PATTERN = @"M301 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
+        const string PARSE_HOTEND_PID_PATTERN = @"M301 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
+        const string PARSE_BED_PID_PATTERN = @"M304 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
+        private IPrinterConnection _connection;
+
+        public PIDValues(IPrinterConnection connection)
+        {
+            _connection = connection;
+        }
 
         /// <summary>
         /// Gets or sets the Proportional (P) value for PID control.
@@ -39,19 +47,57 @@ namespace MachineControlHub.Temps
         /// <seealso cref="Proportional"/>
         /// <seealso cref="Integral"/>
         /// <seealso cref="Derivative"/>
-        public void ParsePIDValues(PrinterConnection.SerialConnection serial)
+        public void ParseHotendPIDValues()
         {
             // Send a command to report settings
-            serial.Write(CommandMethods.BuildReportSettings());
+            _connection.Write(CommandMethods.BuildReportSettings());
 
             // Wait for the response
             Thread.Sleep(200);
 
             // Read the response from the serial interface
-            string input = serial.Read();
+            string input = _connection.Read();
 
             // Match the response with the PID pattern
-            Match match = Regex.Match(input, PARSE_PID_PATTERN);
+            Match match = Regex.Match(input, PARSE_HOTEND_PID_PATTERN);
+
+            // If a match is found, extract and parse the PID values
+            if (match.Success)
+            {
+                string pValue = match.Groups[1].Value;
+                string iValue = match.Groups[2].Value;
+                string dValue = match.Groups[3].Value;
+
+                // Parse and assign the Proportional, Integral, and Derivative values
+                Proportional = double.Parse(pValue);
+                Integral = double.Parse(iValue);
+                Derivative = double.Parse(dValue);
+            }
+            else
+            {
+                Console.WriteLine("Value not found in the string");
+            }
+        }
+
+        //public void SetHotendPIDValues(PrinterConnection.SerialConnection serial)
+        //{
+        //    // Send a command to set PID values
+        //    serial.Write(CommandMethods.BuildSetPIDValues(Proportional, Integral, Derivative));
+        //}
+
+        public void ParseBedPIDValues()
+        {
+            // Send a command to report settings
+            _connection.Write(CommandMethods.BuildReportSettings());
+
+            // Wait for the response
+            Thread.Sleep(200);
+
+            // Read the response from the serial interface
+            string input = _connection.Read();
+
+            // Match the response with the PID pattern
+            Match match = Regex.Match(input, PARSE_BED_PID_PATTERN);
 
             // If a match is found, extract and parse the PID values
             if (match.Success)
