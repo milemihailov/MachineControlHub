@@ -98,9 +98,11 @@ else
     private IList<ITrace> data;
     private IEnumerable<EventDataPoint> ClickInfos { get; set; }
 
-
     protected override void OnInitialized()
     {
+
+        int xSize = printer.SelectedPrinter?.Bed?.XSize ?? 0;
+        int ySize = printer.SelectedPrinter?.Bed?.YSize ?? 0;
         background.SecondElapsed += OnUpdate;
 
         config = new Config
@@ -124,8 +126,8 @@ else
             {
                 Name = "ScatterTrace",
                 Mode = ModeFlag.None,
-                X = Enumerable.Range(0, printer.Printer.Bed.XSize + 1).SelectMany(_ => Enumerable.Range(0, printer.Printer.Bed.XSize + 1)).Cast<object>().ToList(),
-                Y = Enumerable.Range(0, printer.Printer.Bed.YSize + 1).SelectMany(y => Enumerable.Repeat(y, printer.Printer.Bed.YSize + 1)).Cast<object>().ToList()
+                X = Enumerable.Range(0, xSize + 1).SelectMany(_ => Enumerable.Range(0, xSize + 1)).Cast<object>().ToList(),
+                Y = Enumerable.Range(0, ySize + 1).SelectMany(y => Enumerable.Repeat(y, ySize + 1)).Cast<object>().ToList()
             }
             };
 

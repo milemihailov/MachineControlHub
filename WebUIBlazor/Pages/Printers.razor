@@ -1,0 +1,62 @@
+﻿@page "/printers"
+
+<MudCard>
+    <MudExpansionPanels MultiExpansion="true">
+        @foreach (var p in printer.Printers)
+        {
+            <MudExpansionPanel Text="@p.Name">
+                <MudList>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>ID:</b> @p.Id</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>Model:</b> @p.Model</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>PrinterFirmwareVersion:</b> @p.PrinterFirmwareVersion</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>HasAutoBedLevel</b>: @p.HasAutoBedLevel</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>HasChamber:</b> @p.HasChamber</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>HasFilamentRunoutSensor:</b> @p.HasFilamentRunoutSensor</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>HasHeatedBed:</b> @p.HasHeatedBed</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText Typo="Typo.overline"><b>NumberOfExtruders:</b> @p.NumberOfExtruders</MudText>
+                    </MudListItem>
+                    @foreach (var extruder in p.Extruders)
+                    {
+                        <MudExpansionPanel Text=@($"Extruder #{p.Extruders.IndexOf(extruder) + 1}")>
+                            <MudList>
+                                <MudListItem>
+                                    <MudText Typo="Typo.overline"><b>Nozzle Material:</b> @extruder.NozzleMaterial</MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.overline"><b>Nozzle Diameter:</b> @extruder.NozzleDiameter</MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.overline"><b>Has Cooling Fan:</b> @extruder.HasCoolingFan</MudText>
+                                </MudListItem>
+                                <MudListItem>
+                                    <MudText Typo="Typo.overline"><b>Probe Present:</b> @extruder.ProbePresent</MudText>
+                                </MudListItem>
+                            </MudList>
+                        </MudExpansionPanel>
+                    }
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.ChoosePrinter(p)">Select</MudButton>
+                </MudList>
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
+</MudCard>
+
+@code {
+
+}

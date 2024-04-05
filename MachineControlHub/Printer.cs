@@ -13,6 +13,9 @@ namespace MachineControlHub
     /// </summary>
     public class Printer
     {
+
+        public string Name { get; set; }
+        public string Id { get; set; }
         /// <summary>
         /// Gets or sets the model of the 3D printer.
         /// </summary>
@@ -57,7 +60,7 @@ namespace MachineControlHub
         /// <summary>
         /// Gets or sets the print head configuration and properties of the printer.
         /// </summary>
-        public PrinterHead Head { get; set; }
+        public List <PrinterHead> Extruders { get; set; }
 
         /// <summary>
         /// Gets or sets the camera configuration and properties of the printer.

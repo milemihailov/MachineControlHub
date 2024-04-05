@@ -6,7 +6,7 @@ namespace WebUI.Data
 {
     public class BedTemperatureService
     {
-        public BedTemps bed;
+        public ITemperatures bed;
         private readonly ISnackbar _snackbar;
 
         public int currentBedTemperature;
@@ -17,22 +17,22 @@ namespace WebUI.Data
 
         public BedTemperatureService(ISnackbar snackbar) 
         {
-            bed = new BedTemps(Data.ConnectionServiceSerial.printerConnection);
+            bed = new BedTemps(ConnectionServiceSerial.printerConnection);
             _snackbar = snackbar;
         }
 
         public void SetBedTemperature(int setTemp) 
         {
-            bed.SetBedTemperature(setTemp);
+            bed.SetTemperature(setTemp);
             _snackbar.Add($"Bed temperature set to {setTemp}°C", Severity.Info);
         }
 
         public void ParseCurrentBedTemperature()
         {
             bed.ParseCurrentTemperature();
-            currentBedTemperature = bed.CurrentBedTemp;
-            setBedTemperature = bed.SetBedTemp;
-            targetBedTemperature = bed.TargetBedTemp;
+            currentBedTemperature = bed.CurrentTemp;
+            setBedTemperature = bed.SetTemp;
+            targetBedTemperature = bed.TargetTemp;
         }
 
         public void SetBedPIDValues()

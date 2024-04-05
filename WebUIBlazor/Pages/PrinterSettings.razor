@@ -27,6 +27,39 @@
             <MudNumericField Label="X Axis in mm" @bind-Value="printer.Printer.Bed.XSize" Immediate="true" Variant="Variant.Outlined" />
         }
     </MudCardContent>
+
+    <MudCardContent>
+        <MudTextField @bind-Value="printer.PrinterName" Label="Printer Name" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="printer.Model" Label="Printer Model" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="printer.PrinterFirmwareVersion" Label="Firmware Version" Variant="Variant.Outlined" />
+    </MudCardContent>
+
+    <MudCardContent>
+        <MudSwitch Color="Color.Success" @bind-Value="printer.HasAutoBedLevel" Label="Has Auto Bed Level" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.HasHeatedBed" Label="Has Heated Bed" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.HasChamber" Label="Has Chamber" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.HasFilamentRunoutSensor" Label="Has Filament Sensor" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.HasCamera" Label="Has Camera" />
+        @if (printer.HasCamera)
+        {
+            <MudTextField @bind-Value="printer.Printer.Camera.Model" Label="Camera Model" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="printer.Printer.Camera.ResolutionHeight" Label="Resolution Height" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="printer.Printer.Camera.ResolutionWidth" Label="Resolution Width" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="printer.Printer.Camera.LensFocalLength" Label="Lens Focal Length" Variant="Variant.Outlined" />
+        }
+        @*      <MudSwitch @bind-Checked="printer.HasPowerLossRecovery" Label="Has Power Loss Recovery" />
+        <MudSwitch @bind-Checked="printer.HasDisplay" Label="Has Display" />
+        <MudSwitch @bind-Checked="printer.HasDualZ" Label="Has Dual Z" />
+        <MudSwitch @bind-Checked="printer.HasEnclosure" Label="Has Enclosure" />
+        <MudSwitch @bind-Checked="printer.HasDryBox" Label="Has Dry Box" />
+        <MudSwitch @bind-Checked="printer.HasCamera" Label="Has Camera" />
+        <MudSwitch @bind-Checked="printer.HasNetwork" Label="Has Network" />
+        <MudSwitch @bind-Checked="printer.HasOctoPrint" Label="Has OctoPrint" />
+        <MudSwitch @bind-Checked="printer.HasWebcam" Label="Has Webcam" />
+        <MudSwitch @bind-Checked="printer.HasWebcamStream" Label="Has Webcam Stream" />
+        <MudSwitch @bind-Checked="printer.HasWebcamSnapshot" Label="Has Webcam Snapshot" />
+        <MudSwitch @bind-Checked="printer.HasWebcamTimelapse" Label="Has Webcam Timelapse" /> *@
+    </MudCardContent>
 </MudCard>
 
 <MudCard>
@@ -34,27 +67,25 @@
         <MudText Typo="Typo.h6">Set if your machine has multiple extruders</MudText>
     </MudCardHeader>
     <MudCardContent>
-        <MudNumericField @bind-Value="printer.Printer.NumberOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
+        <MudNumericField @bind-Value="printer.NumOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => printer.UpdateExtruders(printer.NumOfExtruders)">Set Extruder Properties</MudButton>
+        @foreach (var extruder in printer.ExtruderSettings)
+        {
+            <MudExpansionPanel Text=@($"Set Your Settings For Extruder #{printer.ExtruderSettings.IndexOf(extruder) + 1}")>
+                <MudCardContent>
+                    <MudTextField @bind-Value="extruder.NozzleMaterial" Label="Nozzle Material" Variant="Variant.Outlined" />
+                    <MudNumericField @bind-Value="extruder.NozzleDiameter" Label="Nozzle Diameter" Variant="Variant.Text" />
+                    <MudSwitch Color="Color.Success" @bind-Value="extruder.HasCoolingFan" Label="Has Part Cooling Fan" />
+                    <MudSwitch Color="Color.Success" @bind-Value="extruder.ProbePresent" Label="Has Probe" />
+                </MudCardContent>
+            </MudExpansionPanel>
+        }
     </MudCardContent>
 </MudCard>
+<MudButton Type="submit" OnClick="printer.CreatePrinterProfile" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
 
-<MudCard>
-    <MudCardHeader>
-        <MudText Typo="Typo.h6">Create Preheating Profiles</MudText>
-    </MudCardHeader>
-    <MudCardContent>
-        <EditForm Model="printer.Printer.PreheatingProfiles" OnValidSubmit="printer.HandleValidSubmit">
-            <MudTextField @bind-Value="printer.Printer.PreheatingProfiles.MaterialName" Label="Material" Variant="Variant.Outlined" />
-            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.HotendTemp" Label="Hotend Temperature" Variant="Variant.Outlined" />
-            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.BedTemp" Label="Bed Temperature" Variant="Variant.Outlined" />
-            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.FanSpeed" Label="Fan Speed" Variant="Variant.Outlined" />
-            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.MaterialIndex" Label="Index" Variant="Variant.Outlined" />
-            <MudButton Type="submit" OnClick="printer.HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary">Make Presets</MudButton>
-            <MudButton OnClick="printer.SendPreheatingProfiles">Send Presets To Printer</MudButton>
-        </EditForm>
-    </MudCardContent>
-</MudCard>
-<MudCard>
+
+@* <MudCard>
     <MudCardHeader>
         <MudText Typo="Typo.h6">Set Offsets</MudText>
         <MudNumericField @bind-Value="printer.Printer.MotionSettings.XHomeOffset" Label="X Offset" Variant="Variant.Outlined" />
@@ -71,13 +102,25 @@
     </MudCardHeader>
 
     <MudButton OnClick="printer.SetMaxFeedrates">Set Feedrates to printer</MudButton>
-</MudCard>
+</MudCard> *@
 
+<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">Create Preheating Profiles</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        <EditForm Model="printer.Printer.PreheatingProfiles" OnValidSubmit="printer.CreatePreheatProfile">
+            <MudTextField @bind-Value="printer.Printer.PreheatingProfiles.MaterialName" Label="Material" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.HotendTemp" Label="Hotend Temperature" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.BedTemp" Label="Bed Temperature" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.FanSpeed" Label="Fan Speed" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="printer.Printer.PreheatingProfiles.MaterialIndex" Label="Index" Variant="Variant.Outlined" />
+            <MudButton Type="submit" OnClick="printer.CreatePreheatProfile" Variant="Variant.Filled" Color="Color.Primary">Save Presets</MudButton>
+            <MudButton OnClick="printer.SendPreheatingProfiles">Send Presets To Printer</MudButton>
+        </EditForm>
+    </MudCardContent>
+</MudCard>
 
 @code {
 
-    protected override void OnParametersSet()
-    {
-        printer.SelectBedShape(printer.selectedShape);
-    }
 }

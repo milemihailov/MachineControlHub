@@ -31,11 +31,11 @@ namespace MachineControlHub.Print
         /// </remarks>
         /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
         /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
-        public void TransferFileToSD(string GcodeFile, string fileName)
+        public void TransferFileToSD(string GcodeContent, string fileName)
         {
             try
             {
-                using (StreamReader reader = new StreamReader(GcodeFile))
+                using (StringReader reader = new StringReader(GcodeContent))
                 {
                     string line;
                     _connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");

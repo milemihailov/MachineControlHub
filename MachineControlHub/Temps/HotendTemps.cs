@@ -9,7 +9,7 @@ namespace MachineControlHub.Temps
     /// <summary>
     /// Represents temperature-related information for the printer's hotend.
     /// </summary>
-    public class HotendTemps
+    public class HotendTemps : ITemperatures
     {
         const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)\.\d+\s*/(\d+)\.\d+";
         private IPrinterConnection _connection;
@@ -25,22 +25,11 @@ namespace MachineControlHub.Temps
         /// </summary>
         public PIDValues PIDHotendValues { get; set; }
 
-        /// <summary>
-        /// Gets or sets the current temperature of the hotend in degrees Celsius.
-        /// </summary>
-        public int HotendCurrentTemp { get; set; }
 
-        /// <summary>
-        /// Gets or sets the maximum allowable temperature for the hotend in degrees Celsius.
-        /// </summary>
-        public int HotendMaxTemp { get; set; }
-
-        /// <summary>
-        /// Gets or sets the target temperature set for the hotend in degrees Celsius.
-        /// </summary>
-        public int SetHotendTemp { get; set; }
-
-        public int TargetHotendTemp { get; set; }
+        public int CurrentTemp { get ; set ; }
+        public int MaxTemp { get; set; }
+        public int SetTemp { get; set; }
+        public int TargetTemp { get; set; }
 
 
         /// <summary>
@@ -51,7 +40,7 @@ namespace MachineControlHub.Temps
         /// then extracts and parses the hotend temperature value from the received input string.
         /// The extracted temperature value is stored in the HotendCurrentTemp property.
         /// </remarks>
-        public void ParseCurrentHotendTemperature()
+        public void ParseCurrentTemperature()
         {
             Thread.Sleep(200);  // Simulating the initial delay asynchronously
 
@@ -75,8 +64,8 @@ namespace MachineControlHub.Temps
             foreach (Match match in matches)
             {
                 // The temperature value is captured in the first group (index 1)
-                HotendCurrentTemp = int.Parse(match.Groups[1].Value);
-                TargetHotendTemp = int.Parse(match.Groups[2].Value);
+                CurrentTemp = int.Parse(match.Groups[1].Value);
+                TargetTemp = int.Parse(match.Groups[2].Value);
             }
         }
 
@@ -85,7 +74,7 @@ namespace MachineControlHub.Temps
         /// Sets the target temperature for the hotend and sends the corresponding G-code command to the printer.
         /// </summary>
         /// <param name="temp">The target temperature to set for the hotend.</param>
-        public void SetHotendTemperature(int setTemp)
+        public void SetTemperature(int setTemp)
         {
             // Send the G-code command to set the hotend temperature
             _connection.Write(CommandMethods.BuildSetHotendTempCommand(setTemp));

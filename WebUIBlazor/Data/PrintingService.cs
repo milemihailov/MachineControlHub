@@ -20,11 +20,13 @@ namespace WebUI.Data
         private readonly ISnackbar _snackbar;
 
         public string printName;
+        public string uploadFileName;
         public string estimatedTime;
         public double fileSize;
         public string extractedSettings;
         public string timeElapsed;
         public List<string> files;
+        public List<(string FileName, string FileContent, long FileSize)> uploadedFiles = new List<(string FileName, string FileContent, long FileSize)>();
         public string file;
         public string fileToPrint = "";
         public bool _processing = false;
@@ -86,9 +88,10 @@ namespace WebUI.Data
             extractedSettings = printJob.ExtractedSettingsFromPrintedFile;
         }
 
-        public void StartPCPrint(string file, string fileName)
+        public void TransferFileToSD(string file, string fileName)
         {
-            printService.TransferFileToSD(file, fileName);
+            //printService.TransferFileToSD(file, fileName);
+            throw new NotImplementedException();
         }
 
         public void GetFileNameAndSize(string input)

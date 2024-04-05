@@ -5,6 +5,7 @@
 @inject NavigationManager MyNavigationManager
 @inject Data.HotendTemperatureService hotend
 @inject Data.BedTemperatureService bed
+@inject Data.ChamberTemperatureService chamber
 @inject Data.BackgroundTimer background
 
 @implements IDisposable
@@ -27,11 +28,11 @@ else
     <MudItem xs="4">
         <MudPaper MinHeight="600px" Width="100%" Elevation="0">
             <MudCardContent>
-                <MudButton class="button-30" OnClick="print.ConfirmStartAsync">Start Print</MudButton>
-                <MudButton class="button-30" @onclick="print.PausePrint">Pause Print</MudButton>
-                <MudButton class="button-30" @onclick="print.ResumePrint">Resume Print</MudButton>
-                <MudButton class="button-30" @onclick="print.StopPrint">Stop Print</MudButton>
-
+                <MudButton OnClick="print.ConfirmStartAsync">Start Print</MudButton>
+                <MudButton @onclick="print.PausePrint">Pause Print</MudButton>
+                <MudButton @onclick="print.ResumePrint">Resume Print</MudButton>
+                <MudButton @onclick="print.StopPrint">Stop Print</MudButton>
+                <MudButton OnClick="() => print.TransferFileToSD(print.file,print.printName)">Start PC</MudButton>
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
                     <ButtonTemplate>
                         <MudButton HtmlTag="label"
@@ -43,7 +44,18 @@ else
                         </MudButton>
                     </ButtonTemplate>
                 </MudFileUpload>
-
+                <MudExpansionPanel Text="Uploaded Files">
+                    @foreach (var file in print.uploadedFiles)
+                    {
+                        <MudListItem>
+                            <div style="display: flex; justify-content: space-between;">
+                                <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
+                                <MudText Typo="Typo.overline">@Math.Round(print.printProgress.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => print.TransferFileToSD(file.FileContent,file.FileName)">Start</MudButton>
+                            </div>
+                        </MudListItem>
+                    }
+                </MudExpansionPanel>
                 <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                     @if (serial.initialized)
                     {
@@ -63,32 +75,35 @@ else
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="8">
-        <MudPaper Height="100%" Width="100%" Elevation="2">
-            <MudCardContent>
-                @if (!levelBed._isInitialized)
-                {
-                    <MudPaper>
-                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-                    </MudPaper>
-                }
-                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
+    @if (printer.SelectedPrinter.HasAutoBedLevel)
+    {
+        <MudItem xs="8">
+            <MudPaper Height="100%" Width="100%" Elevation="2">
+                <MudCardContent>
+                    @if (!levelBed._isInitialized)
+                    {
+                        <MudPaper>
+                            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                        </MudPaper>
+                    }
+                    <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
 
 
-                <MudButton FullWidth="true" Disabled="@print._processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
-                    @if (print._processing)
-                    {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                        <MudText Class="ms-2">Measuring Bed</MudText>
-                    }
-                    else
-                    {
-                        <MudText>CALIBRATE BED</MudText>
-                    }
-                </MudButton>
-            </MudCardContent>
-        </MudPaper>
-    </MudItem>
+                    <MudButton FullWidth="true" Disabled="@print._processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
+                        @if (print._processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Measuring Bed</MudText>
+                        }
+                        else
+                        {
+                            <MudText>CALIBRATE BED</MudText>
+                        }
+                    </MudButton>
+                </MudCardContent>
+            </MudPaper>
+        </MudItem>
+    }
 
 
     <MudItem xs="4">
@@ -105,12 +120,42 @@ else
                     </MudStack>
                 </MudListItem>
                 <MudDivider DividerType="DividerType.FullWidth" />
-                <MudListItem>
-                    <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText>Current Bed Temperature: @bed.currentBedTemperature</MudText>
-                        <MudText>Target Bed Temperature: @bed.targetBedTemperature</MudText>
-                    </MudStack>
-                </MudListItem>
+                @if (printer.SelectedPrinter.HasHeatedBed)
+                {
+                    <MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText>Current Bed Temperature: @bed.currentBedTemperature</MudText>
+                            <MudText>Target Bed Temperature: @bed.targetBedTemperature</MudText>
+                        </MudStack>
+                    </MudListItem>
+                }
+                else
+                {
+                    <MudListItem Disabled="true">
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText>Current Bed Temperature: N/A</MudText>
+                            <MudText>Target Bed Temperature: N/A</MudText>
+                        </MudStack>
+                    </MudListItem>
+                }
+                @if (printer.SelectedPrinter.HasChamber)
+                {
+                    <MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText>Current Chamber Temperature: @chamber.currentChamberTemperature</MudText>
+                            <MudText>Target Chamber Temperature: @chamber.targetChamberTemperature</MudText>
+                        </MudStack>
+                    </MudListItem>
+                }
+                else
+                {
+                    <MudListItem Disabled="true">
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText>Current Chamber Temperature: N/A</MudText>
+                            <MudText>Target Chamber Temperature: N/A</MudText>
+                        </MudStack>
+                    </MudListItem>
+                }
                 <MudDivider DividerType="DividerType.FullWidth" />
             </MudList>
         </MudPaper>
@@ -118,10 +163,31 @@ else
         <MudNumericField @bind-Value="hotend.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
         <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Hotend Temperature</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => hotend.SetHotendTemperature(0)">Turn Hotend Off</MudButton>
+        @if (printer.SelectedPrinter.HasHeatedBed)
+        {
+            <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</MudButton>
+        }
+        else
+        {
+            <MudNumericField Disabled="true" @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Disabled="true" Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</MudButton>
+            <MudButton Disabled="true" Variant="Variant.Filled" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</MudButton>
 
-        <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Bed Temperature</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Bed Off</MudButton>
+        }
+        @if (printer.SelectedPrinter.HasChamber)
+        {
+            <MudNumericField @bind-Value="chamber.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => chamber.SetChamberTemperature(chamber.setChamberTemperature)">Set Chamber Temperature</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="() => chamber.SetChamberTemperature(0)">Turn Chamber Off</MudButton>
+        }
+        else
+        {
+            <MudNumericField Disabled="true" @bind-Value="chamber.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+            <MudButton Disabled="true" Variant="Variant.Filled" Color="Color.Tertiary" @onclick="() => chamber.SetChamberTemperature(chamber.setChamberTemperature)">Set Chamber Temperature</MudButton>
+            <MudButton Disabled="true" Variant="Variant.Filled" Color="Color.Error" @onclick="() => chamber.SetChamberTemperature(0)">Turn Chamber Off</MudButton>
+        }
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
@@ -246,6 +312,9 @@ else
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         print.file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        var fileName = e.File.Name;
+        var fileSize = e.File.Size;
+        print.uploadedFiles.Add((fileName, print.file, fileSize));
         print.ExtractPrintingSettings(print.file);
         StateHasChanged();
     }

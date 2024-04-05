@@ -6,7 +6,7 @@ namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
-        public HotendTemps hotend;
+        public ITemperatures hotend ;
         private readonly ISnackbar _snackbar;
         public int currentHotendTemperature;
         public int setHotendTemperature;
@@ -21,15 +21,15 @@ namespace WebUI.Data
         }
         public void SetHotendTemperature(int setTemp)
         {
-            hotend.SetHotendTemperature(setTemp);
+            hotend.SetTemperature(setTemp);
             _snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
         }
         public void ParseCurrentHotendTemperature()
         {
-            hotend.ParseCurrentHotendTemperature();
-            currentHotendTemperature = hotend.HotendCurrentTemp;
-            setHotendTemperature = hotend.SetHotendTemp;
-            targetHotendTemperature = hotend.TargetHotendTemp;
+            hotend.ParseCurrentTemperature();
+            currentHotendTemperature = hotend.CurrentTemp;
+            setHotendTemperature = hotend.SetTemp;
+            targetHotendTemperature = hotend.TargetTemp;
         }
 
         public void ChangeFilament()
