@@ -198,27 +198,32 @@ else
             <MudChart ChartType="ChartType.Line" ChartSeries="@print.Series" @bind-SelectedIndex="print.Index" XAxisLabels="@print.XAxisLabels" Width="100%" Height="350px" ChartOptions="print.Options" />
         </MudPaper>
     </MudItem>
-    <MudItem xs="4">
-        <MudCardHeader>
-            <MudText Typo="Typo.h6">Preheating Profiles</MudText>
-        </MudCardHeader>
-        <MudCard>
-            <MudExpansionPanels>
+    <MudItem xs="12">
+        <MudCard Elevation="3">
+
+            <MudCardHeader Style="display: flex; justify-content: center; text-decoration:underline">
+                <MudText Typo="Typo.h6">Preheating Profiles</MudText>
+            </MudCardHeader>
+            <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(10)" EnableSwipeGesture="true" Elevation="1">
                 @foreach (var profile in printer.preheatingProfiles)
                 {
-                    <MudExpansionPanel Text="@profile.MaterialName">
-                        <MudItem xs="12" Style="display: flex; justify-content: space-between;">
-                            <div>
-                                <MudText Typo="Typo.overline"><b>Hotend:</b> @(profile.HotendTemp)°C</MudText>
-                                <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
-                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeed)%</MudText>
-                            </div>
-                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
+                    <MudCarouselItem Transition="MudBlazor.Transition.Slide" Color="@Color.Surface">
+                        <MudText Typo="Typo.h4" Style="display: flex; justify-content: center; ">@profile.MaterialName</MudText>
+
+                        <div class="d-flex pt-4 pr-16 pl-16" Style="display: flex; justify-content: space-around; align-items: center;">
+                            <MudText Typo="Typo.overline"><b>Hotend:</b> @(profile.HotendTemp)°C</MudText>
+                            <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
+                            <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeed)%</MudText>
+                        </div>
+                        <div Style="display: flex; justify-content: center;" class="pt-2">
+
+                            <MudButton Class="mr-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
                             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" OnClick="() => printer.DeletePreheatingProfile(profile)">Delete</MudButton>
-                        </MudItem>
-                    </MudExpansionPanel>
+                        </div>
+                    </MudCarouselItem>
                 }
-            </MudExpansionPanels>
+            </MudCarousel>
+
         </MudCard>
     </MudItem>
     <MudItem xs="4">
