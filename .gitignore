@@ -365,3 +365,4 @@ WebUIBlazor/ErrorHistory.txt
 *.txt
 WebUIBlazor/ErrorHistory.txt
 MachineControlHub/Program.cs
+WebUIBlazor/printers.json

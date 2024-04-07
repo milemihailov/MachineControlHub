@@ -19,6 +19,7 @@ builder.Services.AddSingleton<BedLevelingService>();
 builder.Services.AddScoped<PrinterDataServiceTest>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
 builder.Services.AddMudServices();
+builder.Services.AddHttpClient();
 
 
 var app = builder.Build();

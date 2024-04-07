@@ -1,4 +1,5 @@
-﻿using MachineControlHub;
+﻿using System.Text.Json;
+using MachineControlHub;
 using MachineControlHub.Bed;
 using MachineControlHub.Head;
 using MachineControlHub.Material;
@@ -6,13 +7,12 @@ using MachineControlHub.Motion;
 using MachineControlHub.Print;
 using MachineControlHub.Temps;
 using MudBlazor;
-using static MachineControlHub.Bed.PrinterBed;
 
 namespace WebUI.Data
 {
     public class PrinterDataServiceTest
     {
-        public Printer Printer = new Printer();
+        public Printer Printer;
         public readonly ConnectionServiceSerial serialConnection;
         private readonly ISnackbar _snackbar;
 
@@ -21,67 +21,43 @@ namespace WebUI.Data
         public string selectedShape;
 
         public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
-        public List<Printer> Printers = new List<Printer>();
+        public List<Printer> Printers { get; set; }
         public List<PrinterHead> Extruders { get; set;}
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
         public PrinterBed Bed { get; set;}
 
 
         public Printer SelectedPrinter;
-
-        public int XMaxFeedrate { get; set; }
-        public int YMaxFeedrate { get; set; }
-        public int ZMaxFeedrate { get; set; }
-        public int EMaxFeedrate { get; set; }
-
-        public string PrinterName { get; set; }
-        public int NumOfExtruders = 1;
-        public string Model { get; set; }
-        public string PrinterFirmwareVersion { get; set; }
-        public bool HasAutoBedLevel { get; set; }
-        public bool HasChamber { get; set; }
-        public bool HasHeatedBed = true;
-        public bool HasFilamentRunoutSensor { get; set; }
-        public int ZMaxBuildVolume { get; set; }
         public bool HasCamera { get; set; }
-        public bool HasPartCoolingFan { get; set; }
-        public bool HasProbe { get; set; }
-        public double NozzleDiameter { get;  set; }
-        public string NozzleMaterial { get;  set; }
 
         public PrinterDataServiceTest(ISnackbar snackbar)
         {
+            Printer = new Printer();
             _snackbar = snackbar;
             Printer.HotendTemperatures = new HotendTemps(Printer.PrinterConnection);
             Printer.BedTemperatures = new BedTemps(Printer.PrinterConnection);
             Printer.ChamberTemperatures = new ChamberTemps(Printer.PrinterConnection);
             Printer.Camera = new Camera();
-            Printer.FilamentProperties = new FilamentProperties();
             Printer.PreheatingProfiles = new PreheatingProfiles();
             Printer.MotionSettings = new MotionSettingsData();
             Printer.PrintHistory = new PrintHistory();
             Printer.CurrentPrintJob = new CurrentPrintJob(Printer.PrinterConnection);
             Printer.TouchScreen = new TouchScreen();
-            Printer.MotionSettings.XMaxFeedrate = XMaxFeedrate;
-            Printer.MotionSettings.YMaxFeedrate = YMaxFeedrate;
-            Printer.MotionSettings.ZMaxFeedrate = ZMaxFeedrate;
-            Printer.MotionSettings.EMaxFeedrate = EMaxFeedrate;
-            Printer.Model = Model;
-            Printer.NumberOfExtruders = NumOfExtruders;
-            Printer.PrinterFirmwareVersion = PrinterFirmwareVersion;
-            Printer.HasAutoBedLevel = HasAutoBedLevel;
-            Printer.HasChamber = HasChamber;
-            Printer.HasHeatedBed = HasHeatedBed;
-            Printer.HasFilamentRunoutSensor = HasFilamentRunoutSensor;
-            Printer.ZMaxBuildVolume = ZMaxBuildVolume;
             Extruders = new List<PrinterHead>();
-            SelectedPrinter = new Printer();
             Printer.Bed = new PrinterBed();
+            Printers = new List<Printer>();
+            SelectedPrinter = new Printer();
         }
 
         public void ChoosePrinter(Printer printer)
         {
             SelectedPrinter = printer;
+        }
+
+        public void RemovePrinter(Printer printer)
+        {
+            Printers.Remove(printer);
+            SavePrinterData();
         }
 
         public void UpdateExtruders(int newValue)
@@ -96,21 +72,34 @@ namespace WebUI.Data
             }
         }
 
+        public string GenerateUniquePrinterId()
+        {
+            Random random = new Random();
+            string newId;
+            do
+            {
+                newId = $"#{random.Next(1, 10000)}";
+            }
+            while (Printers.Any(p => p.Id == newId));
+
+            return newId;
+        }
+
         public void CreatePrinterProfile()
         {
             var newPrinter = new Printer();
             newPrinter.Extruders = new List<PrinterHead>();
             newPrinter.Bed = new PrinterBed();
-            newPrinter.Name = PrinterName;
-            newPrinter.Id = $"#{Printers.Count}";
-            newPrinter.Model = Model;
-            newPrinter.NumberOfExtruders = NumOfExtruders;
-            newPrinter.PrinterFirmwareVersion = PrinterFirmwareVersion;
-            newPrinter.HasAutoBedLevel = HasAutoBedLevel;
-            newPrinter.HasChamber = HasChamber;
-            newPrinter.HasHeatedBed = HasHeatedBed;
-            newPrinter.HasFilamentRunoutSensor = HasFilamentRunoutSensor;
-            newPrinter.ZMaxBuildVolume = ZMaxBuildVolume;
+            newPrinter.Name = Printer.Name;
+            newPrinter.Id = GenerateUniquePrinterId();
+            newPrinter.Model = Printer.Model;
+            newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
+            newPrinter.PrinterFirmwareVersion = Printer.PrinterFirmwareVersion;
+            newPrinter.HasAutoBedLevel = Printer.HasAutoBedLevel;
+            newPrinter.HasChamber = Printer.HasChamber;
+            newPrinter.HasHeatedBed = Printer.HasHeatedBed;
+            newPrinter.HasFilamentRunoutSensor = Printer.HasFilamentRunoutSensor;
+            newPrinter.ZMaxBuildVolume = Printer.ZMaxBuildVolume;
             newPrinter.Bed.XSize = Printer.Bed.XSize;
             newPrinter.Bed.YSize = Printer.Bed.YSize;
             newPrinter.Bed.Diameter = Printer.Bed.Diameter;
@@ -127,10 +116,7 @@ namespace WebUI.Data
 
                 newPrinter.Extruders.Add(newExtruder);
             }
-
             Printers.Add(newPrinter);
-
-            SelectedPrinter = newPrinter;
         }
 
         public void CreatePreheatProfile()
@@ -165,17 +151,27 @@ namespace WebUI.Data
 
         public void SetMaxFeedrates()
         {
-            Printer.MotionSettings.XMaxFeedrate = XMaxFeedrate;
-            Printer.MotionSettings.YMaxFeedrate = YMaxFeedrate;
-            Printer.MotionSettings.ZMaxFeedrate = ZMaxFeedrate;
-            Printer.MotionSettings.EMaxFeedrate = EMaxFeedrate;
-
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
         }
 
         public void SaveToEEPROM()
         {
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
+        }
+
+        public void SavePrinterData()
+        {
+            var jsonString = JsonSerializer.Serialize(Printers);
+            File.WriteAllText("printers.json", jsonString);
+        }
+
+        public void LoadData()
+        {
+            if (File.Exists("printers.json"))
+            {
+                var jsonString = File.ReadAllText("printers.json");
+                Printers = JsonSerializer.Deserialize<List<Printer>>(jsonString);
+            }
         }
     }
 }

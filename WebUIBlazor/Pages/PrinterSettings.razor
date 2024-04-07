@@ -1,4 +1,5 @@
 ﻿@page "/printersettings"
+@using MachineControlHub
 @using MachineControlHub.Material
 
 
@@ -29,16 +30,16 @@
     </MudCardContent>
 
     <MudCardContent>
-        <MudTextField @bind-Value="printer.PrinterName" Label="Printer Name" Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="printer.Model" Label="Printer Model" Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="printer.PrinterFirmwareVersion" Label="Firmware Version" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="printer.Printer.Name" Label="Printer Name" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="printer.Printer.Model" Label="Printer Model" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="printer.Printer.PrinterFirmwareVersion" Label="Firmware Version" Variant="Variant.Outlined" />
     </MudCardContent>
 
     <MudCardContent>
-        <MudSwitch Color="Color.Success" @bind-Value="printer.HasAutoBedLevel" Label="Has Auto Bed Level" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.HasHeatedBed" Label="Has Heated Bed" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.HasChamber" Label="Has Chamber" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.HasFilamentRunoutSensor" Label="Has Filament Sensor" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasAutoBedLevel" Label="Has Auto Bed Level" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasHeatedBed" Label="Has Heated Bed" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasChamber" Label="Has Chamber" />
+        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasFilamentRunoutSensor" Label="Has Filament Sensor" />
         <MudSwitch Color="Color.Success" @bind-Value="printer.HasCamera" Label="Has Camera" />
         @if (printer.HasCamera)
         {
@@ -47,7 +48,9 @@
             <MudTextField @bind-Value="printer.Printer.Camera.ResolutionWidth" Label="Resolution Width" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="printer.Printer.Camera.LensFocalLength" Label="Lens Focal Length" Variant="Variant.Outlined" />
         }
-        @*      <MudSwitch @bind-Checked="printer.HasPowerLossRecovery" Label="Has Power Loss Recovery" />
+        @*     
+            //TODO: Implement these
+        <MudSwitch @bind-Checked="printer.HasPowerLossRecovery" Label="Has Power Loss Recovery" />
         <MudSwitch @bind-Checked="printer.HasDisplay" Label="Has Display" />
         <MudSwitch @bind-Checked="printer.HasDualZ" Label="Has Dual Z" />
         <MudSwitch @bind-Checked="printer.HasEnclosure" Label="Has Enclosure" />
@@ -67,8 +70,8 @@
         <MudText Typo="Typo.h6">Set if your machine has multiple extruders</MudText>
     </MudCardHeader>
     <MudCardContent>
-        <MudNumericField @bind-Value="printer.NumOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
-        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => printer.UpdateExtruders(printer.NumOfExtruders)">Set Extruder Properties</MudButton>
+        <MudNumericField @bind-Value="printer.Printer.NumberOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => printer.UpdateExtruders(printer.Printer.NumberOfExtruders)">Set Extruder Properties</MudButton>
         @foreach (var extruder in printer.ExtruderSettings)
         {
             <MudExpansionPanel Text=@($"Set Your Settings For Extruder #{printer.ExtruderSettings.IndexOf(extruder) + 1}")>
@@ -82,10 +85,10 @@
         }
     </MudCardContent>
 </MudCard>
-<MudButton Type="submit" OnClick="printer.CreatePrinterProfile" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
+<MudButton Type="submit" OnClick="() => {printer.CreatePrinterProfile();printer.SavePrinterData();}" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
 
 
-@* <MudCard>
+<MudCard>
     <MudCardHeader>
         <MudText Typo="Typo.h6">Set Offsets</MudText>
         <MudNumericField @bind-Value="printer.Printer.MotionSettings.XHomeOffset" Label="X Offset" Variant="Variant.Outlined" />
@@ -95,14 +98,14 @@
 
     <MudCardHeader>
         <MudText Typo="Typo.h6">Set Max Feedrates</MudText>
-        <MudNumericField @bind-Value="printer.XMaxFeedrate" Label="X Maximum Feedrate" Variant="Variant.Outlined" />
-        <MudNumericField @bind-Value="printer.YMaxFeedrate" Label="Y Maximum Feedrate" Variant="Variant.Outlined" />
-        <MudNumericField @bind-Value="printer.ZMaxFeedrate" Label="Z Maximum Feedrate" Variant="Variant.Outlined" />
-        <MudNumericField @bind-Value="printer.EMaxFeedrate" Label="E Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.XMaxFeedrate" Label="X Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.YMaxFeedrate" Label="Y Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.ZMaxFeedrate" Label="Z Maximum Feedrate" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="printer.Printer.MotionSettings.EMaxFeedrate" Label="E Maximum Feedrate" Variant="Variant.Outlined" />
     </MudCardHeader>
 
     <MudButton OnClick="printer.SetMaxFeedrates">Set Feedrates to printer</MudButton>
-</MudCard> *@
+</MudCard>
 
 <MudCard>
     <MudCardHeader>
@@ -122,5 +125,7 @@
 </MudCard>
 
 @code {
-
+    // [Parameter]
+    // public Printer SelectedPrinter { get; set; } = new();
 }
+
