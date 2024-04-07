@@ -12,6 +12,9 @@ namespace WebUI.Data
 {
     public class PrinterDataServiceTest
     {
+        public const string PRINTER_DATA_PATH = "printers.json";
+        public const string PREHEATING_PROFILES_PATH = "preheatingProfiles.json";
+
         public Printer Printer;
         public readonly ConnectionServiceSerial serialConnection;
         private readonly ISnackbar _snackbar;
@@ -57,7 +60,7 @@ namespace WebUI.Data
         public void RemovePrinter(Printer printer)
         {
             Printers.Remove(printer);
-            SavePrinterData();
+            SavePrinterData(PRINTER_DATA_PATH,Printers);
         }
 
         public void UpdateExtruders(int newValue)
@@ -117,12 +120,14 @@ namespace WebUI.Data
                 newPrinter.Extruders.Add(newExtruder);
             }
             Printers.Add(newPrinter);
+            SavePrinterData(PRINTER_DATA_PATH, Printers);
         }
 
         public void CreatePreheatProfile()
         {
             preheatingProfiles.Add(Printer.PreheatingProfiles);
             Printer.PreheatingProfiles = new PreheatingProfiles();
+            SavePrinterData(PREHEATING_PROFILES_PATH, preheatingProfiles);
             _snackbar.Add("Preset Added To Print Section", Severity.Success);
         }
 
@@ -159,19 +164,20 @@ namespace WebUI.Data
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
-        public void SavePrinterData()
+        public void SavePrinterData<T>(string filePath,List<T> list)
         {
-            var jsonString = JsonSerializer.Serialize(Printers);
-            File.WriteAllText("printers.json", jsonString);
+            var jsonString = JsonSerializer.Serialize(list);
+            File.WriteAllText(filePath, jsonString);
         }
 
-        public void LoadData()
+        public List<T> LoadPrinterData<T>(string filePath)
         {
-            if (File.Exists("printers.json"))
+            if (File.Exists(filePath))
             {
-                var jsonString = File.ReadAllText("printers.json");
-                Printers = JsonSerializer.Deserialize<List<Printer>>(jsonString);
+                var jsonString = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<List<T>>(jsonString);
             }
+            return new List<T>();
         }
     }
 }

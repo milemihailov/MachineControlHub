@@ -1,7 +1,7 @@
 ﻿@page "/printersettings"
 @using MachineControlHub
 @using MachineControlHub.Material
-
+@inject Data.PrinterDataServiceTest printer
 
 <MudCard>
     <MudCardHeader>
@@ -85,7 +85,7 @@
         }
     </MudCardContent>
 </MudCard>
-<MudButton Type="submit" OnClick="() => {printer.CreatePrinterProfile();printer.SavePrinterData();}" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
+<MudButton Type="submit" OnClick="() => printer.CreatePrinterProfile()" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
 
 
 <MudCard>

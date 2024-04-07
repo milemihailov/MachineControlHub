@@ -21,7 +21,7 @@ namespace MachineControlHub
         /// </summary>
         public string Model { get; set; }
 
-        public int NumberOfExtruders { get; set; }
+        public int NumberOfExtruders = 1;
 
         /// <summary>
         /// Gets or sets the firmware version installed on the printer.

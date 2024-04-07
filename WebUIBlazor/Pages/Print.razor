@@ -7,6 +7,7 @@
 @inject Data.BedTemperatureService bed
 @inject Data.ChamberTemperatureService chamber
 @inject Data.BackgroundTimer background
+@inject Data.PrinterDataServiceTest printer
 
 @implements IDisposable
 @using MachineControlHub.Temps
@@ -295,7 +296,8 @@ else
                 }
             };
         data = new List<ITrace>();
-        LoadData();
+        LoadPlotlyData();
+        printer.preheatingProfiles = printer.LoadPrinterData<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
     }
 
     private void OnTemperatureChange()
@@ -330,14 +332,14 @@ else
         print._processing = true;
         await Task.Run(() => levelBed.CalibrateBed());
         levelBed.meshData = levelBed.GetSurfaceData();
-        LoadData();
+        LoadPlotlyData();
         print._processing = false;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(1000);
         background.SecondElapsed += OnTemperatureChange;
     }
 
-    private void LoadData()
+    private void LoadPlotlyData()
     {
         Task.Run(async () =>
         {

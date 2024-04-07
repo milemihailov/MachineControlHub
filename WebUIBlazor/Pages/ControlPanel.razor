@@ -2,6 +2,7 @@
 @inject Data.ConnectionServiceSerial serial
 @inject Data.ControlPanelService control
 @inject Data.BackgroundTimer background
+@inject Data.PrinterDataServiceTest printer
 
 @using Plotly.Blazor.Interop
 @using Plotly.Blazor.LayoutLib
@@ -119,7 +120,6 @@ else
                 PaperBgColor = "#FDF0D5",
                 PlotBgColor = "#AAAFB5"
             };
-
         data = new List<ITrace>
             {
             new Scatter
@@ -130,12 +130,11 @@ else
                 Y = Enumerable.Range(0, ySize + 1).SelectMany(y => Enumerable.Repeat(y, ySize + 1)).Cast<object>().ToList()
             }
             };
-
     }
 
     public void OnUpdate()
     {
-        if(serial.initialized)
+        if (serial.initialized)
         {
             Task.Run(() =>
             {
