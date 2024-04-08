@@ -142,6 +142,7 @@ namespace WebUI.Data
         public void DeletePreheatingProfile(PreheatingProfiles profile)
         {
             preheatingProfiles.Remove(profile);
+            SavePrinterData(PREHEATING_PROFILES_PATH, preheatingProfiles);
             _snackbar.Add("Preset Removed", Severity.Error);
         }
 
