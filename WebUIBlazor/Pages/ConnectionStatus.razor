@@ -1,0 +1,15 @@
+﻿@inject Data.ConnectionServiceSerial serial
+
+@if (Connection)
+{
+    <MudAlert Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="Severity.Success" Variant="Variant.Filled">Connected</MudAlert>
+}
+else
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Disconnected</MudAlert>
+}
+
+@code {
+    [Parameter]
+    public bool Connection { get; set; }
+}

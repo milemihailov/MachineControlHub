@@ -6,6 +6,7 @@ using MachineControlHub.Material;
 using MachineControlHub.Motion;
 using MachineControlHub.Print;
 using MachineControlHub.Temps;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using MudBlazor;
 
 namespace WebUI.Data
@@ -14,6 +15,7 @@ namespace WebUI.Data
     {
         public const string PRINTER_DATA_PATH = "printers.json";
         public const string PREHEATING_PROFILES_PATH = "preheatingProfiles.json";
+        public const string SELECTED_PRINTER_SETTINGS_PATH = "selectedPrinter.json";
 
         public Printer Printer;
         public readonly ConnectionServiceSerial serialConnection;
@@ -55,6 +57,7 @@ namespace WebUI.Data
         public void ChoosePrinter(Printer printer)
         {
             SelectedPrinter = printer;
+            SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
         }
 
         public void RemovePrinter(Printer printer)
@@ -171,7 +174,13 @@ namespace WebUI.Data
             File.WriteAllText(filePath, jsonString);
         }
 
-        public List<T> LoadPrinterData<T>(string filePath)
+        public void SavePrinterData<T>(string filePath, T data)
+        {
+            var jsonString = JsonSerializer.Serialize(data);
+            File.WriteAllText(filePath, jsonString);
+        }
+
+        public List<T> LoadPrinterDataList<T>(string filePath)
         {
             if (File.Exists(filePath))
             {
@@ -179,6 +188,15 @@ namespace WebUI.Data
                 return JsonSerializer.Deserialize<List<T>>(jsonString);
             }
             return new List<T>();
+        }
+        public T LoadPrinterData<T>(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                var jsonString = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<T>(jsonString);
+            }
+            return default(T);
         }
     }
 }

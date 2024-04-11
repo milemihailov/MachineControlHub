@@ -17,28 +17,12 @@
         /// <returns>csv Grid</returns>
         public string GetGrid(string input)
         {
-            char[] delimiters = new char[] { '\r', '\n' };
-
-            string[] rows = input.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-
-            string csv = "";
-
-            for (int i = 0; i < rows.Length - LINES_TO_EXCLUDE; i++)
-            {
-                string[] columns = rows[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                for (int j = 0; j < columns.Length; j++)
-                {
-                    csv += columns[j];
-
-                    if (j < columns.Length - 1)
-                    {
-                        csv += ",";
-                    }
-                }
-                csv += "\n";
-            }
-            return csv;
+            var rows = input.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var csv = string.Join("\n", rows.Take(rows.Length - LINES_TO_EXCLUDE)
+                                           .Select(row => string.Join(",", row.Split(' ', StringSplitOptions.RemoveEmptyEntries))));
+            int index = csv.IndexOf("X:");
+            return index >= 0 ? csv.Substring(0, index) : csv;
         }
+
     }
 }

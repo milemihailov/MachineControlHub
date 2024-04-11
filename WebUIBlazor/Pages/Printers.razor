@@ -5,7 +5,8 @@
     <MudExpansionPanels MultiExpansion="true">
         @foreach (var p in printer.Printers)
         {
-            <MudExpansionPanel Text="@p.Name">
+            <MudExpansionPanel @ref="PanelRefs[p]" Text="@p.Name" Icon="@(printer.SelectedPrinter == p ? @Icons.Material.Filled.Verified : null)">
+
                 <MudList>
                     <MudListItem>
                         <MudText Typo="Typo.overline"><b>ID:</b> @p.Id</MudText>
@@ -51,7 +52,7 @@
                         </MudExpansionPanel>
                     }
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.ChoosePrinter(p)">Select</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => ChooseAndCollapse(p)">Select</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.RemovePrinter(p)">Delete Profile</MudButton>
 
                 </MudList>
@@ -61,10 +62,16 @@
 </MudCard>
 
 @code {
-
+    Dictionary<MachineControlHub.Printer, MudExpansionPanel> PanelRefs = new Dictionary<MachineControlHub.Printer, MudExpansionPanel>();
 
     protected override void OnInitialized()
     {
-        printer.Printers = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.PRINTER_DATA_PATH);
+        printer.Printers = printer.LoadPrinterDataList<MachineControlHub.Printer>(Data.PrinterDataServiceTest.PRINTER_DATA_PATH);
+    }
+
+    private void ChooseAndCollapse(MachineControlHub.Printer p)
+    {
+        printer.ChoosePrinter(p);
+        PanelRefs[p].Collapse(false);
     }
 }

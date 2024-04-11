@@ -14,7 +14,7 @@ namespace MachineControlHub.PrinterConnection
         const int SLEEP_TIME_AFTER_BUSY_CHECK = 500;
 
         private SerialPort serialPort;
-
+        public bool IsConnected { get; set; }
         public SerialConnection()
         {
             serialPort = new SerialPort();
@@ -95,12 +95,14 @@ namespace MachineControlHub.PrinterConnection
                 {
                     serialPort.Open();
                     Console.WriteLine("Port opened");
+                    IsConnected = true;
                 }
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error opening serial port: {ex.Message}");
                 Logger.LogError(ex.StackTrace);
+                IsConnected = false;
             }
         }
 
@@ -114,6 +116,7 @@ namespace MachineControlHub.PrinterConnection
             {
                 serialPort.Close();
                 Console.WriteLine("Port closed");
+                IsConnected = false;
             }
             catch (Exception ex)
             {
@@ -138,6 +141,7 @@ namespace MachineControlHub.PrinterConnection
             catch (Exception ex)
             {
                 Logger.LogError($"Error writing to serial port: {ex.Message}");
+                IsConnected = false;
             }
         }
 
@@ -158,6 +162,7 @@ namespace MachineControlHub.PrinterConnection
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
+                IsConnected = false;
                 return null;
             }
         }

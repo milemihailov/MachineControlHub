@@ -6,17 +6,18 @@ namespace WebUI.Data
 {
     public class ConnectionServiceSerial
     {
-
         public static SerialConnection printerConnection;
         public string portName = "";
-        public int baudRate;
-
-        public bool initialized = false;
-        public string isConnected => initialized? "Connected" : "Disconnected";
+        public int baudRate = 115200;
 
         public ConnectionServiceSerial()
         {
             printerConnection = new SerialConnection();
+            var ports = GetPorts();
+            if (ports.Any())
+            {
+                portName = ports.First();
+            }
         }
 
         public void Connect()
@@ -42,7 +43,7 @@ namespace WebUI.Data
         public void Disconnect()
         {
             printerConnection.Disconnect();
-            initialized = false;
+            printerConnection.IsConnected = false;
         }
 
         public List<string> GetPorts()

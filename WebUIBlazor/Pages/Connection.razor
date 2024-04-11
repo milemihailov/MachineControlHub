@@ -5,26 +5,25 @@
 
 <PageTitle>Serial Connection</PageTitle>
 <div class="center-div">
-    <h5 style="color: @(serial.isConnected == "Connected" ? "green" : "red")">@serial.isConnected</h5>
+
+    <ConnectionStatus Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
     <h1>Serial Connection</h1>
 
 
-    <button class="button-30" @onclick="ConnectionConfiguration"> Connect</button>
-    <button class="button-30" @onclick="serial.Disconnect"> Disconnect</button>
+    <MudButton @onclick="ConnectionConfiguration"> Connect</MudButton>
+    <MudButton @onclick="serial.Disconnect"> Disconnect</MudButton>
 
-    <p>Port:</p>
-    <select class="center-div" @bind="@serial.portName" style="width:100px">
+    <MudSelect T="string" Label="Select Port" @bind-Value="serial.portName" Variant="Variant.Outlined">
         @foreach (var template in serial.GetPorts())
         {
-            <option value=@template>@template</option>
+            <MudSelectItem Value=@template />
         }
-    </select>
-    <p>Baudrate:</p>
-    <select class="center-div" @bind="@serial.baudRate" style="width:100px">
-        <option value="115200">115200</option>
-        <option value="250000">250000</option>
-    </select>
+    </MudSelect>
+    <MudSelect T="int" Label = "Select Baudrate" @bind-Value="serial.baudRate" Variant="Variant.Outlined">
+        <MudSelectItem Value="115200" />
+        <MudSelectItem Value="250000" />
+    </MudSelect>
 </div>
 @code {
 
@@ -33,7 +32,7 @@
         try
         {
             serial.Initialize($"{serial.portName},{serial.baudRate}");
-            serial.initialized = true;
+            ConnectionServiceSerial.printerConnection.IsConnected = true;
             serial.Connect();
         }
         catch (Exception e)
