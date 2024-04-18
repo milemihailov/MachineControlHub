@@ -1,12 +1,12 @@
 ﻿@page "/printers"
 @inject Data.PrinterDataServiceTest printer
 
+<MudAlert Severity="Severity.Success">Selected Printer: <strong>@printer.SelectedPrinter.Name</strong></MudAlert>
 <MudCard>
     <MudExpansionPanels MultiExpansion="true">
         @foreach (var p in printer.Printers)
         {
             <MudExpansionPanel @ref="PanelRefs[p]" Text="@p.Name" Icon="@(printer.SelectedPrinter == p ? @Icons.Material.Filled.Verified : null)">
-
                 <MudList>
                     <MudListItem>
                         <MudText Typo="Typo.overline"><b>ID:</b> @p.Id</MudText>
@@ -67,7 +67,14 @@
     protected override void OnInitialized()
     {
         printer.Printers = printer.LoadPrinterDataList<MachineControlHub.Printer>(Data.PrinterDataServiceTest.PRINTER_DATA_PATH);
+        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
+        if (printer.Printers.Any())
+        {
+            string targetID = printer.SelectedPrinter.Id;
+            printer.SelectedPrinter = printer.Printers.Where(p => p.Id == targetID).FirstOrDefault();
+        }
     }
+
 
     private void ChooseAndCollapse(MachineControlHub.Printer p)
     {

@@ -6,7 +6,6 @@ using MachineControlHub.Material;
 using MachineControlHub.Motion;
 using MachineControlHub.Print;
 using MachineControlHub.Temps;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using MudBlazor;
 
 namespace WebUI.Data
@@ -27,9 +26,9 @@ namespace WebUI.Data
 
         public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
         public List<Printer> Printers { get; set; }
-        public List<PrinterHead> Extruders { get; set;}
+        public List<PrinterHead> Extruders { get; set; }
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
-        public PrinterBed Bed { get; set;}
+        public PrinterBed Bed { get; set; }
 
 
         public Printer SelectedPrinter;
@@ -63,7 +62,7 @@ namespace WebUI.Data
         public void RemovePrinter(Printer printer)
         {
             Printers.Remove(printer);
-            SavePrinterData(PRINTER_DATA_PATH,Printers);
+            SavePrinterData(PRINTER_DATA_PATH, Printers);
         }
 
         public void UpdateExtruders(int newValue)
@@ -114,7 +113,7 @@ namespace WebUI.Data
             for (int i = 0; i < ExtruderSettings.Count; i++)
             {
                 var newExtruder = new PrinterHead();
-                
+
                 newExtruder.HasCoolingFan = ExtruderSettings[i].HasCoolingFan;
                 newExtruder.ProbePresent = ExtruderSettings[i].ProbePresent;
                 newExtruder.NozzleDiameter = ExtruderSettings[i].NozzleDiameter;
@@ -168,7 +167,7 @@ namespace WebUI.Data
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
-        public void SavePrinterData<T>(string filePath,List<T> list)
+        public void SavePrinterData<T>(string filePath, List<T> list)
         {
             var jsonString = JsonSerializer.Serialize(list);
             File.WriteAllText(filePath, jsonString);

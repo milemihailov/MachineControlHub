@@ -1,6 +1,4 @@
 ﻿using MachineControlHub.PrinterConnection;
-using MachineControlHub.Temps;
-using Microsoft.AspNetCore.Components;
 
 namespace WebUI.Data
 {
@@ -35,7 +33,7 @@ namespace WebUI.Data
             printerConnection.Write(value);
         }
 
-        public string Read() 
+        public string Read()
         {
             return printerConnection.Read();
         }

@@ -5,14 +5,14 @@
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 <MudLayout>
-    <MudAppBar Elevation="1">
+    <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
         <MudSwitch @bind-Value="@_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" ThumbIcon="@(_isDarkMode ? @Icons.Material.Filled.Bedtime : @Icons.Material.Filled.WbSunny)" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Temporary" >
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1">Application</MudText>
+            <MudText Typo="Typo.h5" Class="mt-1">Main Menu</MudText>
         </MudDrawerHeader>
         <NavMenu />
     </MudDrawer>
@@ -20,8 +20,9 @@
         @Body
     </MudMainContent>
 </MudLayout>
+
 @code {
-    bool _drawerOpen = true;
+    bool _drawerOpen = false;
     private MudTheme _theme = new MudTheme()
     {
         Palette = new PaletteLight()
