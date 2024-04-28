@@ -57,6 +57,8 @@ namespace MachineControlHub
         /// </summary>
         public PrinterBed Bed { get; set; }
 
+        public PrinterHead Head { get; set; }
+
         /// <summary>
         /// Gets or sets the print head configuration and properties of the printer.
         /// </summary>

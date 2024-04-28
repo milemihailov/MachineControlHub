@@ -9,6 +9,16 @@
     {
         public enum Axis { X, Y, Z, E }
 
+        public int MinFeedrate { get; set; }
+
+        public int MinTravelFeedrate { get; set; }
+
+        public int MinSegmentTime { get; set; }
+
+        public double JunctionDeviation { get; set; }
+
+        public int FadeHeight { get; set; }
+
         /// <summary>
         /// Gets or sets the maximum feedrate for the X-axis.
         /// </summary>
@@ -72,27 +82,29 @@
         /// <summary>
         /// Gets or sets the default acceleration for the X-axis.
         /// </summary>
-        public int? XDefaultAcceleration { get; set; }
+        public int? PrintAcceleration { get; set; }
 
         /// <summary>
         /// Gets or sets the default acceleration for the Y-axis.
         /// </summary>
-        public int? YDefaultAcceleration { get; set; }
+        public int? RetractAcceleration { get; set; }
 
         /// <summary>
         /// Gets or sets the default acceleration for the Z-axis.
         /// </summary>
-        public int? ZDefaultAcceleration { get; set; }
+        public int? TravelAcceleration { get; set; }
 
-        /// <summary>
-        /// Gets or sets the default acceleration for the extruder (E-axis).
-        /// </summary>
-        public int? EDefaultAcceleration { get; set; }
 
         /// <summary>
         /// Gets or sets the number of steps per unit.
         /// </summary>
-        public int StepsPerUnit { get; set; }
+        public double XStepsPerUnit { get; set; }
+
+        public int YStepsPerUnit { get; set; }
+
+        public int ZStepsPerUnit { get; set; }
+
+        public int EStepsPerUnit { get; set; }
 
         /// <summary>
         /// Gets or sets the feedrate for free moves.

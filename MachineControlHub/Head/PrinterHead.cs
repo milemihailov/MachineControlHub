@@ -24,6 +24,10 @@
         /// Gets or sets the material used for the extruder nozzle.
         /// </summary>
         public string NozzleMaterial { get; set; }
+
+        public double XProbeOffset { get; set; }
+        public double YProbeOffset { get; set; }
+        public double ZProbeOffset { get; set; }
     }
 
 }

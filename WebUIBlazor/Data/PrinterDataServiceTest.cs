@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using MachineControlHub;
 using MachineControlHub.Bed;
 using MachineControlHub.Head;
@@ -42,11 +43,14 @@ namespace WebUI.Data
             Printer.BedTemperatures = new BedTemps(Printer.PrinterConnection);
             Printer.ChamberTemperatures = new ChamberTemps(Printer.PrinterConnection);
             Printer.Camera = new Camera();
+            Printer.Head = new PrinterHead();
             Printer.PreheatingProfiles = new PreheatingProfiles();
             Printer.MotionSettings = new MotionSettingsData();
             Printer.PrintHistory = new PrintHistory();
             Printer.CurrentPrintJob = new CurrentPrintJob(Printer.PrinterConnection);
             Printer.TouchScreen = new TouchScreen();
+            Printer.HotendTemperatures.PIDHotendValues = new PIDValues(Printer.PrinterConnection);
+            Printer.BedTemperatures.PIDBedValues = new PIDValues(Printer.PrinterConnection);
             Extruders = new List<PrinterHead>();
             Printer.Bed = new PrinterBed();
             Printers = new List<Printer>();
@@ -197,5 +201,182 @@ namespace WebUI.Data
             }
             return default(T);
         }
+
+        public string linearUnits = "";
+        public string temperatureUnits = "";
+
+        public void GetPrinterSettings()
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSettings());
+            Thread.Sleep(400);
+            string response = ConnectionServiceSerial.printerConnection.Read();
+            linearUnits = GetPrinterLinearUnits(response);
+            temperatureUnits = GetTemperatureUnits(response);
+            GetStepsPerUnit(response);
+            GetMaximumFeedrates(response);
+            GetMaximumAccelerations(response);
+            GetPrintRetractTravelAcceleration(response);
+            GetAdvancedSettings(response);
+            GetOffsetSettings(response);
+            GetAutoBedLevelingSettings(response);
+            GetHotendPIDValues(response);
+            GetBedPIDValues(response);
+            GetZProbeOffsets(response);
+        }
+
+
+        public string GetPrinterLinearUnits(string input)
+        {
+            var linearUnits = input.Split('\n').Where(x => x.Contains("G21") || x.Contains("G20")).FirstOrDefault();
+            if (linearUnits.Contains("G21"))
+            {
+                return "mm";
+            }
+            else if (linearUnits.Contains("G20"))
+            {
+                return "inches";
+            }
+            return null;
+        }
+
+        public string GetTemperatureUnits(string input)
+        {
+            var match = Regex.Match(input, @"M149 ([CFK])");
+
+            if (match.Success)
+            {
+                switch (match.Groups[1].Value)
+                {
+                    case "C":
+                        return "Celsius";
+                    case "F":
+                        return "Farenheit";
+                    case "K":
+                        return "Kelvin";
+                }
+            }
+            return "Not Found";
+        }
+
+        public void GetStepsPerUnit(string input)
+        {
+            var match = Regex.Match(input, @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.XStepsPerUnit = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.YStepsPerUnit = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.ZStepsPerUnit = (int)double.Parse(match.Groups[3].Value);
+                Printer.MotionSettings.EStepsPerUnit = (int)double.Parse(match.Groups[4].Value);
+            }
+        }
+
+        public void GetMaximumFeedrates(string input)
+        {
+            var match = Regex.Match(input, @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.XMaxFeedrate = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.YMaxFeedrate = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.ZMaxFeedrate = (int)double.Parse(match.Groups[3].Value);
+                Printer.MotionSettings.EMaxFeedrate = (int)double.Parse(match.Groups[4].Value);
+            }
+        }
+
+        public void GetMaximumAccelerations(string input)
+        {
+            var match = Regex.Match(input, @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.XMaxAcceleration = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.YMaxAcceleration = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.ZMaxAcceleration = (int)double.Parse(match.Groups[3].Value);
+                Printer.MotionSettings.EMaxAcceleration = (int)double.Parse(match.Groups[4].Value);
+            }
+        }
+
+        public void GetPrintRetractTravelAcceleration(string input)
+        {
+            var match = Regex.Match(input, @"M204 P(\d+\.?\d*) R(\d+\.?\d*) T(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.PrintAcceleration = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.RetractAcceleration = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.TravelAcceleration = (int)double.Parse(match.Groups[3].Value);
+            }
+        }
+
+        public void GetAdvancedSettings(string input)
+        {
+            var match = Regex.Match(input, @"M205 B(\d+\.?\d*) S(\d+\.?\d*) T(\d+\.?\d*) J(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.MinSegmentTime = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.MinFeedrate = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.MinTravelFeedrate = (int)double.Parse(match.Groups[3].Value);
+                Printer.MotionSettings.JunctionDeviation = double.Parse(match.Groups[4].Value);
+            }
+        }
+
+        public void GetOffsetSettings(string input)
+        {
+            var match = Regex.Match(input, @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)");
+
+            if (match.Success)
+            {
+                Printer.MotionSettings.XHomeOffset = (int)double.Parse(match.Groups[1].Value);
+                Printer.MotionSettings.YHomeOffset = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.ZHomeOffset = (int)double.Parse(match.Groups[3].Value);
+            }
+        }
+
+        public void GetAutoBedLevelingSettings(string input)
+        {
+            var match = Regex.Match(input, @"M420 S(\d) Z(\d+\.?\d*)");
+            if (match.Success)
+            {
+                Printer.HasAutoBedLevel = (int)double.Parse(match.Groups[1].Value) == 1;
+
+                Printer.MotionSettings.FadeHeight = (int)double.Parse(match.Groups[2].Value);
+            }
+        }
+
+        public void GetHotendPIDValues(string input)
+        {
+            var match = Regex.Match(input, PIDValues.PARSE_HOTEND_PID_PATTERN);
+            if (match.Success)
+            {
+                Printer.HotendTemperatures.PIDHotendValues.Proportional = double.Parse(match.Groups[1].Value);
+                Printer.HotendTemperatures.PIDHotendValues.Integral = double.Parse(match.Groups[2].Value);
+                Printer.HotendTemperatures.PIDHotendValues.Derivative = double.Parse(match.Groups[3].Value);
+            }
+        }
+
+        public void GetBedPIDValues(string input)
+        {
+            var match = Regex.Match(input, PIDValues.PARSE_BED_PID_PATTERN);
+            if (match.Success)
+            {
+                Printer.BedTemperatures.PIDBedValues.Proportional = double.Parse(match.Groups[1].Value);
+                Printer.BedTemperatures.PIDBedValues.Integral = double.Parse(match.Groups[2].Value);
+                Printer.BedTemperatures.PIDBedValues.Derivative = double.Parse(match.Groups[3].Value);
+            }
+        }
+
+        public void GetZProbeOffsets(string input)
+        {
+            var match = Regex.Match(input, @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)");
+            if (match.Success)
+            {
+                Printer.Head.XProbeOffset = double.Parse(match.Groups[1].Value);
+                Printer.Head.YProbeOffset = double.Parse(match.Groups[2].Value);
+                Printer.Head.ZProbeOffset = double.Parse(match.Groups[3].Value);
+            }
+        }
+
     }
 }

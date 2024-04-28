@@ -9,8 +9,8 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class PIDValues
     {
-        const string PARSE_HOTEND_PID_PATTERN = @"M301 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
-        const string PARSE_BED_PID_PATTERN = @"M304 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
+        public const string PARSE_HOTEND_PID_PATTERN = @"M301 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
+        public const string PARSE_BED_PID_PATTERN = @"M304 P(\d+\.\d+) I(\d+\.\d+) D(\d+\.\d+)";
         private IPrinterConnection _connection;
 
         public PIDValues(IPrinterConnection connection)
@@ -21,17 +21,17 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Gets or sets the Proportional (P) value for PID control.
         /// </summary>
-        public double Proportional { get; set; }
+        public double? Proportional { get; set; } = 0;
 
         /// <summary>
         /// Gets or sets the Integral (I) value for PID control.
         /// </summary>
-        public double Integral { get; set; }
+        public double? Integral { get; set; }
 
         /// <summary>
         /// Gets or sets the Derivative (D) value for PID control.
         /// </summary>
-        public double Derivative { get; set; }
+        public double? Derivative { get; set; }
 
 
         /// <summary>

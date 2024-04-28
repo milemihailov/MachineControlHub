@@ -2,6 +2,7 @@
 @page "/"
 @using MachineControlHub.PrinterConnection
 @inject Data.ConnectionServiceSerial serial
+@inject Data.PrinterDataServiceTest printer
 
 <PageTitle>Serial Connection</PageTitle>
 <div class="center-div">
@@ -11,7 +12,7 @@
     <h1>Serial Connection</h1>
 
 
-    <MudButton @onclick="ConnectionConfiguration"> Connect</MudButton>
+    <MudButton @onclick="() => {ConnectionConfiguration(); printer.GetPrinterSettings();}"> Connect</MudButton>
     <MudButton @onclick="serial.Disconnect"> Disconnect</MudButton>
 
     <MudSelect T="string" Label="Select Port" @bind-Value="serial.portName" Variant="Variant.Outlined">
