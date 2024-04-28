@@ -17,11 +17,10 @@
 @using MachineControlHub.Motion;
 @using MachineControlHub.Print;
 
-<ConnectionStatus Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
 @if (printer.SelectedPrinter != null)
 {
-    <MudAlert Severity="Severity.Success">Selected Printer: <strong>@printer.SelectedPrinter.Name</strong></MudAlert>
     <MudGrid id="unique_id_scroll_section">
         <MudItem xs="4">
             <MudPaper MinHeight="600px" Width="100%" Elevation="0">
@@ -67,6 +66,12 @@
                     <MudText>File printing: <strong>@print.printName</strong></MudText>
                     <MudText>Estimated print time: @print.estimatedTime</MudText>
                     <MudText>Elapsed print time:  @string.Format($"")</MudText>
+                    <MudText>Print Progress:</MudText>
+                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="25" Class="my-7">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">
+                            <b>25%</b>
+                        </MudText>
+                    </MudProgressLinear>
                     <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
                     <MudText>File Size: <strong>@print.fileSize MB</strong></MudText>
                 </MudCardContent>
@@ -76,7 +81,7 @@
         @if (printer.SelectedPrinter.HasAutoBedLevel)
         {
             <MudItem xs="8">
-                <MudPaper Height="100%" Width="100%" Elevation="2">
+                <MudPaper Height="100%" Width="100%" Elevation="0">
                     <MudCardContent>
                         @if (!levelBed._isInitialized)
                         {
@@ -105,7 +110,7 @@
 
 
         <MudItem xs="4">
-            <MudPaper Width="100%" Square="true">
+            <MudPaper Width="100%" Square="true" Elevation="0">
                 <MudCardHeader>
                     <MudText Typo="Typo.h6">Set Temperatures</MudText>
                 </MudCardHeader>
@@ -136,6 +141,7 @@
                             </MudStack>
                         </MudListItem>
                     }
+                    <MudDivider DividerType="DividerType.FullWidth" />
                     @if (printer.SelectedPrinter.HasChamber)
                     {
                         <MudListItem>
@@ -197,7 +203,7 @@
             </MudPaper>
         </MudItem>
         <MudItem xs="12">
-            <MudCard Elevation="3">
+            <MudCard Elevation="0">
 
                 <MudCardHeader Style="display: flex; justify-content: center; text-decoration:underline">
                     <MudText Typo="Typo.h6">Preheating Profiles</MudText>

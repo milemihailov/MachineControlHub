@@ -1,7 +1,8 @@
 ﻿@page "/printers"
 @inject Data.PrinterDataServiceTest printer
 
-<MudAlert Severity="Severity.Success">Selected Printer: <strong>@printer.SelectedPrinter.Name</strong></MudAlert>
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+
 <MudCard>
     <MudExpansionPanels MultiExpansion="true">
         @foreach (var p in printer.Printers)

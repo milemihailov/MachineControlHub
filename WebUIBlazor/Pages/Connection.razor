@@ -5,27 +5,36 @@
 @inject Data.PrinterDataServiceTest printer
 
 <PageTitle>Serial Connection</PageTitle>
-<div class="center-div">
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
-    <ConnectionStatus Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+<MudPaper Height="500px" Width="100%" Elevation="0" Class="pt-10">
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <MudPaper Style="display: flex; justify-content:center;" Class="pt-2" Elevation="0">
+            <MudButton Color="Color.Tertiary" @onclick="ConnectionConfiguration" > Connect</MudButton>
+            <MudButton Color="Color.Error" @onclick="serial.Disconnect" > Disconnect</MudButton>
+        </MudPaper>
+    </MudContainer>
 
-    <h1>Serial Connection</h1>
+    <MudContainer MaxWidth="MaxWidth.ExtraSmall">
+        <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
+            <MudSelect T="string" Label="Select Port" @bind-Value="serial.portName" Variant="Variant.Outlined">
+                @foreach (var template in serial.GetPorts())
+                {
+                    <MudSelectItem Value=@template />
+                }
+            </MudSelect>
+        </MudPaper>
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.ExtraSmall">
+        <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
+            <MudSelect T="int" Label="Select Baudrate" @bind-Value="serial.baudRate" Variant="Variant.Outlined">
+                <MudSelectItem Value="115200" />
+                <MudSelectItem Value="250000" />
+            </MudSelect>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
 
-
-    <MudButton @onclick="() => {ConnectionConfiguration(); printer.GetPrinterSettings();}"> Connect</MudButton>
-    <MudButton @onclick="serial.Disconnect"> Disconnect</MudButton>
-
-    <MudSelect T="string" Label="Select Port" @bind-Value="serial.portName" Variant="Variant.Outlined">
-        @foreach (var template in serial.GetPorts())
-        {
-            <MudSelectItem Value=@template />
-        }
-    </MudSelect>
-    <MudSelect T="int" Label = "Select Baudrate" @bind-Value="serial.baudRate" Variant="Variant.Outlined">
-        <MudSelectItem Value="115200" />
-        <MudSelectItem Value="250000" />
-    </MudSelect>
-</div>
 @code {
 
     public void ConnectionConfiguration()

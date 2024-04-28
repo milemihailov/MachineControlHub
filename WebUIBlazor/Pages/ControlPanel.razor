@@ -12,12 +12,11 @@
 @implements IDisposable
 
 
-<ConnectionStatus Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
-<MudAlert Severity="Severity.Success">Selected Printer: <strong>@printer.SelectedPrinter.Name</strong></MudAlert>
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
 <MudGrid>
     <MudItem xs="4">
-        <MudPaper Elevation="4">
+        <MudPaper Elevation="0">
             <PlotlyChart style="height: 60vh; width:100%; min-height: 350px"
                          @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart"
                          ClickAction="ClickAction" AfterRender="SubscribeEvents" />
@@ -27,16 +26,16 @@
         <MudPaper Height="100%" Width="100%" Elevation="0">
             <MudContainer MaxWidth="MaxWidth.Small" Class="px-0">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,true,serial)">X+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,true,serial)">Y+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,true,serial)">Z+</MudButton>
                     <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="control.feedRate.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                 </MudStack>
 
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.XMovePos,false,serial)">X-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.YMovePos,false,serial)">Y-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.ZMovePos,false,serial)">Z-</MudButton>
                     <MudText Typo="Typo.overline"><b>CURRENT FEEDRATE: </b> @(control.feedRate.FeedRateFreeMove)(mm/min)</MudText>
                 </MudStack>
 
@@ -54,20 +53,27 @@
                         control.valueToMove = double.Parse(@selected.Text);
                     }
                 </MudStack>
+                <MudPaper Style="display: flex; justify-content: center;" Elevation="0">
+                    <MudContainer>
+                        <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
+                            <MudItem xs="4" Class="px-0">
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.HomeAxisCommand()">HomeAll</MudButton>
+                            </MudItem>
+                            <MudItem xs="4" Class="px-0">
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(true,true)">HomeXY</MudButton>
+                            </MudItem>
+                            <MudItem xs="4" Class="px-0">
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="control.DisableSteppers">Disable Motors</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(false,false,true)">HomeZ</MudButton>
+                            </MudItem>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="control.DisableSteppers">Disable Motors</MudButton>
-
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand()">HomeAll</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(true,true)">HomeXY</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.HomeAxisCommand(false,false,true)">HomeZ</MudButton>
-
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,true,serial)">Extrude</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => control.AdjustAxis(MovePositions.EMovePos,false,serial)">Retract</MudButton>
-
-                <MudSwitch @bind-Value="@control.SwitchValue" @onclick="() => {control.ToggleValue();control.SetFanSpeed(control.fanSpeed);}" Color="Color.Success" Class="mr-n2 mb-6" />
-
-                <MudSlider Class="d-inline-block" @bind-Value="@control.defaultFanSpeed" Vertical="true" Min="0" Max="255" @onchange="() => control.SetFanSpeed(control.defaultFanSpeed)" />
-                <MudText>@control.fanSpeedInPercentage%</MudText>
+                        </MudGrid>
+                        <MudSwitch Label="Turn Fan On/Off" @bind-Value="@control.SwitchValue" @onclick="() => {control.ToggleValue();control.SetFanSpeed(control.fanSpeed);}" Color="Color.Success" Class="mr-n2 mb-6" />
+                        <MudSlider Size="Size.Large" @bind-Value="@control.defaultFanSpeed" Min="0" Max="255" @onchange="() => control.SetFanSpeed(control.defaultFanSpeed)">Fan Speed: @control.fanSpeedInPercentage% </MudSlider>
+                    </MudContainer>
+                </MudPaper>
             </MudContainer>
         </MudPaper>
     </MudItem>

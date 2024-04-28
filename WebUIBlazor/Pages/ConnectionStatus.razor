@@ -1,15 +1,14 @@
 ﻿@inject Data.ConnectionServiceSerial serial
 
-@if (Connection)
-{
-    <MudAlert Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="Severity.Success" Variant="Variant.Filled">Connected</MudAlert>
-}
-else
-{
-    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Disconnected</MudAlert>
-}
+
+<MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(Connection ? Severity.Success : Severity.Error)" Variant="Variant.Text">
+    @(new MarkupString(Connection ? $"Selected Printer:<strong>{SelectedPrinter}</strong> Status: <strong>Connected</strong>" : "Disconnected"))
+</MudAlert>
 
 @code {
     [Parameter]
     public bool Connection { get; set; }
+
+    [Parameter]
+    public string SelectedPrinter { get; set; }
 }
