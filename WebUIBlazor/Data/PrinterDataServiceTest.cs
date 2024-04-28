@@ -16,6 +16,14 @@ namespace WebUI.Data
         public const string PRINTER_DATA_PATH = "printers.json";
         public const string PREHEATING_PROFILES_PATH = "preheatingProfiles.json";
         public const string SELECTED_PRINTER_SETTINGS_PATH = "selectedPrinter.json";
+        const string _sTEPS_PER_UNIT_PATTERN = @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _mAX_FEEDRATES_PATTERN = @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _mAX_ACCELERATIONS_PATTERN = @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _pRINT_RETRACT_TRAVEL_ACCELERATION_PATTERN = @"M204 P(\d+\.?\d*) R(\d+\.?\d*) T(\d+\.?\d*)";
+        const string _aDVANCED_SETTINGS_PATTERN = @"M205 B(\d+\.?\d*) S(\d+\.?\d*) T(\d+\.?\d*) J(\d+\.?\d*)";
+        const string _oFFSET_SETTINGS_PATTERN = @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)";
+        const string _aUTO_BED_LEVELING_PATTERN = @"M420 S(\d) Z(\d+\.?\d*)";
+        const string _z_PROBE_OFFSETS_PATTERN = @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)";
 
         public Printer Printer;
         public readonly ConnectionServiceSerial serialConnection;
@@ -34,6 +42,8 @@ namespace WebUI.Data
 
         public Printer SelectedPrinter;
         public bool HasCamera { get; set; }
+        public string linearUnits = "";
+        public string temperatureUnits = "";
 
         public PrinterDataServiceTest(ISnackbar snackbar)
         {
@@ -202,8 +212,6 @@ namespace WebUI.Data
             return default(T);
         }
 
-        public string linearUnits = "";
-        public string temperatureUnits = "";
 
         public void GetPrinterSettings()
         {
@@ -260,7 +268,7 @@ namespace WebUI.Data
 
         public void GetStepsPerUnit(string input)
         {
-            var match = Regex.Match(input, @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+            var match = Regex.Match(input, _sTEPS_PER_UNIT_PATTERN);
 
             if (match.Success)
             {
@@ -273,7 +281,7 @@ namespace WebUI.Data
 
         public void GetMaximumFeedrates(string input)
         {
-            var match = Regex.Match(input, @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+            var match = Regex.Match(input, _mAX_FEEDRATES_PATTERN);
 
             if (match.Success)
             {
@@ -286,7 +294,7 @@ namespace WebUI.Data
 
         public void GetMaximumAccelerations(string input)
         {
-            var match = Regex.Match(input, @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)");
+            var match = Regex.Match(input, _mAX_ACCELERATIONS_PATTERN);
 
             if (match.Success)
             {
@@ -299,7 +307,7 @@ namespace WebUI.Data
 
         public void GetPrintRetractTravelAcceleration(string input)
         {
-            var match = Regex.Match(input, @"M204 P(\d+\.?\d*) R(\d+\.?\d*) T(\d+\.?\d*)");
+            var match = Regex.Match(input, _pRINT_RETRACT_TRAVEL_ACCELERATION_PATTERN);
 
             if (match.Success)
             {
@@ -311,7 +319,7 @@ namespace WebUI.Data
 
         public void GetAdvancedSettings(string input)
         {
-            var match = Regex.Match(input, @"M205 B(\d+\.?\d*) S(\d+\.?\d*) T(\d+\.?\d*) J(\d+\.?\d*)");
+            var match = Regex.Match(input, _aDVANCED_SETTINGS_PATTERN);
 
             if (match.Success)
             {
@@ -324,7 +332,7 @@ namespace WebUI.Data
 
         public void GetOffsetSettings(string input)
         {
-            var match = Regex.Match(input, @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)");
+            var match = Regex.Match(input, _oFFSET_SETTINGS_PATTERN);
 
             if (match.Success)
             {
@@ -336,7 +344,7 @@ namespace WebUI.Data
 
         public void GetAutoBedLevelingSettings(string input)
         {
-            var match = Regex.Match(input, @"M420 S(\d) Z(\d+\.?\d*)");
+            var match = Regex.Match(input, _aUTO_BED_LEVELING_PATTERN);
             if (match.Success)
             {
                 Printer.HasAutoBedLevel = (int)double.Parse(match.Groups[1].Value) == 1;
@@ -369,7 +377,7 @@ namespace WebUI.Data
 
         public void GetZProbeOffsets(string input)
         {
-            var match = Regex.Match(input, @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)");
+            var match = Regex.Match(input, _z_PROBE_OFFSETS_PATTERN);
             if (match.Success)
             {
                 Printer.Head.XProbeOffset = double.Parse(match.Groups[1].Value);
