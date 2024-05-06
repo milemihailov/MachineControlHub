@@ -371,7 +371,7 @@ else
 
     public void SetInterval()
     {
-            Data.ConnectionServiceSerial.printerConnection.Write($"M155 S{autoReportValueInterval}");
+        Data.ConnectionServiceSerial.printerConnection.Write($"M155 S{autoReportValueInterval}");
     }
 
 
@@ -393,9 +393,15 @@ else
                 {
                     Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
                 }
-                    ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
-                    Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
-                    Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+                ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
+                if (Data.PrintingService.hotendGraph.Count >= 30)
+                {
+                    Data.PrintingService.hotendGraph.RemoveAt(0);
+                    Data.PrintingService.bedGraph.RemoveAt(0);
+
+                }
+                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
+                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
                     print.UpdateGraphData();
                     InvokeAsync(StateHasChanged);
             });

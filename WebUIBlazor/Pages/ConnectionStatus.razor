@@ -11,14 +11,11 @@
 {
     if (Printing)
     {
-        <MudProgressLinear Color="Color.Success" Striped="true" Size="Size.Large" Value="PrintProgress" Class="py-7">
-            <MudText Typo="Typo.subtitle1" Color="Color.Dark">
-                <b>@PrintProgress %</b>
+        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrintProgress" Class="pb-9">
+            <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+                <b>Printing: @PrintProgress %</b>
             </MudText>
         </MudProgressLinear>
-        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info" Variant="Variant.Filled">
-            <MudText> Printing </MudText>
-        </MudAlert>
     }
     else
     {
