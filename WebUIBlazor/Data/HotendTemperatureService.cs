@@ -24,9 +24,9 @@ namespace WebUI.Data
             hotend.SetTemperature(setTemp);
             _snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
         }
-        public void ParseCurrentHotendTemperature()
+        public void ParseCurrentHotendTemperature(string input)
         {
-            hotend.ParseCurrentTemperature();
+            hotend.ParseCurrentTemperature(input);
             currentHotendTemperature = hotend.CurrentTemp;
             setHotendTemperature = hotend.SetTemp;
             targetHotendTemperature = hotend.TargetTemp;

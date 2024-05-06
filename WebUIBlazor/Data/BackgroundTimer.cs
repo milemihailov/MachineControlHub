@@ -9,6 +9,8 @@ namespace WebUI.Data
 
 
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
+        public readonly PeriodicTimer _timer2 = new(TimeSpan.FromMilliseconds(1000));
+
         public CancellationTokenSource _cts = new();
 
         public event Action SecondElapsed;
@@ -40,6 +42,7 @@ namespace WebUI.Data
         public void StartTimer()
         {
             _ = DoWorkAsync();
+            //_ = DoWorkEachSecondAsync();
         }
 
         public void StopTimer()
@@ -54,11 +57,14 @@ namespace WebUI.Data
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
-                    //Console.WriteLine(DateTime.Now);
-                    //if (i % 500 == 0 && Data.ConnectionServiceSerial.printerConnection != null)
-                    //{
-                    //    SecondElapsed?.Invoke();
-                    //}
+                    i++;
+                    {
+                        if (i % 100 == 0 && Data.ConnectionServiceSerial.printerConnection.IsConnected)
+                        {
+                            SecondElapsed?.Invoke();
+                            //Console.WriteLine(DateTime.Now);
+                        }
+                    }
 
                     if (Data.ConnectionServiceSerial.printerConnection != null && Data.ConnectionServiceSerial.printerConnection.HasData())
                     {
@@ -99,6 +105,20 @@ namespace WebUI.Data
             catch (OperationCanceledException)
             {
                 Console.WriteLine("Timer Cancelled");
+            }
+        }
+
+        public async Task DoWorkEachSecondAsync()
+        {
+            int i = 0;
+            while (await _timer2.WaitForNextTickAsync(_cts.Token))
+            {
+                i++;
+                if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+                {
+                    SecondElapsed?.Invoke();
+                    Console.WriteLine(DateTime.Now);
+                }
             }
         }
 

@@ -24,7 +24,7 @@ namespace MachineControlHub.Temps
         public int SetTemp { get; set; }
 
         public int TargetTemp { get; set; }
-        void ParseCurrentTemperature();
+        void ParseCurrentTemperature(string input);
 
         void SetTemperature(int setTemp);
     }

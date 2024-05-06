@@ -27,9 +27,9 @@ namespace WebUI.Data
             _snackbar.Add($"Bed temperature set to {setTemp}°C", Severity.Info);
         }
 
-        public void ParseCurrentBedTemperature()
+        public void ParseCurrentBedTemperature(string input)
         {
-            bed.ParseCurrentTemperature();
+            bed.ParseCurrentTemperature(input);
             currentBedTemperature = bed.CurrentTemp;
             setBedTemperature = bed.SetTemp;
             targetBedTemperature = bed.TargetTemp;

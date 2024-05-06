@@ -26,9 +26,9 @@ namespace WebUI.Data
             _snackbar.Add($"Chamber temperature set to {setTemp}°C", Severity.Info);
         }
 
-        public void ParseCurrentChamberTemperature()
+        public void ParseCurrentChamberTemperature(string input)
         {
-            chamber.ParseCurrentTemperature();
+            chamber.ParseCurrentTemperature(input);
             currentChamberTemperature = chamber.CurrentTemp;
             setChamberTemperature = chamber.SetTemp;
             targetChamberTemperature = chamber.TargetTemp;

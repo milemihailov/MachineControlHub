@@ -20,7 +20,7 @@ namespace MachineControlHub.Temps
         public int SetTemp { get; set; }
         public int TargetTemp { get; set; }
 
-        public void ParseCurrentTemperature()
+        public void ParseCurrentTemperature(string input)
         {
             throw new System.NotImplementedException();
         }

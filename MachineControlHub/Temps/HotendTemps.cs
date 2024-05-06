@@ -40,18 +40,18 @@ namespace MachineControlHub.Temps
         /// then extracts and parses the hotend temperature value from the received input string.
         /// The extracted temperature value is stored in the HotendCurrentTemp property.
         /// </remarks>
-        public void ParseCurrentTemperature()
+        public void ParseCurrentTemperature(string input)
         {
-            Thread.Sleep(200);  // Simulating the initial delay asynchronously
+            //Thread.Sleep(200);  // Simulating the initial delay asynchronously
 
-            // Send a command to request temperature information
-            _connection.Write(CommandMethods.BuildReportTemperaturesCommand());
+            //// Send a command to request temperature information
+            //_connection.Write(CommandMethods.BuildReportTemperaturesCommand());
 
             // Simulate the delay asynchronously
-            Thread.Sleep(200);
+            //Thread.Sleep(200);
 
             // Read the printer's response
-            string input = _connection.Read();
+            //string input = _connection.Read();
 
             // Define a regular expression pattern to match the bed temperature
             string pattern = HOTEND_TEMP_PARSE_PATTERN;

@@ -102,7 +102,7 @@
                         <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
 
 
-                        <MudButton FullWidth="true" Disabled="@print._processing" OnClick="Calibrate" Variant="Variant.Filled" Color="Color.Primary">
+                        <MudButton FullWidth="true" Disabled="@print._processing" OnClick="print.CalibrateBed" Variant="Variant.Filled" Color="Color.Primary">
                             @if (print._processing)
                             {
                                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -279,11 +279,10 @@ else
     protected override void OnInitialized()
     {
         background.MessageReceived += OnUpdate;
-        // OnSecondElapsed();
+        background.SecondElapsed += OnTemperatureChange;
         if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
         {
             Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildListSDCardCommand());
-            // Console.WriteLine("Data Sent");
         }
 
         config = new Config
@@ -314,6 +313,7 @@ else
                 }
             };
         data = new List<ITrace>();
+        levelBed.CSVData = printer.LoadPrinterData<string>("meshData.json");
         LoadPlotlyData();
         printer.preheatingProfiles = printer.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
@@ -321,18 +321,48 @@ else
 
 
     string fileMessage = "";
-
+    string sdFiles = "";
+    string calibrateMessage = "";
     private void OnUpdate(string message)
     {
-        fileMessage += message;
+
         // get the list of files on the SD card
-        string sdFiles = "";
+        fileMessage += message;
         if (message.Contains("End"))
         {
             sdFiles = string.Join("\n", fileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
             print.ListSDFiles(sdFiles);
             fileMessage = "";
         }
+
+        // get the bed leveling data
+        if(fileMessage.Contains("Bilinear"))
+        {
+            calibrateMessage += message;
+            if (message.Contains("X:"))
+            {
+                levelBed.CSVData = "";
+                levelBed.CSVData = levelBed.bedData.GetGrid(calibrateMessage);
+                levelBed.meshData = levelBed.GetSurfaceData();
+                print._processing = false;
+                fileMessage = "";
+                calibrateMessage = "";
+
+                // delete previous bed leveling data if it exists
+                if (File.Exists("meshData.json"))
+                {
+                    File.Delete("meshData.json");
+                }
+                // save the new bed leveling data
+                printer.SavePrinterData("meshData.json", levelBed.CSVData);
+                LoadPlotlyData();
+            }
+        }
+
+        // get other printer status information
+        hotend.ParseCurrentHotendTemperature(message);
+        bed.ParseCurrentBedTemperature(message);
+        print.UpdatePrintProgress(message);
     }
 
 
@@ -344,22 +374,21 @@ else
     //     Console.WriteLine(print.estimatedTime);
     // }
 
-    // private void OnTemperatureChange()
-    // {
-    //     if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
-    //     {
-    //         Task.Run(() =>
-    //         {
-    //             hotend.ParseCurrentHotendTemperature();
-    //             bed.ParseCurrentBedTemperature();
-    //             Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
-    //             Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
-    //             print.UpdateGraphData();
-    //             print.UpdatePrintProgress();
-    //             InvokeAsync(StateHasChanged);
-    //         });
-    //     }
-    // }
+    private void OnTemperatureChange()
+    {
+        if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+        {
+            Task.Run(() =>
+            {
+                Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
+                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
+                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+                print.UpdateGraphData();
+                InvokeAsync(StateHasChanged);
+            });
+        }
+    }
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -371,23 +400,11 @@ else
         StateHasChanged();
     }
 
-    private async Task Calibrate()
-    {
-        // background.MessageReceived -= OnUpdate;
-        print._processing = true;
-        await Task.Run(() => levelBed.CalibrateBed());
-        levelBed.meshData = levelBed.GetSurfaceData();
-        LoadPlotlyData();
-        print._processing = false;
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(1000);
-        // background.MessageReceived += OnUpdate;
-    }
-
     private void LoadPlotlyData()
     {
-        if (levelBed.meshData != null)
+        if (levelBed.CSVData != null)
         {
+            levelBed.meshData = levelBed.GetSurfaceData();
             Task.Run(async () =>
             {
                 foreach (var trace in await levelBed.meshData)
@@ -395,6 +412,7 @@ else
                     await InvokeAsync(async () => await chart.AddTrace(trace));
                     await Task.Delay(100);
                 }
+
                 levelBed._isInitialized = true;
             });
         }
@@ -403,5 +421,6 @@ else
     public void Dispose()
     {
         background.MessageReceived -= OnUpdate;
+        background.SecondElapsed -= OnTemperatureChange;
     }
 }

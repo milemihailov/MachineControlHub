@@ -11,7 +11,7 @@ namespace WebUI.Data
 {
     public class BedLevelingService
     {
-        public static BedLevelData bedData;
+        public BedLevelData bedData;
         public string CSVData;
         public Task<IList<ITrace>> meshData;
         public bool _isInitialized { get; set; }
@@ -25,10 +25,10 @@ namespace WebUI.Data
 
         public void CalibrateBed()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
-            ConnectionServiceSerial.printerConnection.CheckForBusy();
-            string input = ConnectionServiceSerial.printerConnection.Read();
-            CSVData = bedData.GetGrid(input);
+            //ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
+            //ConnectionServiceSerial.printerConnection.CheckForBusy();
+            //string input = ConnectionServiceSerial.printerConnection.Read();
+            //CSVData = bedData.GetGrid(input);
         }
 
         public async Task<IList<ITrace>> GetSurfaceData()

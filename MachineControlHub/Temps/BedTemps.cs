@@ -34,18 +34,18 @@ namespace MachineControlHub.Temps
         /// Parses and updates the current bed temperature from the response received from the printer.
         /// </summary>
         /// <param name="serial">The serial interface used for communication with the printer.</param>
-        public void ParseCurrentTemperature()
+        public void ParseCurrentTemperature(string input)
         {
-            Thread.Sleep(200);
-            // Send a command to request temperature information
-            _connection.Write(CommandMethods.BuildReportTemperaturesCommand());
+            //Thread.Sleep(200);
+            //// Send a command to request temperature information
+            //_connection.Write(CommandMethods.BuildReportTemperaturesCommand());
 
-            // Sleep for a brief moment to ensure the input has enough time to be received and processed.
-            // This sleep is used to account for potential delays in serial communication.
-            Thread.Sleep(200);
+            //// Sleep for a brief moment to ensure the input has enough time to be received and processed.
+            //// This sleep is used to account for potential delays in serial communication.
+            //Thread.Sleep(200);
 
-            // Read the printer's response
-            string input = _connection.Read();
+            //// Read the printer's response
+            //string input = _connection.Read();
 
             // Define a regular expression pattern to match the bed temperature
             string pattern = BED_TEMP_PARSE_PATTERN;

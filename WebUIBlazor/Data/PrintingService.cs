@@ -155,17 +155,11 @@ namespace WebUI.Data
             return fraction * 100;
         }
 
-        public void UpdatePrintProgress(string message)
+        public async void UpdatePrintProgress(string message)
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
-            Thread.Sleep(600);
-            if(message.Contains("Not SD printing"))
+            await Task.Run(() =>
             {
-                return;
-            }
-            else
-            {
-                var match = Regex.Match(message, @"SD printing byte (\d+)/(\d+)");
+                var match = Regex.Match(message, @"printing byte (\d+)/(\d+)");
 
                 if (match.Success)
                 {
@@ -173,7 +167,13 @@ namespace WebUI.Data
                     int secondNumber = int.Parse(match.Groups[2].Value);
                     progress = Math.Round(CalculatePercentage(firstNumber, secondNumber));
                 }
-            }
+            });
+        }
+
+        public void CalibrateBed()
+        {
+            _processing = true;
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
         }
     }
 }

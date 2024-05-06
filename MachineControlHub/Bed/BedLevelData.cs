@@ -5,8 +5,6 @@
     /// </summary>
     public class BedLevelData
     {
-        public const int LINES_TO_EXCLUDE = 2;
-
         public string BedLevelGridData;
 
 
@@ -17,10 +15,12 @@
         /// <returns>csv Grid</returns>
         public string GetGrid(string input)
         {
+            Console.WriteLine(input);
             var rows = input.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var csv = string.Join("\n", rows.Take(rows.Length - LINES_TO_EXCLUDE)
+            var csv = string.Join("\n", rows.Where(row => char.IsDigit(row.TrimStart().FirstOrDefault())) // Only include lines that start with a digit
                                            .Select(row => string.Join(",", row.Split(' ', StringSplitOptions.RemoveEmptyEntries))));
             int index = csv.IndexOf("X:");
+            Console.WriteLine(index);
             return index >= 0 ? csv.Substring(0, index) : csv;
         }
 
