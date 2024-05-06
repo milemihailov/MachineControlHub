@@ -17,7 +17,7 @@
 
         public double JunctionDeviation { get; set; }
 
-        public int FadeHeight { get; set; }
+        public int? FadeHeight { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum feedrate for the X-axis.

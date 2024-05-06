@@ -131,6 +131,10 @@ namespace WebUI.Data
         {   
             // Send the fan speed command to the printer
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+            if (value > 0)
+            {
+                SwitchValue = true;
+            }
         }
 
 
@@ -143,11 +147,8 @@ namespace WebUI.Data
             fanSpeedInPercentage = Math.Round(value / 255 * 100);
         }
 
-        public void UpdateParagraph(ConnectionServiceSerial serial)
+        public void UpdateParagraph(string message)
         {
-            Thread.Sleep(50);
-            string message = serial.Read();
-
             double value;
             Match match = Regex.Match(message, FAN_PATTERN);
             if (match.Success)
@@ -156,17 +157,27 @@ namespace WebUI.Data
                 CalculateFanSpeedIntoPercentage(value);
             }
 
-            string filteredOutput = message.Replace("ok", " ");
-            consoleOutput += filteredOutput;
+            var lines = message.Split('\n');
+            var filteredLines = lines.Where(line => !line.Contains("ok"));
+            var filteredData = string.Join('\n', filteredLines);
+            consoleOutput += filteredData;
         }
 
         public void ToggleValue()
         {
             SwitchValue = !SwitchValue;
             if (SwitchValue)
+            {
                 fanSpeed = 255;
+                defaultFanSpeed = 255;
+
+            }
             else
+            {
                 fanSpeed = 0;
+                defaultFanSpeed = 0;
+            }
+
         }
     }
 }

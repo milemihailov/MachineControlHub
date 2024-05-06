@@ -11,7 +11,7 @@ namespace MachineControlHub.PrinterConnection
     public class SerialConnection : IPrinterConnection
     {
         const string BUSY_CHECK = "echo:busy: processing\n";
-        const int SLEEP_TIME_AFTER_BUSY_CHECK = 500;
+        const int SLEEP_TIME_AFTER_BUSY_CHECK = 1500;
 
         private SerialPort serialPort;
         public bool IsConnected { get; set; }
@@ -156,6 +156,23 @@ namespace MachineControlHub.PrinterConnection
 
             try
             {
+                string data = serialPort.ReadLine();
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error reading from serial port: {ex.Message}");
+                IsConnected = false;
+                return null;
+            }
+        }
+
+        public string ReadAll()
+        {
+            serialPort.ReadTimeout = 5000;
+
+            try
+            {
                 string data = serialPort.ReadExisting();
                 return data;
             }
@@ -171,7 +188,7 @@ namespace MachineControlHub.PrinterConnection
         /// <summary>
         /// Checks to see if printer is busy if this is the case sleeps for 1 second and outputs "busy" to the user then rechecks until it's no longer busy
         /// </summary>
-        public void CheckForBusy()
+        public bool CheckForBusy()
         {
             string data = serialPort.ReadLine();
 
@@ -179,7 +196,9 @@ namespace MachineControlHub.PrinterConnection
             {
                 Console.WriteLine(serialPort.ReadLine());
                 Thread.Sleep(SLEEP_TIME_AFTER_BUSY_CHECK);
+                return true;
             }
+            return false;
         }
 
 
@@ -187,7 +206,7 @@ namespace MachineControlHub.PrinterConnection
         /// Checks on opened port to see if there is data left to read
         /// </summary>
         /// <returns></returns>
-        private  bool HasData()
+        public bool HasData()
         {
             if (serialPort.IsOpen && serialPort.BytesToRead > 0)
             {

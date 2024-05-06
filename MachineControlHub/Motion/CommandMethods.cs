@@ -213,6 +213,18 @@ namespace MachineControlHub.Motion
         }
 
 
+        public static string BuildReportSDStatus()
+        {
+            var reportSDStatus = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSdPrintStatus
+            };
+
+            return GCodeMethods.GCodeString(reportSDStatus);
+        }
+
+
         /// <summary>
         /// Start an SD print.
         /// Requires SDSUPPORT

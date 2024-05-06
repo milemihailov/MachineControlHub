@@ -27,6 +27,11 @@
             return null;
         }
 
+        public string ReadAll()
+        {
+            return null;
+        }
+
         public List<string> AvailableConnections()
         {
             return new List<string>();

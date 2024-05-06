@@ -16,8 +16,8 @@ namespace WebUI.Data
         public PrintService printService;
         public CurrentPrintJob printJob;
         public PrintProgress printProgress;
-        private readonly IDialogService _dialogService;
-        private readonly ISnackbar _snackbar;
+        public readonly IDialogService _dialogService;
+        public readonly ISnackbar _snackbar;
 
         public string printName;
         public string uploadFileName;
@@ -30,6 +30,7 @@ namespace WebUI.Data
         public string file;
         public string fileToPrint = "";
         public bool _processing = false;
+        public double progress = 0;
 
         public static List<double> hotendGraph = new List<double> { };
         public static List<double> bedGraph = new List<double> { };
@@ -72,9 +73,9 @@ namespace WebUI.Data
             _snackbar.Add("Print Stopped", Severity.Error);
         }
 
-        public void ListSDFiles()
+        public void ListSDFiles(string inputText)
         {
-            files = printService.ListSDFiles();
+            files = printService.ListSDFiles(inputText);
         }
 
         public void StartTimeOfPrint()
@@ -101,11 +102,10 @@ namespace WebUI.Data
             fileSize = Math.Round(printProgress.FileSizeInMB, 2);
         }
 
-        public void EstimatedPrintTime()
+        public void EstimatedPrintTime(string message)
         {
             ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPrintProgressCommand());
-            string timeLeft = ConnectionServiceSerial.printerConnection.Read();
-            Match match = Regex.Match(timeLeft, PATTERN, RegexOptions.IgnoreCase);
+            Match match = Regex.Match(message, PATTERN, RegexOptions.IgnoreCase);
             estimatedTime = match.Groups[1].Value;
         }
 
@@ -147,6 +147,33 @@ namespace WebUI.Data
         };
             Series = new_series;
 
+        }
+
+        public static double CalculatePercentage(double numerator, double denominator)
+        {
+            double fraction = numerator / denominator;
+            return fraction * 100;
+        }
+
+        public void UpdatePrintProgress(string message)
+        {
+            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
+            Thread.Sleep(600);
+            if(message.Contains("Not SD printing"))
+            {
+                return;
+            }
+            else
+            {
+                var match = Regex.Match(message, @"SD printing byte (\d+)/(\d+)");
+
+                if (match.Success)
+                {
+                    int firstNumber = int.Parse(match.Groups[1].Value);
+                    int secondNumber = int.Parse(match.Groups[2].Value);
+                    progress = Math.Round(CalculatePercentage(firstNumber, secondNumber));
+                }
+            }
         }
     }
 }

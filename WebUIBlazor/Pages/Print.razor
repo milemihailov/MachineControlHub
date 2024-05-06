@@ -8,6 +8,7 @@
 @inject Data.ChamberTemperatureService chamber
 @inject Data.BackgroundTimer background
 @inject Data.PrinterDataServiceTest printer
+@inject ISnackbar Snackbar
 
 @implements IDisposable
 @using MachineControlHub.Temps
@@ -16,6 +17,7 @@
 @using Plotly.Blazor.LayoutLib
 @using MachineControlHub.Motion;
 @using MachineControlHub.Print;
+@using System.Text
 
 <ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
@@ -53,12 +55,16 @@
                             </MudListItem>
                         }
                     </MudExpansionPanel>
+
                     <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                         @if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
                         {
-                            @foreach (var file in print.files)
+                            @if (print.files != null)
                             {
-                                <MudSelectItem Value="@file" />
+                                @foreach (var file in print.files)
+                                {
+                                    <MudSelectItem Value="@file" />
+                                }
                             }
                         }
                     </MudSelect>
@@ -67,9 +73,13 @@
                     <MudText>Estimated print time: @print.estimatedTime</MudText>
                     <MudText>Elapsed print time:  @string.Format($"")</MudText>
                     <MudText>Print Progress:</MudText>
-                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="25" Class="my-7">
+                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="@print.progress" Class="my-7">
                         <MudText Typo="Typo.subtitle1" Color="Color.Dark">
-                            <b>25%</b>
+                            <b>@print.progress %</b>
+                            @if (print.progress == 100)
+                            {
+                                Snackbar.Add("Print Finished", Severity.Info);
+                            }
                         </MudText>
                     </MudProgressLinear>
                     <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
@@ -268,12 +278,13 @@ else
 
     protected override void OnInitialized()
     {
-
+        background.MessageReceived += OnUpdate;
+        // OnSecondElapsed();
         if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
         {
-            print.ListSDFiles();
+            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildListSDCardCommand());
+            // Console.WriteLine("Data Sent");
         }
-        background.SecondElapsed += OnTemperatureChange;
 
         config = new Config
             {
@@ -307,28 +318,48 @@ else
         printer.preheatingProfiles = printer.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
     }
-    private void OnEstimatedPrintTime()
-    {
-        print.EstimatedPrintTime();
-        InvokeAsync(StateHasChanged);
-        Console.WriteLine(print.estimatedTime);
-    }
 
-    private void OnTemperatureChange()
+
+    string fileMessage = "";
+
+    private void OnUpdate(string message)
     {
-        if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+        fileMessage += message;
+        // get the list of files on the SD card
+        string sdFiles = "";
+        if (message.Contains("End"))
         {
-            Task.Run(() =>
-            {
-                hotend.ParseCurrentHotendTemperature();
-                bed.ParseCurrentBedTemperature();
-                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
-                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
-                print.UpdateGraphData();
-                InvokeAsync(StateHasChanged);
-            });
+            sdFiles = string.Join("\n", fileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+            print.ListSDFiles(sdFiles);
+            fileMessage = "";
         }
     }
+
+
+
+    // private void OnEstimatedPrintTime()
+    // {
+    //     print.EstimatedPrintTime();
+    //     InvokeAsync(StateHasChanged);
+    //     Console.WriteLine(print.estimatedTime);
+    // }
+
+    // private void OnTemperatureChange()
+    // {
+    //     if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+    //     {
+    //         Task.Run(() =>
+    //         {
+    //             hotend.ParseCurrentHotendTemperature();
+    //             bed.ParseCurrentBedTemperature();
+    //             Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
+    //             Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+    //             print.UpdateGraphData();
+    //             print.UpdatePrintProgress();
+    //             InvokeAsync(StateHasChanged);
+    //         });
+    //     }
+    // }
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -342,7 +373,7 @@ else
 
     private async Task Calibrate()
     {
-        background.SecondElapsed -= OnTemperatureChange;
+        // background.MessageReceived -= OnUpdate;
         print._processing = true;
         await Task.Run(() => levelBed.CalibrateBed());
         levelBed.meshData = levelBed.GetSurfaceData();
@@ -350,24 +381,27 @@ else
         print._processing = false;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(1000);
-        background.SecondElapsed += OnTemperatureChange;
+        // background.MessageReceived += OnUpdate;
     }
 
     private void LoadPlotlyData()
     {
-        Task.Run(async () =>
+        if (levelBed.meshData != null)
         {
-            foreach (var trace in await levelBed.meshData)
+            Task.Run(async () =>
             {
-                await InvokeAsync(async () => await chart.AddTrace(trace));
-                await Task.Delay(100);
-            }
-            levelBed._isInitialized = true;
-        });
+                foreach (var trace in await levelBed.meshData)
+                {
+                    await InvokeAsync(async () => await chart.AddTrace(trace));
+                    await Task.Delay(100);
+                }
+                levelBed._isInitialized = true;
+            });
+        }
     }
 
     public void Dispose()
     {
-        background.SecondElapsed -= OnTemperatureChange;
+        background.MessageReceived -= OnUpdate;
     }
 }

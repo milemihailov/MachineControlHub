@@ -33,6 +33,8 @@
         /// <returns>The message read from the printer.</returns>
         string Read();
 
+        string ReadAll();
+
         /// <summary>
         /// Retrieves a list of available printer connections.
         /// </summary>

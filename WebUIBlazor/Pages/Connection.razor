@@ -44,6 +44,9 @@
             serial.Initialize($"{serial.portName},{serial.baudRate}");
             ConnectionServiceSerial.printerConnection.IsConnected = true;
             serial.Connect();
+
+            //set the host keep alive command to 1 second after connection
+            serial.Write("M113 S1");
         }
         catch (Exception e)
         {

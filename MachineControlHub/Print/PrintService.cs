@@ -85,15 +85,15 @@ namespace MachineControlHub.Print
         
 
 
-        public List<string> ListSDFiles()
+        public List<string> ListSDFiles(string inputText)
         {
 
             string pattern = @"Begin file list([\s\S]+?)End file list";
 
-            _connection.Write(CommandMethods.BuildListSDCardCommand());
-            Thread.Sleep(100);
-            string inputText = _connection.Read();
-
+            //_connection.Write(CommandMethods.BuildListSDCardCommand());
+            //Thread.Sleep(200);
+            //string inputText = _connection.ReadAll();
+            Console.WriteLine(inputText);
             Match match = Regex.Match(inputText, pattern, RegexOptions.None);
 
             string parsedString = "";

@@ -154,7 +154,7 @@
         <MudText> Y Max Acceleration: @printer.Printer.MotionSettings.YMaxAcceleration</MudText>
         <MudText> Z Max Acceleration: @printer.Printer.MotionSettings.ZMaxAcceleration</MudText>
         <MudText> E Max Acceleration: @printer.Printer.MotionSettings.EMaxAcceleration</MudText>
-        <MudText Typo="Typo.h6"> Advanced Settings: </MudText>
+        <MudText Typo="Typo.h6"> Starting Accelerations: </MudText>
         <MudText> Min Segment Time: @printer.Printer.MotionSettings.MinSegmentTime</MudText>
         <MudText> Min Feedrate: @printer.Printer.MotionSettings.MinFeedrate</MudText>
         <MudText> Min Travel Feedrate: @printer.Printer.MotionSettings.MinTravelFeedrate</MudText>
@@ -169,6 +169,7 @@
         <MudText> Z Offset: @printer.Printer.Head.ZProbeOffset</MudText>
         <MudText Typo="Typo.h6"> AutoBed Level:</MudText>
         <MudText> @(printer.Printer.HasAutoBedLevel ? "Enabled" : "Not Enabled") </MudText>
+        <MudText> Fade Height: @printer.Printer.MotionSettings.FadeHeight mm</MudText>
     </MudCardContent>
 </MudCard>
 

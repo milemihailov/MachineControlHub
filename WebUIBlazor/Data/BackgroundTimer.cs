@@ -1,15 +1,24 @@
 ﻿
+using System.Text;
+using Microsoft.AspNetCore.Components;
+
 namespace WebUI.Data
 {
     public class BackgroundTimer
     {
 
 
-        public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(1000));
+        public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
         public CancellationTokenSource _cts = new();
 
         public event Action SecondElapsed;
+        public event Action<string> MessageReceived;
+        public event Action BusyStatusChanged;
 
+        public string message { get; set; }
+
+        [Parameter]
+        public bool isBusy { get; set; }
         BackgroundTimer()
         {
             StartTimer();
@@ -40,12 +49,51 @@ namespace WebUI.Data
 
         public async Task DoWorkAsync()
         {
+            int i = 0;
             try
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
                     //Console.WriteLine(DateTime.Now);
-                    SecondElapsed?.Invoke();
+                    //if (i % 500 == 0 && Data.ConnectionServiceSerial.printerConnection != null)
+                    //{
+                    //    SecondElapsed?.Invoke();
+                    //}
+
+                    if (Data.ConnectionServiceSerial.printerConnection != null && Data.ConnectionServiceSerial.printerConnection.HasData())
+                    {
+                        string readData = Data.ConnectionServiceSerial.printerConnection.Read();
+                        string data = "";
+                        data += readData;
+                        string echoMessage = "";
+
+                        if (data.ToLower().Contains("echo"))
+                        {
+                            isBusy = true;
+                            BusyStatusChanged?.Invoke();
+                            await Task.Run(async () =>
+                            {
+                                while (readData.ToLower().Contains("echo:busy: processing"))
+                                {
+                                    Console.WriteLine("Printer is busy");
+                                    await Task.Delay(1500);
+                                    echoMessage += readData = ConnectionServiceSerial.printerConnection.ReadAll();
+                                }
+                            });
+                            isBusy = false;
+                            BusyStatusChanged?.Invoke();
+                        }
+                        message = $"{readData} \n";
+
+                        if (echoMessage != "")
+                        {
+                            message = FilterData(echoMessage);
+                        }
+
+
+                        //Console.WriteLine(message);
+                        MessageReceived?.Invoke(message);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -53,5 +101,16 @@ namespace WebUI.Data
                 Console.WriteLine("Timer Cancelled");
             }
         }
+
+
+        public string FilterData(string data)
+        {
+            var lines = data.Split('\n');
+            var filteredLines = lines.Where(line => !line.Contains("echo"));
+            var filteredData = string.Join('\n', filteredLines);
+            return filteredData;
+        }
+
     }
+
 }

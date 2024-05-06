@@ -14,6 +14,20 @@
 
 <ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
+@if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+{
+
+
+    <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!printerBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
+        @if (printerBusy)
+        {
+            <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+        }
+        @(new MarkupString(!printerBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+
+    </MudAlert>
+}
+
 <MudGrid>
     <MudItem xs="4">
         <MudPaper Elevation="0">
@@ -99,13 +113,16 @@
     private Layout layout;
     private IList<ITrace> data;
     private IEnumerable<EventDataPoint> ClickInfos { get; set; }
+    private bool printerBusy { get; set; }
 
     protected override void OnInitialized()
     {
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
         int xSize = printer.SelectedPrinter?.Bed?.XSize ?? 0;
         int ySize = printer.SelectedPrinter?.Bed?.YSize ?? 0;
-        background.SecondElapsed += OnUpdate;
+
+        background.MessageReceived += OnUpdate;
+        background.BusyStatusChanged += OnBusyChanged;
 
         config = new Config
             {
@@ -134,16 +151,22 @@
 
     }
 
-    public void OnUpdate()
+    public void OnUpdate(string message)
     {
-        if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+        Task.Run(() =>
         {
-            Task.Run(() =>
-            {
-                control.UpdateParagraph(serial);
-                InvokeAsync(StateHasChanged);
-            });
-        }
+            control.UpdateParagraph(message);
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void OnBusyChanged()
+    {
+        Task.Run(() =>
+        {
+            printerBusy = background.isBusy;
+            InvokeAsync(StateHasChanged);
+        });
     }
 
     public void ClickAction(IEnumerable<EventDataPoint> eventData)
@@ -176,6 +199,7 @@
 
     void IDisposable.Dispose()
     {
-        background.SecondElapsed -= OnUpdate;
+        background.MessageReceived -= OnUpdate;
+        background.BusyStatusChanged -= OnBusyChanged;
     }
 }

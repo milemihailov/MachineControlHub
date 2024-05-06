@@ -224,7 +224,7 @@ namespace WebUI.Data
             GetMaximumFeedrates(response);
             GetMaximumAccelerations(response);
             GetPrintRetractTravelAcceleration(response);
-            GetAdvancedSettings(response);
+            GetStartingAccelerations(response);
             GetOffsetSettings(response);
             GetAutoBedLevelingSettings(response);
             GetHotendPIDValues(response);
@@ -317,7 +317,7 @@ namespace WebUI.Data
             }
         }
 
-        public void GetAdvancedSettings(string input)
+        public void GetStartingAccelerations(string input)
         {
             var match = Regex.Match(input, _aDVANCED_SETTINGS_PATTERN);
 
