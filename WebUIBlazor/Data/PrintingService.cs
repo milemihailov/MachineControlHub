@@ -31,6 +31,7 @@ namespace WebUI.Data
         public string fileToPrint = "";
         public bool _processing = false;
         public double progress = 0;
+        public bool _isPrinting = false;
 
         public static List<double> hotendGraph = new List<double> { };
         public static List<double> bedGraph = new List<double> { };
@@ -70,6 +71,8 @@ namespace WebUI.Data
         public void StopPrint()
         {
             printService.AbortCurrentPrint();
+            progress = 0;
+            _isPrinting = false;
             _snackbar.Add("Print Stopped", Severity.Error);
         }
 
@@ -155,17 +158,33 @@ namespace WebUI.Data
             return fraction * 100;
         }
 
+
         public async void UpdatePrintProgress(string message)
         {
+            if (progress > 0)
+            {
+                _isPrinting = true;
+                if (progress == 100)
+                {
+                    _isPrinting = false;
+                    progress = 0;
+                }
+            }
             await Task.Run(() =>
             {
-                var match = Regex.Match(message, @"printing byte (\d+)/(\d+)");
+                var printing = Regex.Match(message, @"printing byte (\d+)/(\d+)");
+                var finished = Regex.Match(message, @"Done printing file");
 
-                if (match.Success)
+                if (printing.Success)
                 {
-                    int firstNumber = int.Parse(match.Groups[1].Value);
-                    int secondNumber = int.Parse(match.Groups[2].Value);
+                    int firstNumber = int.Parse(printing.Groups[1].Value);
+                    int secondNumber = int.Parse(printing.Groups[2].Value);
                     progress = Math.Round(CalculatePercentage(firstNumber, secondNumber));
+                }
+
+                if(finished.Success)
+                {
+                    progress = 100;
                 }
             });
         }

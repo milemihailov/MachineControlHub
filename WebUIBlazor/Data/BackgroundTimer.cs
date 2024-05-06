@@ -68,6 +68,7 @@ namespace WebUI.Data
 
                     if (Data.ConnectionServiceSerial.printerConnection != null && Data.ConnectionServiceSerial.printerConnection.HasData())
                     {
+                        Thread.Sleep(100);
                         string readData = Data.ConnectionServiceSerial.printerConnection.Read();
                         string data = "";
                         data += readData;

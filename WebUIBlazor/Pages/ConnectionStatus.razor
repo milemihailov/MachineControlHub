@@ -1,5 +1,5 @@
 ﻿@inject Data.ConnectionServiceSerial serial
-@inject Data.BackgroundTimer timer
+@inject Data.BackgroundTimer background
 
 
 <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(Connection ? Severity.Success : Severity.Error)" Variant="Variant.Text">
@@ -7,10 +7,66 @@
 </MudAlert>
 
 
+@if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+{
+    if (Printing)
+    {
+        <MudProgressLinear Color="Color.Success" Striped="true" Size="Size.Large" Value="PrintProgress" Class="py-7">
+            <MudText Typo="Typo.subtitle1" Color="Color.Dark">
+                <b>@PrintProgress %</b>
+            </MudText>
+        </MudProgressLinear>
+        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info" Variant="Variant.Filled">
+            <MudText> Printing </MudText>
+        </MudAlert>
+    }
+    else
+    {
+        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!PrinterBusy? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
+            @if (PrinterBusy)
+            {
+                <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+            }
+            @(new MarkupString(!PrinterBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+        </MudAlert>
+    }
+}
+
 @code {
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // Subscribe to the event here.
+        background.BusyStatusChanged += OnBusyChanged;
+    }
+
     [Parameter]
     public bool Connection { get; set; }
 
     [Parameter]
     public string SelectedPrinter { get; set; }
+
+    public bool PrinterBusy { get; set; }
+
+    [Parameter]
+    public bool Printing { get; set; }
+
+    [Parameter]
+    public double PrintProgress { get; set; }
+
+    public void OnBusyChanged()
+    {
+        Task.Run(() =>
+        {
+            PrinterBusy = background.isBusy;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void Dispose()
+    {
+        background.BusyStatusChanged -= OnBusyChanged;
+    }
 }

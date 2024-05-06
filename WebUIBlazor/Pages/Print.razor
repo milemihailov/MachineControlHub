@@ -19,7 +19,7 @@
 @using MachineControlHub.Print;
 @using System.Text
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" Printing="print._isPrinting" PrintProgress="print.progress" />
 
 @if (printer.SelectedPrinter != null)
 {
@@ -72,8 +72,8 @@
                     <MudText>File printing: <strong>@print.printName</strong></MudText>
                     <MudText>Estimated print time: @print.estimatedTime</MudText>
                     <MudText>Elapsed print time:  @string.Format($"")</MudText>
-                    <MudText>Print Progress:</MudText>
-                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="@print.progress" Class="my-7">
+@*                     <MudText>Print Progress:</MudText>
+                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="@print.progress">
                         <MudText Typo="Typo.subtitle1" Color="Color.Dark">
                             <b>@print.progress %</b>
                             @if (print.progress == 100)
@@ -81,7 +81,7 @@
                                 Snackbar.Add("Print Finished", Severity.Info);
                             }
                         </MudText>
-                    </MudProgressLinear>
+                    </MudProgressLinear> *@
                     <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
                     <MudText>File Size: <strong>@print.fileSize MB</strong></MudText>
                 </MudCardContent>
@@ -93,12 +93,6 @@
             <MudItem xs="8">
                 <MudPaper Height="100%" Width="100%" Elevation="0">
                     <MudCardContent>
-                        @if (!levelBed._isInitialized)
-                        {
-                            <MudPaper>
-                                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-                            </MudPaper>
-                        }
                         <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
 
 
@@ -123,7 +117,15 @@
             <MudPaper Width="100%" Square="true" Elevation="0">
                 <MudCardHeader>
                     <MudText Typo="Typo.h6">Set Temperatures</MudText>
+
                 </MudCardHeader>
+                <MudText>If you have Temperature Auto Report Enabled turn On</MudText>
+                <MudSwitch @bind-Value="@autoReportTemps" Color="Color.Success" Class="mr-n2 mb-6"> Turn On/Off</MudSwitch>
+                @if (autoReportTemps)
+                {
+                    <MudNumericField @bind-Value="@autoReportValueInterval" Label="Auto Report Temperature Interval" Variant="Variant.Outlined" Min="0" />
+                    <MudButton OnClick="SetInterval"> Set Seconds</MudButton>
+                }
                 <MudList>
                     <MudDivider DividerType="DividerType.FullWidth" />
                     <MudListItem>
@@ -274,7 +276,11 @@ else
     private Config config;
     private Layout layout;
     private IList<ITrace> data;
-
+    bool autoReportTemps { get; set; } = false;
+    int? autoReportValueInterval { get; set; }
+    string fileMessage = "";
+    string sdFiles = "";
+    string calibrateMessage = "";
 
     protected override void OnInitialized()
     {
@@ -320,9 +326,6 @@ else
     }
 
 
-    string fileMessage = "";
-    string sdFiles = "";
-    string calibrateMessage = "";
     private void OnUpdate(string message)
     {
 
@@ -363,8 +366,13 @@ else
         hotend.ParseCurrentHotendTemperature(message);
         bed.ParseCurrentBedTemperature(message);
         print.UpdatePrintProgress(message);
+        Console.WriteLine(message);
     }
 
+    public void SetInterval()
+    {
+            Data.ConnectionServiceSerial.printerConnection.Write($"M155 S{autoReportValueInterval}");
+    }
 
 
     // private void OnEstimatedPrintTime()
@@ -374,18 +382,22 @@ else
     //     Console.WriteLine(print.estimatedTime);
     // }
 
+
     private void OnTemperatureChange()
     {
         if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
         {
             Task.Run(() =>
             {
-                Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
-                ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
-                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
-                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
-                print.UpdateGraphData();
-                InvokeAsync(StateHasChanged);
+                if (!autoReportTemps)
+                {
+                    Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                }
+                    ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
+                    Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
+                    Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+                    print.UpdateGraphData();
+                    InvokeAsync(StateHasChanged);
             });
         }
     }

@@ -14,19 +14,7 @@
 
 <ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
 
-@if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
-{
 
-
-    <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!printerBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
-        @if (printerBusy)
-        {
-            <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
-        }
-        @(new MarkupString(!printerBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
-
-    </MudAlert>
-}
 
 <MudGrid>
     <MudItem xs="4">
@@ -122,7 +110,6 @@
         int ySize = printer.SelectedPrinter?.Bed?.YSize ?? 0;
 
         background.MessageReceived += OnUpdate;
-        background.BusyStatusChanged += OnBusyChanged;
 
         config = new Config
             {
@@ -160,14 +147,6 @@
         });
     }
 
-    public void OnBusyChanged()
-    {
-        Task.Run(() =>
-        {
-            printerBusy = background.isBusy;
-            InvokeAsync(StateHasChanged);
-        });
-    }
 
     public void ClickAction(IEnumerable<EventDataPoint> eventData)
     {
@@ -200,6 +179,5 @@
     void IDisposable.Dispose()
     {
         background.MessageReceived -= OnUpdate;
-        background.BusyStatusChanged -= OnBusyChanged;
     }
 }
