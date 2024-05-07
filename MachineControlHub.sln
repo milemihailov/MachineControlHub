@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MachineControlHub", "Machin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUI", "WebUIBlazor\WebUI.csproj", "{4D1B1FE0-157D-43DF-B76F-8A2B0FA09ABC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinFormsUI", "WinFormsUI\WinFormsUI.csproj", "{677D01F8-0BFD-4885-8051-0CEFB9EDB339}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinFormsUI", "WinFormsUI\WinFormsUI.csproj", "{677D01F8-0BFD-4885-8051-0CEFB9EDB339}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

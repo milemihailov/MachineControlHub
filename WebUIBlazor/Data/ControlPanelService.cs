@@ -1,4 +1,5 @@
 ﻿using MachineControlHub.Motion;
+using Microsoft.JSInterop;
 using System.Text.RegularExpressions;
 
 namespace WebUI.Data
@@ -15,12 +16,17 @@ namespace WebUI.Data
         public bool SwitchValue = false;
         public int fanSpeed;
         public int? freeMoveFeedRate;
+        public int feedRatePercentage = 100;
+        public int printFlowPercentage = 100;
 
         public MotionSettingsData feedRate;
         public Position positionToMove;
-
-        public ControlPanelService()
+        private readonly BackgroundTimer background;
+        private readonly IJSRuntime JSRuntime;
+        public ControlPanelService(BackgroundTimer background, IJSRuntime jsRuntime)
         {
+            this.background = background;
+            this.JSRuntime = jsRuntime;
             feedRate = new MotionSettingsData();
             positionToMove = new Position();
         }
@@ -33,13 +39,13 @@ namespace WebUI.Data
         /// </summary>
         /// <param name="position">The axis to adjust.</param>
         /// <param name="increment">True to increment, false to decrement.</param>
-        public void AdjustAxis(MovePositions position, bool increment, ConnectionServiceSerial serial)
+        public void AdjustAxis(MovePositions position, bool increment)
         {
             // Create a new Position object to store the movement values
             Position pos = new();
 
             // Send a command to set relative positioning
-            serial.Write(CommandMethods.BuildRelativePositionCommand());
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildRelativePositionCommand());
 
             // Determine the movement value based on whether it's an increment or decrement
             double moveValue = increment ? valueToMove : -valueToMove;
@@ -65,8 +71,8 @@ namespace WebUI.Data
             }
 
             // Send a command to perform a linear move with the specified values and feed rate
-            serial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
-            serial.Write(CommandMethods.BuildAbsolutePositionCommand());
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
 
 
@@ -79,9 +85,9 @@ namespace WebUI.Data
         /// Sends a command to disable the steppers of the 3D printer.
         /// </summary>
         public void DisableSteppers()
-        {   
+        {
             // Send the command to disable the steppers to the printer
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
         }
 
 
@@ -94,7 +100,7 @@ namespace WebUI.Data
         public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
         {
             // Send the command to turn off the fan to the printer
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
         }
 
 
@@ -106,9 +112,9 @@ namespace WebUI.Data
         /// <remarks>
         /// The provided Gcode command will be sent to the terminal connection after converting it to lowercase.
         /// </remarks>
-        public void SendGcodeViaTerminal(string command, ConnectionServiceSerial serial)
+        public void SendGcodeViaTerminal(string command)
         {
-            serial.Write(command.ToLower());
+            background.ConnectionServiceSerial.printerConnection.Write(command);
             sendCommand = null;
         }
 
@@ -119,7 +125,7 @@ namespace WebUI.Data
         public void SetFanOff()
         {
             // Send the fan speed command to the printer
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
         }
 
 
@@ -130,13 +136,22 @@ namespace WebUI.Data
         public void SetFanSpeed(int value)
         {   
             // Send the fan speed command to the printer
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
             if (value > 0)
             {
                 SwitchValue = true;
             }
         }
 
+        public void SetFeedRatePercentage(int feedrate)
+        {
+            background.ConnectionServiceSerial.printerConnection.Write($"M220 S{feedrate}");
+        }
+
+        public void SetPrintFlowPercentage(int flowrate)
+        {
+            background.ConnectionServiceSerial.printerConnection.Write($"M221 S{flowrate}");
+        }
 
         /// <summary>
         /// Calculates the fan speed as a percentage based on the provided value.
@@ -147,7 +162,7 @@ namespace WebUI.Data
             fanSpeedInPercentage = Math.Round(value / 255 * 100);
         }
 
-        public void UpdateParagraph(string message)
+        public async void UpdateParagraph(string message)
         {
             double value;
             Match match = Regex.Match(message, FAN_PATTERN);
@@ -155,12 +170,43 @@ namespace WebUI.Data
             {
                 value = double.Parse(match.Groups[1].Value);
                 CalculateFanSpeedIntoPercentage(value);
+                message = $"Fan Speed: {fanSpeedInPercentage}%\n";
+            }
+            if (message.Contains("Not SD printing") || message.Contains("printing byte"))
+            {
+                message = null;
             }
 
-            var lines = message.Split('\n');
-            var filteredLines = lines.Where(line => !line.Contains("ok"));
-            var filteredData = string.Join('\n', filteredLines);
-            consoleOutput += filteredData;
+            if (message != null)
+            {
+                var lines = message.Split('\n');
+                var filteredLines = lines.Where(line => !line.Contains("ok"));
+                var filteredData = string.Join('\n', filteredLines);
+                consoleOutput += filteredData;
+            }
+
+            //try
+            //{
+            //    await JSRuntime.InvokeVoidAsync("scrollToBottom");
+            //}
+            //catch (TaskCanceledException)
+            //{
+            //    Console.WriteLine("Error from scroll to bottom");
+            //}
+            try
+            {
+                // existing code...
+
+                var isAtBottom = await JSRuntime.InvokeAsync<bool>("isAtBottom", "elementId");
+                if (isAtBottom)
+                {
+                    await JSRuntime.InvokeVoidAsync("scrollToBottom");
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // Handle the exception here, if necessary
+            }
         }
 
         public void ToggleValue()

@@ -1,6 +1,5 @@
 ﻿@page "/print"
 @inject Data.PrintingService print
-@inject Data.ConnectionServiceSerial serial
 @inject Data.BedLevelingService levelBed
 @inject NavigationManager MyNavigationManager
 @inject Data.HotendTemperatureService hotend
@@ -19,7 +18,8 @@
 @using MachineControlHub.Print;
 @using System.Text
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" Printing="print._isPrinting" PrintProgress="print.progress" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
+<PrinterState />
 
 @if (printer.SelectedPrinter != null)
 {
@@ -57,7 +57,7 @@
                     </MudExpansionPanel>
 
                     <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                        @if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+                        @if (background.ConnectionServiceSerial.IsConnected)
                         {
                             @if (print.files != null)
                             {
@@ -72,16 +72,6 @@
                     <MudText>File printing: <strong>@print.printName</strong></MudText>
                     <MudText>Estimated print time: @print.estimatedTime</MudText>
                     <MudText>Elapsed print time:  @string.Format($"")</MudText>
-@*                     <MudText>Print Progress:</MudText>
-                    <MudProgressLinear Color="Color.Primary" Striped="true" Size="Size.Large" Value="@print.progress">
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">
-                            <b>@print.progress %</b>
-                            @if (print.progress == 100)
-                            {
-                                Snackbar.Add("Print Finished", Severity.Info);
-                            }
-                        </MudText>
-                    </MudProgressLinear> *@
                     <MudText>Start time: <strong>@print.printJob.FormattedStartTime</strong></MudText>
                     <MudText>File Size: <strong>@print.fileSize MB</strong></MudText>
                 </MudCardContent>
@@ -120,11 +110,11 @@
 
                 </MudCardHeader>
                 <MudText>If you have Temperature Auto Report Enabled turn On</MudText>
-                <MudSwitch @bind-Value="@autoReportTemps" Color="Color.Success" Class="mr-n2 mb-6"> Turn On/Off</MudSwitch>
-                @if (autoReportTemps)
+                <MudSwitch @bind-Value="@print.autoReportTemps" Color="Color.Success" Class="mr-n2 mb-6"> Turn On/Off</MudSwitch>
+                @if (print.autoReportTemps)
                 {
-                    <MudNumericField @bind-Value="@autoReportValueInterval" Label="Auto Report Temperature Interval" Variant="Variant.Outlined" Min="0" />
-                    <MudButton OnClick="SetInterval"> Set Seconds</MudButton>
+                    <MudNumericField @bind-Value="@print.autoReportValueInterval" Label="Auto Report Temperature Interval" Variant="Variant.Outlined" Min="0" />
+                    <MudButton OnClick="print.SetInterval"> Set Seconds</MudButton>
                 }
                 <MudList>
                     <MudDivider DividerType="DividerType.FullWidth" />
@@ -215,11 +205,11 @@
             </MudPaper>
         </MudItem>
         <MudItem xs="12">
-            <MudCard Elevation="0">
-
+            <div>
+                @* 
                 <MudCardHeader Style="display: flex; justify-content: center; text-decoration:underline">
                     <MudText Typo="Typo.h6">Preheating Profiles</MudText>
-                </MudCardHeader>
+                </MudCardHeader> *@
                 <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(10)" EnableSwipeGesture="true" Elevation="1">
                     @foreach (var profile in printer.preheatingProfiles)
                     {
@@ -239,8 +229,7 @@
                         </MudCarouselItem>
                     }
                 </MudCarousel>
-
-            </MudCard>
+            </div>
         </MudItem>
         <MudItem xs="4">
             <MudCardHeader>
@@ -276,8 +265,6 @@ else
     private Config config;
     private Layout layout;
     private IList<ITrace> data;
-    bool autoReportTemps { get; set; } = false;
-    int? autoReportValueInterval { get; set; }
     string fileMessage = "";
     string sdFiles = "";
     string calibrateMessage = "";
@@ -286,9 +273,10 @@ else
     {
         background.MessageReceived += OnUpdate;
         background.SecondElapsed += OnTemperatureChange;
-        if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+
+        if (background.ConnectionServiceSerial.IsConnected)
         {
-            Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildListSDCardCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
         }
 
         config = new Config
@@ -318,15 +306,26 @@ else
                     T = 90
                 }
             };
-        data = new List<ITrace>();
-        levelBed.CSVData = printer.LoadPrinterData<string>("meshData.json");
-        LoadPlotlyData();
         printer.preheatingProfiles = printer.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
+        levelBed.CSVData = printer.LoadPrinterData<string>("meshData.json");
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Run(() =>
+            {
+                data = new List<ITrace>();
+                LoadPlotlyData();
+            });
+        }
     }
 
 
-    private void OnUpdate(string message)
+    public void OnUpdate(string message)
     {
 
         // get the list of files on the SD card
@@ -339,7 +338,7 @@ else
         }
 
         // get the bed leveling data
-        if(fileMessage.Contains("Bilinear"))
+        if (fileMessage.Contains("Bilinear"))
         {
             calibrateMessage += message;
             if (message.Contains("X:"))
@@ -359,19 +358,13 @@ else
                 // save the new bed leveling data
                 printer.SavePrinterData("meshData.json", levelBed.CSVData);
                 LoadPlotlyData();
+                MyNavigationManager.NavigateTo("/print", true);
             }
         }
 
         // get other printer status information
         hotend.ParseCurrentHotendTemperature(message);
         bed.ParseCurrentBedTemperature(message);
-        print.UpdatePrintProgress(message);
-        Console.WriteLine(message);
-    }
-
-    public void SetInterval()
-    {
-        Data.ConnectionServiceSerial.printerConnection.Write($"M155 S{autoReportValueInterval}");
     }
 
 
@@ -385,15 +378,14 @@ else
 
     private void OnTemperatureChange()
     {
-        if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
+        if (background.ConnectionServiceSerial.IsConnected)
         {
             Task.Run(() =>
             {
-                if (!autoReportTemps)
+                if (!print.autoReportTemps)
                 {
-                    Data.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                    background.ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
                 }
-                ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSDStatus());
                 if (Data.PrintingService.hotendGraph.Count >= 30)
                 {
                     Data.PrintingService.hotendGraph.RemoveAt(0);
@@ -402,8 +394,8 @@ else
                 }
                 Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
                 Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
-                    print.UpdateGraphData();
-                    InvokeAsync(StateHasChanged);
+                print.UpdateGraphData();
+                InvokeAsync(StateHasChanged);
             });
         }
     }

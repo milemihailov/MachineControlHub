@@ -8,6 +8,7 @@ namespace WebUI.Data
     {
         public ITemperatures bed;
         private readonly ISnackbar _snackbar;
+        private readonly BackgroundTimer background;
 
         public int currentBedTemperature;
         public int setBedTemperature;
@@ -15,9 +16,10 @@ namespace WebUI.Data
         public int PIDBedCycles;
         public int PIDBedTemp;
 
-        public BedTemperatureService(ISnackbar snackbar) 
+        public BedTemperatureService(ISnackbar snackbar, BackgroundTimer background) 
         {
-            bed = new BedTemps(ConnectionServiceSerial.printerConnection);
+            this.background = background;
+            bed = new BedTemps(background.ConnectionServiceSerial.printerConnection);
             _snackbar = snackbar;
         }
 
@@ -37,7 +39,7 @@ namespace WebUI.Data
 
         public void SetBedPIDValues()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDBedTemp, PIDBedCycles, true));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDBedTemp, PIDBedCycles, true));
             _snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
         }
     }

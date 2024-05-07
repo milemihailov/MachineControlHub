@@ -1,11 +1,14 @@
 ﻿
+using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 
 namespace WebUI.Data
 {
     public class BackgroundTimer
     {
+        public ConnectionServiceSerial ConnectionServiceSerial;
 
 
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
@@ -14,6 +17,7 @@ namespace WebUI.Data
         public CancellationTokenSource _cts = new();
 
         public event Action SecondElapsed;
+        public event Action FiveSecondElapsed;
         public event Action<string> MessageReceived;
         public event Action BusyStatusChanged;
 
@@ -23,6 +27,7 @@ namespace WebUI.Data
         public bool isBusy { get; set; }
         BackgroundTimer()
         {
+            ConnectionServiceSerial = new ConnectionServiceSerial();
             StartTimer();
         }
 
@@ -52,24 +57,24 @@ namespace WebUI.Data
 
         public async Task DoWorkAsync()
         {
+            //foreach (var p in Data.PrinterDataServiceTest.Printers)
+            //{
+            //    Console.WriteLine(p);
+            //}
             int i = 0;
             try
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
                     i++;
+                    if (i % 100 == 0 && ConnectionServiceSerial.IsConnected)
                     {
-                        if (i % 100 == 0 && Data.ConnectionServiceSerial.printerConnection.IsConnected)
-                        {
-                            SecondElapsed?.Invoke();
-                            //Console.WriteLine(DateTime.Now);
-                        }
+                        SecondElapsed?.Invoke();
                     }
 
-                    if (Data.ConnectionServiceSerial.printerConnection != null && Data.ConnectionServiceSerial.printerConnection.HasData())
+                    if (ConnectionServiceSerial != null && ConnectionServiceSerial.HasData())
                     {
-                        Thread.Sleep(100);
-                        string readData = Data.ConnectionServiceSerial.printerConnection.Read();
+                        string readData = ConnectionServiceSerial.Read();
                         string data = "";
                         data += readData;
                         string echoMessage = "";
@@ -97,8 +102,6 @@ namespace WebUI.Data
                             message = FilterData(echoMessage);
                         }
 
-
-                        //Console.WriteLine(message);
                         MessageReceived?.Invoke(message);
                     }
                 }
@@ -106,20 +109,6 @@ namespace WebUI.Data
             catch (OperationCanceledException)
             {
                 Console.WriteLine("Timer Cancelled");
-            }
-        }
-
-        public async Task DoWorkEachSecondAsync()
-        {
-            int i = 0;
-            while (await _timer2.WaitForNextTickAsync(_cts.Token))
-            {
-                i++;
-                if (Data.ConnectionServiceSerial.printerConnection.IsConnected)
-                {
-                    SecondElapsed?.Invoke();
-                    Console.WriteLine(DateTime.Now);
-                }
             }
         }
 

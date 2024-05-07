@@ -38,7 +38,7 @@ namespace WebUI.Data
         public List<PrinterHead> Extruders { get; set; }
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
         public PrinterBed Bed { get; set; }
-
+        private readonly BackgroundTimer background;
 
         public Printer SelectedPrinter;
         public bool HasCamera { get; set; }
@@ -149,9 +149,9 @@ namespace WebUI.Data
 
         public void StartPreheating(PreheatingProfiles profile)
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
             _snackbar.Add("Preheating Started", Severity.Success);
         }
 
@@ -166,19 +166,19 @@ namespace WebUI.Data
         {
             foreach (var profile in preheatingProfiles)
             {
-                ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildMaterialPresetCommand(profile));
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
                 _snackbar.Add("Preset Added To Printer", Severity.Success);
             }
         }
 
         public void SetMaxFeedrates()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
         }
 
         public void SaveToEEPROM()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
         public void SavePrinterData<T>(string filePath, List<T> list)
@@ -215,9 +215,9 @@ namespace WebUI.Data
 
         public void GetPrinterSettings()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildReportSettings());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
             Thread.Sleep(400);
-            string response = ConnectionServiceSerial.printerConnection.Read();
+            string response = background.ConnectionServiceSerial.Read();
             linearUnits = GetPrinterLinearUnits(response);
             temperatureUnits = GetTemperatureUnits(response);
             GetStepsPerUnit(response);

@@ -8,15 +8,18 @@ namespace WebUI.Data
     {
         public ITemperatures hotend ;
         private readonly ISnackbar _snackbar;
+        private readonly BackgroundTimer background;
+
         public int currentHotendTemperature;
         public int setHotendTemperature;
         public int targetHotendTemperature;
         public int PIDHotendCycles;
         public int PIDHotendTemp;
 
-        public HotendTemperatureService(ISnackbar snackbar)
+        public HotendTemperatureService(ISnackbar snackbar, BackgroundTimer background)
         {
-            hotend = new HotendTemps(ConnectionServiceSerial.printerConnection);
+            this.background = background;
+            hotend = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
             _snackbar = snackbar;
         }
         public void SetHotendTemperature(int setTemp)
@@ -34,25 +37,25 @@ namespace WebUI.Data
 
         public void ChangeFilament()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFilamentChangeCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildFilamentChangeCommand());
             _snackbar.Add("Filament Change Command Sent", Severity.Info);
         }
         
         public void LoadFilament()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLoadFilamentCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildLoadFilamentCommand());
             _snackbar.Add("Filament Load Command Sent", Severity.Info);
         }
 
         public void UnloadFilament()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildUnloadFilamentCommand());
             _snackbar.Add("Filament Unload Command Sent", Severity.Info);
         }
 
         public void SetHotendPIDValues()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDHotendTemp, PIDHotendCycles, true));
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDHotendTemp, PIDHotendCycles, true));
             _snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }

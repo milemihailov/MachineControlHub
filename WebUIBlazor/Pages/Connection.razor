@@ -1,24 +1,24 @@
 ﻿@page "/connection"
 @page "/"
 @using MachineControlHub.PrinterConnection
-@inject Data.ConnectionServiceSerial serial
+@inject Data.BackgroundTimer background
 @inject Data.PrinterDataServiceTest printer
 
 <PageTitle>Serial Connection</PageTitle>
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 
 <MudPaper Height="500px" Width="100%" Elevation="0" Class="pt-10">
     <MudContainer MaxWidth="MaxWidth.Small">
         <MudPaper Style="display: flex; justify-content:center;" Class="pt-2" Elevation="0">
             <MudButton Color="Color.Tertiary" @onclick="ConnectionConfiguration" > Connect</MudButton>
-            <MudButton Color="Color.Error" @onclick="serial.Disconnect" > Disconnect</MudButton>
+            <MudButton Color="Color.Error" @onclick="background.ConnectionServiceSerial.Disconnect"> Disconnect</MudButton>
         </MudPaper>
     </MudContainer>
 
     <MudContainer MaxWidth="MaxWidth.ExtraSmall">
         <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="string" Label="Select Port" @bind-Value="serial.portName" Variant="Variant.Outlined">
-                @foreach (var template in serial.GetPorts())
+            <MudSelect T="string" Label="Select Port" @bind-Value="background.ConnectionServiceSerial.portName" Variant="Variant.Outlined">
+                @foreach (var template in background.ConnectionServiceSerial.GetPorts())
                 {
                     <MudSelectItem Value=@template />
                 }
@@ -27,7 +27,7 @@
     </MudContainer>
     <MudContainer MaxWidth="MaxWidth.ExtraSmall">
         <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="int" Label="Select Baudrate" @bind-Value="serial.baudRate" Variant="Variant.Outlined">
+            <MudSelect T="int" Label="Select Baudrate" @bind-Value="background.ConnectionServiceSerial.baudRate" Variant="Variant.Outlined">
                 <MudSelectItem Value="115200" />
                 <MudSelectItem Value="250000" />
             </MudSelect>
@@ -41,12 +41,12 @@
     {
         try
         {
-            serial.Initialize($"{serial.portName},{serial.baudRate}");
-            ConnectionServiceSerial.printerConnection.IsConnected = true;
-            serial.Connect();
+            background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
+            background.ConnectionServiceSerial.IsConnected = true;
+            background.ConnectionServiceSerial.Connect();
 
             //set the host keep alive command to 1 second after connection
-            serial.Write("M113 S1");
+            background.ConnectionServiceSerial.Write("M113 S1");
         }
         catch (Exception e)
         {

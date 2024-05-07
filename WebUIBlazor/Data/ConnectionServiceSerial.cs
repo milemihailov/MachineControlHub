@@ -4,9 +4,11 @@ namespace WebUI.Data
 {
     public class ConnectionServiceSerial
     {
-        public static SerialConnection printerConnection;
+        public IPrinterConnection printerConnection;
         public string portName = "";
         public int baudRate = 115200;
+
+        public bool IsConnected { get; set; }
 
         public ConnectionServiceSerial()
         {
@@ -47,6 +49,11 @@ namespace WebUI.Data
         public List<string> GetPorts()
         {
             return printerConnection.AvailableConnections();
+        }
+
+        public bool HasData()
+        {
+            return printerConnection.HasData();
         }
     }
 }

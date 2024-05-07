@@ -5,6 +5,8 @@
     /// </summary>
     public interface IPrinterConnection
     {
+        bool IsConnected { get; set; }
+
         /// <summary>
         /// Initializes the printer connection based on the provided connection string.
         /// </summary>
@@ -40,5 +42,6 @@
         /// </summary>
         /// <returns>A list of available printer connections.</returns>
         List<string> AvailableConnections();
+        bool HasData();
     }
 }

@@ -25,7 +25,7 @@
         public static void LogError(string message)
         {
             Console.WriteLine(message);
-            File.AppendAllText(fullPath, $"{DateTime.Now} - {message}\n");
+            //File.AppendAllText(fullPath, $"{DateTime.Now} - {message}\n");
         }
     }
 }

@@ -7,6 +7,7 @@ namespace WebUI.Data
     {
         public ITemperatures chamber;
         private readonly ISnackbar _snackbar;
+        private readonly BackgroundTimer background;
 
         public int currentChamberTemperature;
         public int setChamberTemperature;
@@ -14,9 +15,10 @@ namespace WebUI.Data
         public int PIDChamberCycles;
         public int PIDChamberTemp;
 
-        public ChamberTemperatureService(ISnackbar snackbar)
+        public ChamberTemperatureService(ISnackbar snackbar, BackgroundTimer background)
         {
-            chamber = new ChamberTemps(Data.ConnectionServiceSerial.printerConnection);
+            this.background = background;
+            chamber = new ChamberTemps((background.ConnectionServiceSerial.printerConnection));
             _snackbar = snackbar;
         }
 

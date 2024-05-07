@@ -1,0 +1,65 @@
+﻿@using MachineControlHub.Motion
+@using System.Text.RegularExpressions
+@inject Data.BackgroundTimer background
+@inject Data.PrintingService printingService
+
+@if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+{
+    if (printingService._isPrinting)
+    {
+        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.progress" Class="pb-9">
+            <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+                <b>Printing: @printingService.progress %</b>
+            </MudText>
+        </MudProgressLinear>
+    }
+    else
+    {
+        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.isBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
+            @if (background.isBusy)
+            {
+                <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+            }
+            @(new MarkupString(!background.isBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+        </MudAlert>
+    }
+}
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        background.BusyStatusChanged += OnBusyChanged;
+        background.SecondElapsed += OnSecondElapsed;
+        background.MessageReceived += OnMessageReceived;
+    }
+
+    public void OnBusyChanged()
+    {
+        Task.Run(() =>
+        {
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void OnSecondElapsed()
+    {
+
+        Task.Run(() =>
+        {
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSDStatus());
+        });
+    }
+
+    public void OnMessageReceived(string message)
+    {
+        printingService.UpdatePrintProgress(message);
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    public void Dispose()
+    {
+        background.BusyStatusChanged -= OnBusyChanged;
+    }
+}

@@ -5,6 +5,8 @@ using MudBlazor;
 using WebUI.Pages;
 using Microsoft.AspNetCore.Components;
 using System;
+using MachineControlHub;
+using static MudBlazor.Colors;
 
 namespace WebUI.Data
 {
@@ -16,6 +18,7 @@ namespace WebUI.Data
         public PrintService printService;
         public CurrentPrintJob printJob;
         public PrintProgress printProgress;
+        public BackgroundTimer background;
         public readonly IDialogService _dialogService;
         public readonly ISnackbar _snackbar;
 
@@ -32,6 +35,8 @@ namespace WebUI.Data
         public bool _processing = false;
         public double progress = 0;
         public bool _isPrinting = false;
+        public bool autoReportTemps { get; set; } = false;
+        public int? autoReportValueInterval { get; set; }
 
         public static List<double> hotendGraph = new List<double> { };
         public static List<double> bedGraph = new List<double> { };
@@ -41,10 +46,11 @@ namespace WebUI.Data
 
 
 
-        public PrintingService(IDialogService dialogService, ISnackbar snackbar)
+        public PrintingService(IDialogService dialogService, ISnackbar snackbar, BackgroundTimer background)
         {
-            printService = new PrintService(ConnectionServiceSerial.printerConnection);
-            printJob = new CurrentPrintJob(ConnectionServiceSerial.printerConnection);
+            this.background = background;
+            printService = new PrintService(background.ConnectionServiceSerial.printerConnection);
+            printJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection);
             printProgress = new PrintProgress();
             _dialogService = dialogService;
             _snackbar = snackbar;
@@ -58,13 +64,13 @@ namespace WebUI.Data
 
         public void PausePrint()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
             _snackbar.Add("Print Paused", Severity.Info);
         }
 
         public void ResumePrint()
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildStartSDPrintCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
             _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
@@ -107,7 +113,7 @@ namespace WebUI.Data
 
         public void EstimatedPrintTime(string message)
         {
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildPrintProgressCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildPrintProgressCommand());
             Match match = Regex.Match(message, PATTERN, RegexOptions.IgnoreCase);
             estimatedTime = match.Groups[1].Value;
         }
@@ -149,10 +155,9 @@ namespace WebUI.Data
             new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
         };
             Series = new_series;
-
         }
 
-        public static double CalculatePercentage(double numerator, double denominator)
+        public double CalculatePercentage(double numerator, double denominator)
         {
             double fraction = numerator / denominator;
             return fraction * 100;
@@ -182,17 +187,23 @@ namespace WebUI.Data
                     progress = Math.Round(CalculatePercentage(firstNumber, secondNumber));
                 }
 
-                if(finished.Success)
+                if (finished.Success)
                 {
                     progress = 100;
                 }
             });
         }
 
+        public void SetInterval()
+        {
+            background.ConnectionServiceSerial.Write($"M155 S{autoReportValueInterval}");
+        }
+
+
         public void CalibrateBed()
         {
             _processing = true;
-            ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBedLevelingCommand());
+            background.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
         }
     }
 }

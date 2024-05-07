@@ -2,6 +2,8 @@
 {
     public class WiFiConnection : IPrinterConnection
     {
+        bool IPrinterConnection.IsConnected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public void Initialize(string connectionString)
         {
 
@@ -35,6 +37,11 @@
         public List<string> AvailableConnections()
         {
             return new List<string>();
+        }
+
+        bool IPrinterConnection.HasData()
+        {
+            throw new NotImplementedException();
         }
     }
 }

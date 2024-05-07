@@ -1,7 +1,8 @@
 ﻿@page "/printers"
 @inject Data.PrinterDataServiceTest printer
+@inject Data.BackgroundTimer background
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.IsConnected" />
 
 <MudCard>
     <MudExpansionPanels MultiExpansion="true">
