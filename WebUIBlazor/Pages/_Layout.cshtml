@@ -37,12 +37,17 @@
     <script>
         window.scrollToBottom = () => {
             var textarea = document.getElementById('consoleOutput');
-            textarea.scrollTop = textarea.scrollHeight;
+            if (textarea) {
+                textarea.scrollTop = textarea.scrollHeight;
+            }
         }
 
         window.isAtBottom = () => {
             var textarea = document.getElementById('consoleOutput');
-            return textarea.scrollHeight - textarea.scrollTop === textarea.clientHeight;
+            if (textarea) {
+                return textarea.scrollHeight - textarea.scrollTop === textarea.clientHeight;
+            }
+            return false;
         }
     </script>
 </body>

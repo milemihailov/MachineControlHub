@@ -85,7 +85,7 @@
 
     <MudItem xs="12" md="12" lg="4">
         <MudPaper Class="d-flex mud-height-full" MaxHeight="600px">
-            <textarea id="consoleOutput" style="width:100%; resize: none;" readonly rows="10" cols="50">@control.consoleOutput</textarea>
+            <textarea id="consoleOutput" style="width:100%; padding:5px; resize: none;" readonly rows="10" cols="50">@control.consoleOutput</textarea>
         </MudPaper>
         <form @onsubmit="() => control.SendGcodeViaTerminal(control.sendCommand)">
             <MudFocusTrap>
@@ -116,10 +116,8 @@
     protected override void OnInitialized()
     {
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
-        int xSize = printer.XSize ?? 0;
-        int ySize = printer.YSize ?? 0;
-
-        
+        int xSize = printer.Printer.Bed?.XSize ?? 0;
+        int ySize = printer.Printer.Bed?.XSize ?? 0;
 
         Series = new List<ChartSeries>
     {
@@ -138,7 +136,7 @@
  
                 },
                 PaperBgColor = "#32333d",
-                PlotBgColor = "#FDF0D5",
+                PlotBgColor = "#6E9075",
                 Font = new Font
                 {
                     Color = "#FFF" 
@@ -154,7 +152,6 @@
                 Y = Enumerable.Range(0, ySize + 1).SelectMany(y => Enumerable.Repeat(y, ySize + 1)).Cast<object>().ToList()
             }
             };
-
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -165,6 +162,7 @@
             {
                 background.MessageReceived += OnUpdate;
             });
+
         }
     }
 

@@ -24,7 +24,8 @@ namespace WebUI.Data
         const string _oFFSET_SETTINGS_PATTERN = @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)";
         const string _aUTO_BED_LEVELING_PATTERN = @"M420 S(\d) Z(\d+\.?\d*)";
         const string _z_PROBE_OFFSETS_PATTERN = @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)";
-        const string BED_VOLUME_PATTERN = @"Max:?X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)";
+        const string _bED_VOLUME_PATTERN = @"Max\s*:\s*X(\d+\.?\d*)\s*Y(\d+\.?\d*)\s*Z(\d+\.?\d*)";
+
 
 
         public Printer Printer;
@@ -83,17 +84,17 @@ namespace WebUI.Data
             SavePrinterData(PRINTER_DATA_PATH, Printers);
         }
 
-        public void UpdateExtruders(int newValue)
-        {
-            while (ExtruderSettings.Count < newValue)
-            {
-                ExtruderSettings.Add(new PrinterHead());
-            }
-            while (ExtruderSettings.Count > newValue)
-            {
-                ExtruderSettings.RemoveAt(ExtruderSettings.Count - 1);
-            }
-        }
+        //public void UpdateExtruders(int newValue)
+        //{
+        //    while (ExtruderSettings.Count < newValue)
+        //    {
+        //        ExtruderSettings.Add(new PrinterHead());
+        //    }
+        //    while (ExtruderSettings.Count > newValue)
+        //    {
+        //        ExtruderSettings.RemoveAt(ExtruderSettings.Count - 1);
+        //    }
+        //}
 
         public string GenerateUniquePrinterId()
         {
@@ -108,40 +109,40 @@ namespace WebUI.Data
             return newId;
         }
 
-        public void CreatePrinterProfile()
-        {
-            var newPrinter = new Printer();
-            newPrinter.Extruders = new List<PrinterHead>();
-            newPrinter.Bed = new PrinterBed();
-            newPrinter.Name = Printer.Name;
-            newPrinter.Id = GenerateUniquePrinterId();
-            newPrinter.Model = Printer.Model;
-            newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
-            newPrinter.PrinterFirmwareVersion = Printer.PrinterFirmwareVersion;
-            newPrinter.HasAutoBedLevel = Printer.HasAutoBedLevel;
-            newPrinter.HasChamber = Printer.HasChamber;
-            newPrinter.HasHeatedBed = Printer.HasHeatedBed;
-            newPrinter.HasFilamentRunoutSensor = Printer.HasFilamentRunoutSensor;
-            newPrinter.ZMaxBuildVolume = Printer.ZMaxBuildVolume;
-            newPrinter.Bed.XSize = Printer.Bed.XSize;
-            newPrinter.Bed.YSize = Printer.Bed.YSize;
-            newPrinter.Bed.Diameter = Printer.Bed.Diameter;
+        //public void CreatePrinterProfile()
+        //{
+        //    var newPrinter = new Printer();
+        //    newPrinter.Extruders = new List<PrinterHead>();
+        //    newPrinter.Bed = new PrinterBed();
+        //    newPrinter.Name = Printer.Name;
+        //    newPrinter.Id = GenerateUniquePrinterId();
+        //    newPrinter.Model = Printer.Model;
+        //    newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
+        //    newPrinter.PrinterFirmwareVersion = Printer.PrinterFirmwareVersion;
+        //    newPrinter.HasAutoBedLevel = Printer.HasAutoBedLevel;
+        //    newPrinter.HasChamber = Printer.HasChamber;
+        //    newPrinter.HasHeatedBed = Printer.HasHeatedBed;
+        //    newPrinter.HasFilamentRunoutSensor = Printer.HasFilamentRunoutSensor;
+        //    newPrinter.ZMaxBuildVolume = Printer.ZMaxBuildVolume;
+        //    newPrinter.Bed.XSize = Printer.Bed.XSize;
+        //    newPrinter.Bed.YSize = Printer.Bed.YSize;
+        //    newPrinter.Bed.Diameter = Printer.Bed.Diameter;
 
 
-            for (int i = 0; i < ExtruderSettings.Count; i++)
-            {
-                var newExtruder = new PrinterHead();
+        //    for (int i = 0; i < ExtruderSettings.Count; i++)
+        //    {
+        //        var newExtruder = new PrinterHead();
 
-                newExtruder.HasCoolingFan = ExtruderSettings[i].HasCoolingFan;
-                newExtruder.ProbePresent = ExtruderSettings[i].ProbePresent;
-                newExtruder.NozzleDiameter = ExtruderSettings[i].NozzleDiameter;
-                newExtruder.NozzleMaterial = ExtruderSettings[i].NozzleMaterial;
+        //        newExtruder.HasCoolingFan = ExtruderSettings[i].HasCoolingFan;
+        //        newExtruder.ProbePresent = ExtruderSettings[i].ProbePresent;
+        //        newExtruder.NozzleDiameter = ExtruderSettings[i].NozzleDiameter;
+        //        newExtruder.NozzleMaterial = ExtruderSettings[i].NozzleMaterial;
 
-                newPrinter.Extruders.Add(newExtruder);
-            }
-            Printers.Add(newPrinter);
-            SavePrinterData(PRINTER_DATA_PATH, Printers);
-        }
+        //        newPrinter.Extruders.Add(newExtruder);
+        //    }
+        //    Printers.Add(newPrinter);
+        //SavePrinterData(PRINTER_DATA_PATH, Printers);
+        //}
 
         public void CreatePreheatProfile()
         {
@@ -224,7 +225,6 @@ namespace WebUI.Data
 
         public void OnUpdateSettings(string message)
         {
-
             if (message.Contains("G21") || message.Contains("G20"))
             {
                 linearUnits = GetPrinterLinearUnits(message);
@@ -424,23 +424,13 @@ namespace WebUI.Data
                 Printer.Head.ZProbeOffset = double.Parse(match.Groups[3].Value);
             }
         }
-        public int? XSize = 1;
-        public int? YSize;
         public void SetBedVolume(string input)
         {
-            var match = Regex.Match(input, BED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
-            if (input.Contains("Max"))
-            {
-                if (match.Success)
-                {
-                    XSize = (int)double.Parse(match.Groups[1].Value);
-                    YSize = (int)double.Parse(match.Groups[2].Value);
-                }
-            }
+            var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
             if (match.Success)
             {
-                XSize = (int)double.Parse(match.Groups[1].Value);
-                YSize = (int)double.Parse(match.Groups[2].Value);
+                Printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);
+                Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
             }
         }
 

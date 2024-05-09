@@ -146,31 +146,36 @@
     <MudCardContent>
         <MudGrid>
             <MudItem xs="12" md="4" lg="3">
-                <MudText> Linear Units: @printer.linearUnits</MudText>
-                <MudExpansionPanel Text="Change linear units">
-                    <MudButton OnClick="() => printer.SetPrinterLinearUnits(true)" Color="Color.Tertiary">Change to mm</MudButton>
-                    <MudButton OnClick="() => printer.SetPrinterLinearUnits(false)" Color="Color.Tertiary">Change to inch</MudButton>
-                </MudExpansionPanel>
-                <MudText> Temperature Units: @printer.temperatureUnits</MudText>
-                <MudExpansionPanel Text="Change temperature units">
-                    <MudButton Color="Color.Tertiary">Change to Celsius</MudButton>
-                    <MudButton Color="Color.Tertiary">Change to Farenheit</MudButton>
-                    <MudButton Color="Color.Tertiary">Change to Kelvin</MudButton>
-                </MudExpansionPanel>
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText> Linear Units: @printer.linearUnits</MudText>
+                    <MudExpansionPanel Text="Change linear units">
+                        <MudButton OnClick="() => printer.SetPrinterLinearUnits(true)" Color="Color.Tertiary">Change to mm</MudButton>
+                        <MudButton OnClick="() => printer.SetPrinterLinearUnits(false)" Color="Color.Tertiary">Change to inch</MudButton>
+                    </MudExpansionPanel>
+                </MudPaper>
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText> Temperature Units: @printer.temperatureUnits</MudText>
+                    <MudExpansionPanel Text="Change temperature units">
+                        <MudButton Color="Color.Tertiary">Change to Celsius</MudButton>
+                        <MudButton Color="Color.Tertiary">Change to Farenheit</MudButton>
+                        <MudButton Color="Color.Tertiary">Change to Kelvin</MudButton>
+                    </MudExpansionPanel>
+                </MudPaper>
             </MudItem>
             <MudItem xs="12" md="4" lg="3">
-                <MudText> X Steps: @printer.Printer.MotionSettings.XStepsPerUnit</MudText>
-                <MudText> Y Steps: @printer.Printer.MotionSettings.YStepsPerUnit</MudText>
-                <MudText> Z Steps: @printer.Printer.MotionSettings.ZStepsPerUnit</MudText>
-                <MudText> E Steps: @printer.Printer.MotionSettings.EStepsPerUnit</MudText>
-                <MudText> @printer.XSize</MudText>
-                <MudExpansionPanel Text="Change Steps">
-                    <MudNumericField Label="Set New X Steps" @bind-Value="printer.Printer.MotionSettings.XStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                    <MudNumericField Label="Set New Y Steps" @bind-Value="printer.Printer.MotionSettings.YStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                    <MudNumericField Label="Set New Z Steps" @bind-Value="printer.Printer.MotionSettings.ZStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                    <MudNumericField Label="Set New E Steps" @bind-Value="printer.Printer.MotionSettings.EStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                    <MudButton Color="Color.Tertiary" OnClick="@printer.SetStepsPerUnit"> Update Steps</MudButton>
-                </MudExpansionPanel>
+                <MudPaper Class="pa-4 mx-0" Elevation="3">
+                    <MudText> X Steps: @printer.Printer.MotionSettings.XStepsPerUnit</MudText>
+                    <MudText> Y Steps: @printer.Printer.MotionSettings.YStepsPerUnit</MudText>
+                    <MudText> Z Steps: @printer.Printer.MotionSettings.ZStepsPerUnit</MudText>
+                    <MudText> E Steps: @printer.Printer.MotionSettings.EStepsPerUnit</MudText>
+                    <MudExpansionPanel Text="Change Steps">
+                        <MudNumericField Label="Set New X Steps" @bind-Value="printer.Printer.MotionSettings.XStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                        <MudNumericField Label="Set New Y Steps" @bind-Value="printer.Printer.MotionSettings.YStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                        <MudNumericField Label="Set New Z Steps" @bind-Value="printer.Printer.MotionSettings.ZStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                        <MudNumericField Label="Set New E Steps" @bind-Value="printer.Printer.MotionSettings.EStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                        <MudButton Color="Color.Tertiary" OnClick="@printer.SetStepsPerUnit"> Update Steps</MudButton>
+                    </MudExpansionPanel>
+                </MudPaper>
             </MudItem>
             <MudItem xs="12" md="4" lg="3">
                 <MudText> X Max Feedrate: @printer.Printer.MotionSettings.XMaxFeedrate</MudText>
@@ -224,15 +229,33 @@
                 </MudExpansionPanel>
             </MudItem>
             <MudItem xs="12" md="4" lg="3">
-                <MudText Typo="Typo.h6"> Z-Probe Offsets:</MudText>
-                <MudText> X Offset: @printer.Printer.Head.XProbeOffset</MudText>
-                <MudText> Y Offset: @printer.Printer.Head.YProbeOffset</MudText>
-                <MudText> Z Offset: @printer.Printer.Head.ZProbeOffset</MudText>
-                <MudExpansionPanel>
-                    <MudNumericField Label="Set New X Offset" @bind-Value="printer.Printer.Head.XProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                    <MudNumericField Label="Set New Y Offset" @bind-Value="printer.Printer.Head.YProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                    <MudNumericField Label="Set New Z Offset" @bind-Value="printer.Printer.Head.ZProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                </MudExpansionPanel>
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudContainer Class="mb-5">
+                        <MudPaper Style="display: flex; justify-content: center;" Elevation="0">
+                            <MudText Typo="Typo.h6"> Z-Probe Offsets:</MudText>
+                        </MudPaper>
+                    </MudContainer>
+                    <div style="display: flex; padding-left: 0px; justify-content:space-around;">
+                        <span>X Offset:</span>
+                        <MudText>@printer.Printer.Head.XProbeOffset</MudText>
+                    </div>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span>Y Offset:</span>
+                        <MudText>@printer.Printer.Head.YProbeOffset</MudText>
+                    </div>
+                    <div style="display: flex; justify-content: space-around;">
+                        <span>Z Offset:</span>
+                        <MudText>@printer.Printer.Head.ZProbeOffset</MudText>
+                    </div>@* 
+                    <MudText> Y Offset: @printer.Printer.Head.YProbeOffset</MudText>
+                    <MudText> Z Offset: @printer.Printer.Head.ZProbeOffset</MudText> *@
+                    <MudButton Color="Color.Tertiary" OnClick="OnExpandCollapseClick">@(_expanded ? "Close" : "Change")</MudButton>
+                    <MudCollapse Expanded="_expanded">
+                        <MudNumericField Label="Set New X Offset" @bind-Value="printer.Printer.Head.XProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                        <MudNumericField Label="Set New Y Offset" @bind-Value="printer.Printer.Head.YProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                        <MudNumericField Label="Set New Z Offset" @bind-Value="printer.Printer.Head.ZProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                    </MudCollapse>
+                </MudPaper>
             </MudItem>
             <MudItem xs="12" md="4" lg="3">
                 <MudText Typo="Typo.h6"> Hotend Pid Values:</MudText>
@@ -272,5 +295,24 @@
 @code {
     // [Parameter]
     // public Printer SelectedPrinter { get; set; } = new();
+
+    // protected override async void OnAfterRender(bool firstRender)
+    // {
+    //     bool _isFirstRender = true;
+    //     if (_isFirstRender)
+    //     {
+    //         background.ConnectionServiceSerial.Write("M211");
+    //         printer.GetPrinterSettings();
+    //         _isFirstRender = false;
+    //         await Task.Delay(200);
+    //         await InvokeAsync(StateHasChanged);
+    //     }
+    // }
+    bool _expanded = true;
+
+    private void OnExpandCollapseClick()
+    {
+        _expanded = !_expanded;
+    }
 }
 
