@@ -114,7 +114,7 @@
                 @if (print.autoReportTemps)
                 {
                     <MudNumericField @bind-Value="@print.autoReportValueInterval" Label="Auto Report Temperature Interval" Variant="Variant.Outlined" Min="0" />
-                    <MudButton OnClick="print.SetInterval"> Set Seconds</MudButton>
+                    <MudButton FullWidth="true" OnClick="print.SetInterval" Color="Color.Tertiary"> Set Seconds</MudButton>
                 }
                 <MudList>
                     <MudDivider DividerType="DividerType.FullWidth" />

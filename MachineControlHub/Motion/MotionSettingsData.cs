@@ -9,13 +9,13 @@
     {
         public enum Axis { X, Y, Z, E }
 
-        public int MinFeedrate { get; set; }
+        public int? MinFeedrate { get; set; }
 
-        public int MinTravelFeedrate { get; set; }
+        public int? MinTravelFeedrate { get; set; }
 
-        public int MinSegmentTime { get; set; }
+        public int? MinSegmentTime { get; set; }
 
-        public double JunctionDeviation { get; set; }
+        public double? JunctionDeviation { get; set; }
 
         public int? FadeHeight { get; set; }
 
@@ -98,13 +98,13 @@
         /// <summary>
         /// Gets or sets the number of steps per unit.
         /// </summary>
-        public double XStepsPerUnit { get; set; }
+        public int? XStepsPerUnit { get; set; }
 
-        public int YStepsPerUnit { get; set; }
+        public int? YStepsPerUnit { get; set; }
 
-        public int ZStepsPerUnit { get; set; }
+        public int? ZStepsPerUnit { get; set; }
 
-        public int EStepsPerUnit { get; set; }
+        public int? EStepsPerUnit { get; set; }
 
         /// <summary>
         /// Gets or sets the feedrate for free moves.

@@ -603,7 +603,7 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(filamentChange);
         }
 
-        public static string BuildLoadFilamentCommand() 
+        public static string BuildLoadFilamentCommand()
         {
             var loadFilament = new GCodeCommands
             {
@@ -634,6 +634,20 @@ namespace MachineControlHub.Motion
             };
 
             return GCodeMethods.GCodeString(printTime);
+        }
+
+        public static string BuildSetStepsPerUnitCommand(MotionSettingsData motion)
+        {
+            var stepsPerUnit = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetAxisStepsPerUnit,
+                Parameters = new List<string>() { motion.AxisString(MotionSettingsData.Axis.E, motion.EStepsPerUnit), motion.AxisString(MotionSettingsData.Axis.X, motion.XStepsPerUnit), motion.AxisString(MotionSettingsData.Axis.Y, motion.YStepsPerUnit), motion.AxisString(MotionSettingsData.Axis.Z, motion.ZStepsPerUnit) }
+
+            };
+
+            return GCodeMethods.GCodeString(stepsPerUnit);
+
         }
 
     }

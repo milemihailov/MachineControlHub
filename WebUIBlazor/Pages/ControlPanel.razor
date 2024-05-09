@@ -116,8 +116,8 @@
     protected override void OnInitialized()
     {
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
-        int xSize = printer.SelectedPrinter?.Bed?.XSize ?? 0;
-        int ySize = printer.SelectedPrinter?.Bed?.YSize ?? 0;
+        int xSize = printer.XSize ?? 0;
+        int ySize = printer.YSize ?? 0;
 
         
 
@@ -134,10 +134,15 @@
             {
                 Title = new Title
                 {
-                    Text = "Interactive Bed"
+                    Text = "Interactive Bed",
+ 
                 },
-                PaperBgColor = "#FDF0D5",
-                PlotBgColor = "#AAAFB5"
+                PaperBgColor = "#32333d",
+                PlotBgColor = "#FDF0D5",
+                Font = new Font
+                {
+                    Color = "#FFF" 
+                }
             };
         data = new List<ITrace>
             {

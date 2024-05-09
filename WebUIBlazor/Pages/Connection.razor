@@ -44,9 +44,11 @@
             background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
             background.ConnectionServiceSerial.IsConnected = true;
             background.ConnectionServiceSerial.Connect();
-
+            printer.GetPrinterSettings();
             //set the host keep alive command to 1 second after connection
             background.ConnectionServiceSerial.Write("M113 S1");
+            //ask for bed volume
+            background.ConnectionServiceSerial.Write("M211");
         }
         catch (Exception e)
         {
