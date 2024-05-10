@@ -1,6 +1,6 @@
-﻿using MachineControlHub.Motion;
+﻿using System.Text.RegularExpressions;
+using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
-using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Temps
 {
@@ -21,17 +21,17 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Gets or sets the Proportional (P) value for PID control.
         /// </summary>
-        public double? Proportional { get; set; } = 0;
+        public double Proportional { get; set; }
 
         /// <summary>
         /// Gets or sets the Integral (I) value for PID control.
         /// </summary>
-        public double? Integral { get; set; }
+        public double Integral { get; set; }
 
         /// <summary>
         /// Gets or sets the Derivative (D) value for PID control.
         /// </summary>
-        public double? Derivative { get; set; }
+        public double Derivative { get; set; }
 
 
         /// <summary>

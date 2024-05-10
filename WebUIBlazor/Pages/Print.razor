@@ -231,7 +231,7 @@
                 </MudCarousel>
             </div>
         </MudItem>
-        <MudItem xs="4">
+        @* <MudItem xs="4">
             <MudCardHeader>
                 <MudText Typo="Typo.h6">HOTEND PID Autotune and Store To Printer</MudText>
             </MudCardHeader>
@@ -240,8 +240,8 @@
                 <MudNumericField @bind-Value="hotend.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => hotend.SetHotendPIDValues()">Set PID Values</MudButton>
             </MudCard>
-        </MudItem>
-        <MudItem xs="4">
+        </MudItem> *@
+@*         <MudItem xs="4">
             <MudCardHeader>
                 <MudText Typo="Typo.h6">BED PID Autotune and Store To Printer</MudText>
             </MudCardHeader>
@@ -250,7 +250,7 @@
                 <MudNumericField @bind-Value="bed.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => bed.SetBedPIDValues()">Set PID Values</MudButton>
             </MudCard>
-        </MudItem>
+        </MudItem> *@
 
     </MudGrid>
 }
