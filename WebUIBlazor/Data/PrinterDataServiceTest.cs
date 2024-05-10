@@ -399,8 +399,14 @@ namespace WebUI.Data
 
         public void SetMaximumFeedrates() => background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
 
-        public void SetStepsPerUnit() => background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
+        public void SetStepsPerUnit()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
 
+            }
+        }
         public void SetBedLevelingOn()
         {
             if (background.ConnectionServiceSerial.printerConnection.IsConnected)
