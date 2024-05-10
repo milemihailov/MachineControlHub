@@ -167,20 +167,6 @@ namespace WebUI.Data
             _snackbar.Add("Preset Removed", Severity.Error);
         }
 
-        public void SendPreheatingProfiles()
-        {
-            foreach (var profile in preheatingProfiles)
-            {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
-                _snackbar.Add("Preset Added To Printer", Severity.Success);
-            }
-        }
-
-        public void SetMaxFeedrates()
-        {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
-        }
-
         public void SaveToEEPROM()
         {
             background.ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
@@ -262,18 +248,6 @@ namespace WebUI.Data
             return null;
         }
 
-        public void SetPrinterLinearUnits(bool input)
-        {
-            if (input)
-            {
-                background.ConnectionServiceSerial.Write("G21");
-            }
-            else
-            {
-                background.ConnectionServiceSerial.Write("G20");
-            }
-        }
-
         public string GetTemperatureUnits(string input)
         {
             var match = Regex.Match(input, @"M149 ([CFK])");
@@ -306,11 +280,6 @@ namespace WebUI.Data
             }
         }
 
-        public void SetStepsPerUnit()
-        {
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildSetStepsPerUnitCommand
-                (Printer.MotionSettings));
-        }
 
         public void GetMaximumFeedrates(string input)
         {
@@ -323,12 +292,6 @@ namespace WebUI.Data
                 Printer.MotionSettings.ZMaxFeedrate = (int)double.Parse(match.Groups[3].Value);
                 Printer.MotionSettings.EMaxFeedrate = (int)double.Parse(match.Groups[4].Value);
             }
-        }
-
-        public void SetMaximumFeedrates()
-        {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand
-                (Printer.MotionSettings));
         }
 
         public void GetMaximumAccelerations(string input)
@@ -387,7 +350,6 @@ namespace WebUI.Data
             if (match.Success)
             {
                 Printer.HasAutoBedLevel = (int)double.Parse(match.Groups[1].Value) == 1;
-
                 Printer.MotionSettings.FadeHeight = (int)double.Parse(match.Groups[2].Value);
             }
         }
@@ -433,6 +395,44 @@ namespace WebUI.Data
                 Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
             }
         }
+        public void SetPrinterLinearUnits(bool input) => background.ConnectionServiceSerial.Write(input ? "G21" : "G20");
 
+        public void SetMaximumFeedrates() => background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+
+        public void SetStepsPerUnit() => background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
+
+        public void SetBedLevelingOn()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                if (Printer.HasAutoBedLevel)
+                {
+                    background.ConnectionServiceSerial.Write("M420 S0");
+                    _snackbar.Add("Bed leveling turned off", Severity.Warning);
+                }
+                else
+                {
+                    background.ConnectionServiceSerial.Write("M420 S1");
+                    _snackbar.Add("Bed leveling turned on", Severity.Success);
+                }
+            }
+        }
+        public void SetFadeHeight()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write($"M420 Z{Printer.MotionSettings.FadeHeight}");
+                _snackbar.Add($"Fade height set to {Printer.MotionSettings.FadeHeight}mm", Severity.Success);
+            }
+        }
+
+        public void SetPreheatingProfiles()
+        {
+            preheatingProfiles.ForEach(profile =>
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
+                _snackbar.Add("Preset added to printer", Severity.Success);
+            });
+        }
     }
 }

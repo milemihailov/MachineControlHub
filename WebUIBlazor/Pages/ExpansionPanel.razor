@@ -1,0 +1,8 @@
+﻿<MudExpansionPanel Style="@($"color:{Theme.Palette.Tertiary}; font-weight: bold; text-align: center;")" HideIcon="true" Text="CHANGE VALUES">
+    @ChildContent
+</MudExpansionPanel>
+@code {
+        [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    private MudTheme Theme = new MudTheme();
+}
