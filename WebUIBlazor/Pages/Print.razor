@@ -43,6 +43,23 @@
                             </MudButton>
                         </ButtonTemplate>
                     </MudFileUpload>
+                    <MudButton OnClick="GetDrives">drives</MudButton>
+                    <MudButton OnClick="ReleaseMedia">Release Media</MudButton>
+                    <MudButton OnClick="AttachMedia">Attach Media</MudButton>
+
+                    @if (PortsAvailable != null)
+                    {
+                        foreach (var port in PortsAvailable)
+                        {
+                            <MudListItem>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <MudText> @port.DriveName @port.VolumeLabel </MudText>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => ChoosePort(port.DriveName)">Choose</MudButton>
+                                </div>
+                            </MudListItem>
+                        }
+                    }
+
                     <MudExpansionPanel Text="Uploaded Files">
                         @foreach (var file in print.uploadedFiles)
                         {
@@ -50,7 +67,9 @@
                                 <div style="display: flex; justify-content: space-between;">
                                     <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
                                     <MudText Typo="Typo.overline">@Math.Round(print.printProgress.ConvertToMB(@file.FileSize), 2)MB</MudText>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => print.TransferFileToSD(file.FileContent,file.FileName)">Start</MudButton>
+                                    <MudProgressCircular Color="Color.Default" Indeterminate=@isTransferring />
+                                    <MudButton OnClick="() => WriteFileToPort(portName,file.FileName)">Add to sd card</MudButton>
+
                                 </div>
                             </MudListItem>
                         }
@@ -206,10 +225,10 @@
         </MudItem>
         <MudItem xs="12">
             <div>
-                @* 
-                <MudCardHeader Style="display: flex; justify-content: center; text-decoration:underline">
-                    <MudText Typo="Typo.h6">Preheating Profiles</MudText>
-                </MudCardHeader> *@
+                @*
+            <MudCardHeader Style="display: flex; justify-content: center; text-decoration:underline">
+            <MudText Typo="Typo.h6">Preheating Profiles</MudText>
+            </MudCardHeader> *@
                 <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(10)" EnableSwipeGesture="true" Elevation="1">
                     @foreach (var profile in printer.preheatingProfiles)
                     {
@@ -232,25 +251,25 @@
             </div>
         </MudItem>
         @* <MudItem xs="4">
-            <MudCardHeader>
-                <MudText Typo="Typo.h6">HOTEND PID Autotune and Store To Printer</MudText>
-            </MudCardHeader>
-            <MudCard>
-                <MudNumericField @bind-Value="hotend.PIDHotendTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                <MudNumericField @bind-Value="hotend.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => hotend.SetHotendPIDValues()">Set PID Values</MudButton>
-            </MudCard>
-        </MudItem> *@
-@*         <MudItem xs="4">
-            <MudCardHeader>
-                <MudText Typo="Typo.h6">BED PID Autotune and Store To Printer</MudText>
-            </MudCardHeader>
-            <MudCard>
-                <MudNumericField @bind-Value="bed.PIDBedTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                <MudNumericField @bind-Value="bed.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => bed.SetBedPIDValues()">Set PID Values</MudButton>
-            </MudCard>
-        </MudItem> *@
+    <MudCardHeader>
+    <MudText Typo="Typo.h6">HOTEND PID Autotune and Store To Printer</MudText>
+    </MudCardHeader>
+    <MudCard>
+    <MudNumericField @bind-Value="hotend.PIDHotendTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+    <MudNumericField @bind-Value="hotend.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => hotend.SetHotendPIDValues()">Set PID Values</MudButton>
+    </MudCard>
+    </MudItem> *@
+        @*         <MudItem xs="4">
+    <MudCardHeader>
+    <MudText Typo="Typo.h6">BED PID Autotune and Store To Printer</MudText>
+    </MudCardHeader>
+    <MudCard>
+    <MudNumericField @bind-Value="bed.PIDBedTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+    <MudNumericField @bind-Value="bed.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" @onclick="() => bed.SetBedPIDValues()">Set PID Values</MudButton>
+    </MudCard>
+    </MudItem> *@
 
     </MudGrid>
 }
@@ -410,6 +429,7 @@ else
         StateHasChanged();
     }
 
+
     private void LoadPlotlyData()
     {
         if (levelBed.CSVData != null)
@@ -432,5 +452,51 @@ else
     {
         background.MessageReceived -= OnUpdate;
         background.SecondElapsed -= OnTemperatureChange;
+    }
+
+    public List<(string DriveName, string VolumeLabel)> PortsAvailable = new List<(string DriveName, string VolumeLabel)>();
+
+    bool isTransferring = false;
+
+    private async Task WriteFileToPort(string driveName, string fileName)
+    {
+        isTransferring = true;
+
+        string filePath = Path.Combine(driveName, fileName);
+
+        await Task.Run(() => File.WriteAllText(filePath, print.file));
+
+        isTransferring = false;
+    }
+
+    string portName = "";
+
+    public void ChoosePort(string portname)
+    {
+        portName = portname;
+    }
+
+    public void GetDrives()
+    {
+        foreach (DriveInfo drive in DriveInfo.GetDrives())
+        {
+            if (drive.IsReady && drive.DriveType == DriveType.Removable)
+            {
+                if (!PortsAvailable.Exists(port => port.DriveName == drive.Name))
+                {
+                    PortsAvailable.Add((drive.Name, drive.VolumeLabel));
+                }
+            }
+        }
+    }
+
+    public void ReleaseMedia()
+    {
+        background.ConnectionServiceSerial.printerConnection.Write("M22");
+    }
+
+    public void AttachMedia()
+    {
+        background.ConnectionServiceSerial.printerConnection.Write("M21");
     }
 }

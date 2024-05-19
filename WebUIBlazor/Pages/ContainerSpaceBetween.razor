@@ -1,0 +1,10 @@
+﻿<MudContainer Style="display: flex; justify-content:space-between;">
+    @ChildContent
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    private MudTheme Theme = new MudTheme();
+}

@@ -43,6 +43,7 @@ namespace MachineControlHub.Print
                     while ((line = reader.ReadLine()) != null)
                     {
                         _connection.Write(line);
+                        Console.WriteLine(line);
                     }
 
                     _connection.Write(CommandMethods.BuildStopSDWriteCommand());
