@@ -57,13 +57,10 @@ namespace MachineControlHub.Temps
             string pattern = HOTEND_TEMP_PARSE_PATTERN;
 
             // Create a regular expression object and find matches in the input string
-            Regex regex = new Regex(pattern);
-            MatchCollection matches = regex.Matches(input);
 
-            // Iterate through the matches and extract the temperature values
-            foreach (Match match in matches)
+            Match match = Regex.Match(input, pattern);
+            if (match.Success)
             {
-                // The temperature value is captured in the first group (index 1)
                 CurrentTemp = int.Parse(match.Groups[1].Value);
                 TargetTemp = int.Parse(match.Groups[2].Value);
             }

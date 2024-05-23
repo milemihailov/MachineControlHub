@@ -44,10 +44,9 @@
 
     public void OnSecondElapsed()
     {
-
         Task.Run(() =>
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSDStatus());
+            // background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSDStatus());
         });
     }
 

@@ -15,6 +15,8 @@
 <ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 <PrinterState />
 <MudGrid>
+
+    @* Interactive Bed -------------------------------------------------------------- *@
     <MudItem xs="12" md="6" lg="4">
         <MudPaper Elevation="0">
             <PlotlyChart style="height: 60vh; width:100%; min-height: 350px"
@@ -22,6 +24,8 @@
                          ClickAction="ClickAction" AfterRender="SubscribeEvents" />
         </MudPaper>
     </MudItem>
+
+    @* Control Panel -------------------------------------------------------------- *@
     <MudItem xs="12" md="6" lg="4" Class="px-3">
         <div Class="py-5">
             <MudContainer MaxWidth="MaxWidth.Small" Class="px-2">
@@ -83,6 +87,8 @@
         </div>
     </MudItem>
 
+
+    @* Console Output -------------------------------------------------------------- *@
     <MudItem xs="12" md="12" lg="4">
         <MudPaper Class="d-flex mud-height-full" MaxHeight="600px">
             <textarea id="consoleOutput" style="width:100%; padding:5px; resize: none;" readonly rows="10" cols="50">@control.consoleOutput</textarea>
@@ -94,7 +100,6 @@
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send" FullWidth="true">Send</MudButton>
         </form>
     </MudItem>
-
 </MudGrid>
 
 

@@ -96,11 +96,15 @@
 
 
 
-
+@*
 <MudDivider DividerType="DividerType.FullWidth" />
-<MudButton FullWidth="true" Color="Color.Success" Variant="Variant.Filled" OnClick="printer.GetPrinterSettings">Get Printer Settings</MudButton>
-<MudCard>
-    <MudText Class="pt-5 pb-6" Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
+<MudButton FullWidth="true" Color="Color.Success" Variant="Variant.Filled" OnClick="printer.GetPrinterSettings">Get Printer Settings</MudButton> *@
+<MudPaper Class="" Elevation="0">
+    <div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
+
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Primary" OnClick="printer.GetPrinterSettings" />
+        <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
+    </div>
     <MudTabs>
         @* Printer Information --------------------------------------------------------------------------------------------*@
 
@@ -726,7 +730,7 @@
             </MudGrid>
         </MudTabPanel>
     </MudTabs>
-</MudCard>
+</MudPaper>
 
 @code {
     // [Parameter]

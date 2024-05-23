@@ -82,18 +82,19 @@ namespace WebUI.Data
                         if (data.ToLower().Contains("echo"))
                         {
                             isBusy = true;
-                            BusyStatusChanged?.Invoke();
+                            //BusyStatusChanged?.Invoke();
                             await Task.Run(async () =>
                             {
-                                while (readData.ToLower().Contains("echo:busy: processing"))
+                                if(readData.ToLower().Contains("echo:busy: processing"))
                                 {
                                     Console.WriteLine("Printer is busy");
                                     await Task.Delay(1500);
-                                    echoMessage += readData = ConnectionServiceSerial.printerConnection.ReadAll();
+                                    readData = ConnectionServiceSerial.printerConnection.ReadAll();
+                                    Console.WriteLine(echoMessage);
                                 }
                             });
                             isBusy = false;
-                            BusyStatusChanged?.Invoke();
+                            //BusyStatusChanged?.Invoke();
                         }
                         message = $"{readData} \n";
 
@@ -103,6 +104,7 @@ namespace WebUI.Data
                         }
 
                         MessageReceived?.Invoke(message);
+                        Console.WriteLine(message);
                     }
                 }
             }

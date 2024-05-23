@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Components;
 using System;
 using MachineControlHub;
 using static MudBlazor.Colors;
+using static MachineControlHub.Print.PrintProgress;
 
 namespace WebUI.Data
 {
     public class PrintingService
     {
-        public const int MAX_FILE_SIZE = (1024 * 1024 * 30);
+        public const int MAX_FILE_SIZE = (1024 * 1024 * 90);
         const string PATTERN = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
 
         public PrintService printService;
@@ -24,7 +25,7 @@ namespace WebUI.Data
 
         public string printName;
         public string uploadFileName;
-        public string estimatedTime;
+        public TimeSpan estimatedTime;
         public double fileSize;
         public string extractedSettings;
         public string timeElapsed;
@@ -35,7 +36,7 @@ namespace WebUI.Data
         public bool _processing = false;
         public double progress = 0;
         public bool _isPrinting = false;
-        public bool autoReportTemps { get; set; } = false;
+        public bool autoReportTemps { get; set; } = true;
         public int? autoReportValueInterval { get; set; }
 
         public static List<double> hotendGraph = new List<double> { };
@@ -74,12 +75,33 @@ namespace WebUI.Data
             _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
-        public void StopPrint()
+        public async Task StopPrint()
         {
-            printService.AbortCurrentPrint();
-            progress = 0;
-            _isPrinting = false;
-            _snackbar.Add("Print Stopped", Severity.Error);
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                bool? result = await _dialogService.ShowMessageBox(
+                "Stop Print",
+                "Do you want to stop the print?",
+                yesText: "Stop!", cancelText: "Cancel");
+
+                if (result == true && _isPrinting)
+                {
+                    printService.AbortCurrentPrint();
+                    progress = 0;
+                    _isPrinting = false;
+                    _snackbar.Add("Print Stopped", Severity.Error);
+                }
+                else
+                {
+                    _snackbar.Add("Not Printing", Severity.Error);
+                    return;
+                }
+            }
+            else
+            {
+                _snackbar.Add("Printer is not connected", Severity.Error);
+                return;
+            }
         }
 
         public void ListSDFiles(string inputText)
@@ -98,12 +120,6 @@ namespace WebUI.Data
             extractedSettings = printJob.ExtractedSettingsFromPrintedFile;
         }
 
-        public void TransferFileToSD(string file, string fileName)
-        {
-            //printService.TransferFileToSD(file, fileName);
-            throw new NotImplementedException();
-        }
-
         public void GetFileNameAndSize(string input)
         {
             printProgress.ParseFileNameAndSize(input);
@@ -111,33 +127,69 @@ namespace WebUI.Data
             fileSize = Math.Round(printProgress.FileSizeInMB, 2);
         }
 
-        public void EstimatedPrintTime(string message)
+
+        public void ElapsedPrintTime(string message)
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildPrintProgressCommand());
-            Match match = Regex.Match(message, PATTERN, RegexOptions.IgnoreCase);
-            estimatedTime = match.Groups[1].Value;
+            if (message.Contains("echo:Print time:"))
+            {
+                Match match = Regex.Match(message, @"(?<=echo:Print time: )((\d+h\s*)?(\d+m\s*)?(\d+s)?)", RegexOptions.IgnoreCase);
+                string newTimeElapsed = match.Groups[0].Value;
+
+                if (newTimeElapsed != timeElapsed)
+                {
+                    timeElapsed = newTimeElapsed;
+                }
+            }
+        }
+
+
+        public void StartPrintTimer()
+        {
+            background.ConnectionServiceSerial.Write("M75");
+        }
+
+        public void PausePrintTimer()
+        {
+            background.ConnectionServiceSerial.Write("M76");
+        }
+
+        public void StopPrintTimer()
+        {
+            if (_isPrinting)
+            {
+                background.ConnectionServiceSerial.Write("M77");
+            }
         }
 
         public async Task ConfirmStartAsync()
         {
-            bool? result = await _dialogService.ShowMessageBox(
-            "Start Print",
-            "Do you want to start a print job?",
-            yesText: "Start!", cancelText: "Cancel");
-
-            if (result == true)
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                if (fileToPrint == "")
+                bool? result = await _dialogService.ShowMessageBox(
+                "Start Print",
+                "Do you want to start a print job?",
+                yesText: "Start!", cancelText: "Cancel");
+
+                if (result == true)
                 {
-                    _snackbar.Add("No file selected", Severity.Error);
+                    if (fileToPrint == "")
+                    {
+                        _snackbar.Add("No file selected", Severity.Error);
+                    }
+                    else
+                    {
+                        StartPrint(fileToPrint);
+                        StartPrintTimer();
+                        StartTimeOfPrint();
+                        GetFileNameAndSize(fileToPrint);
+                        _snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {fileToPrint} </li></ul>", Severity.Success);
+                    }
                 }
-                else
-                {
-                    StartPrint(fileToPrint);
-                    StartTimeOfPrint();
-                    GetFileNameAndSize(fileToPrint);
-                    _snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {fileToPrint} </li></ul>", Severity.Success);
-                }
+            }
+            else
+            {
+                _snackbar.Add("Printer is not connected", Severity.Error);
+                return;
             }
         }
 
@@ -182,28 +234,82 @@ namespace WebUI.Data
 
                 if (printing.Success)
                 {
-                    int firstNumber = int.Parse(printing.Groups[1].Value);
-                    int secondNumber = int.Parse(printing.Groups[2].Value);
-                    progress = Math.Round(CalculatePercentage(firstNumber, secondNumber));
+                    long bytesPrinted = int.Parse(printing.Groups[1].Value);
+                    printProgress.TotalBytes = int.Parse(printing.Groups[2].Value);
+                    printProgress.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = bytesPrinted, Timestamp = DateTime.Now });
+                    if (printProgress.PrintProgressRecords.Count > 200) // Keep the last 5 records
+                    {
+                        printProgress.PrintProgressRecords.RemoveAt(0);
+                    }
+                    progress = Math.Round(CalculatePercentage(bytesPrinted, printProgress.TotalBytes));
                 }
 
                 if (finished.Success)
                 {
                     progress = 100;
+                    _snackbar.Add("Print Finished", Severity.Success);
                 }
             });
         }
 
-        public void SetInterval()
-        {
-            background.ConnectionServiceSerial.Write($"M155 S{autoReportValueInterval}");
-        }
 
+        public void DisplayEstimatedTimeRemaining()
+        {
+            estimatedTime = printProgress.EstimateTimeRemaining();
+        }
 
         public void CalibrateBed()
         {
             _processing = true;
             background.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
+        }
+
+        public List<(string DriveName, string VolumeLabel)> PortsAvailable = new List<(string DriveName, string VolumeLabel)>();
+        public string chosenPort = "";
+        public bool isTransferring = false;
+        public bool mediaAttached = true;
+
+        public async Task WriteFileToPort(string driveName, string fileName)
+        {
+            isTransferring = true;
+
+            string filePath = Path.Combine(driveName, fileName);
+
+            await Task.Run(() => File.WriteAllText(filePath, file));
+
+            isTransferring = false;
+            _snackbar.Add("File transferred to media", Severity.Success);
+        }
+
+
+        public void ChoosePort(string portname)
+        {
+            chosenPort = portname;
+        }
+
+        public void GetDrives()
+        {
+            PortsAvailable.Clear();
+
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.DriveType == DriveType.Removable)
+                {
+                    PortsAvailable.Add((drive.Name, drive.VolumeLabel));
+                }
+            }
+        }
+
+        public void ReleaseMedia()
+        {
+            background.ConnectionServiceSerial.printerConnection.Write("M22");
+            mediaAttached = false;
+        }
+
+        public void AttachMedia()
+        {
+            background.ConnectionServiceSerial.printerConnection.Write("M21");
+            mediaAttached = true;
         }
     }
 }

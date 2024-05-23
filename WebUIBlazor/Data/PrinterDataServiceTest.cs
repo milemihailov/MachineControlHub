@@ -69,7 +69,7 @@ namespace WebUI.Data
             Printer.Bed = new PrinterBed();
             Printers = new List<Printer>();
             SelectedPrinter = new Printer();
-            background.MessageReceived += OnUpdateSettings;
+            background.MessageReceived += (message) => _ = OnUpdateSettings(message);
         }
 
         public void ChoosePrinter(Printer printer)
@@ -209,28 +209,36 @@ namespace WebUI.Data
             background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
-        public void OnUpdateSettings(string message)
+        public void GetBedVolume()
         {
-            if (message.Contains("G21") || message.Contains("G20"))
-            {
-                linearUnits = GetPrinterLinearUnits(message);
-            }
-            if (message.Contains("M149"))
-            {
-                temperatureUnits = GetTemperatureUnits(message);
-            }
+            background.ConnectionServiceSerial.Write("M211");
+        }
 
-            GetStepsPerUnit(message);
-            GetMaximumFeedrates(message);
-            GetMaximumAccelerations(message);
-            GetPrintRetractTravelAcceleration(message);
-            GetStartingAccelerations(message);
-            GetOffsetSettings(message);
-            GetAutoBedLevelingSettings(message);
-            GetHotendPIDValues(message);
-            GetBedPIDValues(message);
-            GetZProbeOffsets(message);
-            SetBedVolume(message);
+        public async Task OnUpdateSettings(string message)
+        {
+            await Task.Run(() =>
+            {
+                if (message.Contains("G21") || message.Contains("G20"))
+                {
+                    linearUnits = GetPrinterLinearUnits(message);
+                }
+                if (message.Contains("M149"))
+                {
+                    temperatureUnits = GetTemperatureUnits(message);
+                }
+
+                GetStepsPerUnit(message);
+                GetMaximumFeedrates(message);
+                GetMaximumAccelerations(message);
+                GetPrintRetractTravelAcceleration(message);
+                GetStartingAccelerations(message);
+                GetOffsetSettings(message);
+                GetAutoBedLevelingSettings(message);
+                GetHotendPIDValues(message);
+                GetBedPIDValues(message);
+                GetZProbeOffsets(message);
+            });
+            await SetBedVolume(message);
         }
 
 
@@ -386,15 +394,24 @@ namespace WebUI.Data
                 Printer.Head.ZProbeOffset = double.Parse(match.Groups[3].Value);
             }
         }
-        public void SetBedVolume(string input)
+
+        public async Task SetBedVolume(string input)
         {
-            var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
-            if (match.Success)
+            await Task.Run(() =>
             {
-                Printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);
-                Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
-            }
+                if (input != null)
+                {
+                    var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        Printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);
+                        Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
+                    }
+                }
+            });
+            
         }
+
         public void SetPrinterLinearUnits(bool input) => background.ConnectionServiceSerial.Write(input ? "G21" : "G20");
 
         public void SetMaximumFeedrates() => background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));

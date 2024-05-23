@@ -49,6 +49,8 @@
             background.ConnectionServiceSerial.Write("M113 S1");
             //ask for bed volume
             background.ConnectionServiceSerial.Write("M211");
+            //Report SD status every 2 seconds
+            background.ConnectionServiceSerial.Write("M27 S2");
         }
         catch (Exception e)
         {

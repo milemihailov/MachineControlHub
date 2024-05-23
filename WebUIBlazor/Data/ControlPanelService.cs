@@ -23,10 +23,12 @@ namespace WebUI.Data
         public Position positionToMove;
         private readonly BackgroundTimer background;
         private readonly IJSRuntime JSRuntime;
-        public ControlPanelService(BackgroundTimer background, IJSRuntime jsRuntime)
+        private readonly PrinterDataServiceTest printer;
+        public ControlPanelService(BackgroundTimer background, IJSRuntime jsRuntime, PrinterDataServiceTest printer)
         {
             this.background = background;
             this.JSRuntime = jsRuntime;
+            this.printer = printer;
             feedRate = new MotionSettingsData();
             positionToMove = new Position();
         }
@@ -172,31 +174,23 @@ namespace WebUI.Data
                 CalculateFanSpeedIntoPercentage(value);
                 message = $"Fan Speed: {fanSpeedInPercentage}%\n";
             }
-            if (message.Contains("Not SD printing") || message.Contains("printing byte"))
+            if (message.Contains("Not SD printing") || message.Contains("printing byte") || Regex.IsMatch(message, @"T:\d+\.\d+ /0\.00"))
             {
                 message = null;
             }
 
             if (message != null)
             {
+
                 var lines = message.Split('\n');
                 var filteredLines = lines.Where(line => !line.Contains("ok"));
                 var filteredData = string.Join('\n', filteredLines);
                 consoleOutput += filteredData;
+
             }
 
-            //try
-            //{
-            //    await JSRuntime.InvokeVoidAsync("scrollToBottom");
-            //}
-            //catch (TaskCanceledException)
-            //{
-            //    Console.WriteLine("Error from scroll to bottom");
-            //}
             try
             {
-                // existing code...
-
                 var isAtBottom = await JSRuntime.InvokeAsync<bool>("isAtBottom", "elementId");
                 if (isAtBottom)
                 {
@@ -205,7 +199,7 @@ namespace WebUI.Data
             }
             catch (TaskCanceledException)
             {
-                // Handle the exception here, if necessary
+
             }
         }
 
