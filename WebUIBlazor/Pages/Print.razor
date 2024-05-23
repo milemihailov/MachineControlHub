@@ -131,15 +131,15 @@
 
         @* Temperatures --------------------------------------------------------------------------------------------*@
 
-        <MudItem xs="12" sm="12" md="12" lg="7" Class="pt-10">
+        <MudItem xs="12" sm="12" md="12" lg="7" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
             <MudGrid>
                 <MudItem xs="12" sm="12" md="12" lg="12">
                     <MudContainer>
                         <MudText>Turn off if temperatures are not updating</MudText>
                         <MudSwitch @bind-Value="@print.autoReportTemps" Color="Color.Success" Class="mr-n2 mb-6"></MudSwitch>
                     </MudContainer>
-                    <MudGrid>
-                        <MudItem md="6" Style="align-content:space-around;">
+                    <MudGrid Class="pb-6">
+                        <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                             <ContainerSpaceBetween Class="pt-0 mt-0">
                                 <MudText>Current Hotend Temperature:</MudText>
                                 <MudText Color="@(hotend.currentHotendTemperature >= @hotend.targetHotendTemperature - 3 && hotend.currentHotendTemperature <= @hotend.targetHotendTemperature + 3 ? Color.Success : Color.Secondary)">  @hotend.currentHotendTemperature</MudText>
@@ -149,12 +149,12 @@
                                 <MudText Color="Color.Success">@hotend.targetHotendTemperature</MudText>
                             </ContainerSpaceBetween>
                         </MudItem>
-                        <MudItem md="6">
+                        <MudItem xs="12" sm="12" md="6">
                             <MudGrid Style="align-items: center;">
-                                <MudItem xs="6" md="12">
+                                <MudItem xs="12" sm="6" md="12">
                                     <MudNumericField @bind-Value="hotend.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                                 </MudItem>
-                                <MudItem xs="6" md="12" Class="my-0 py-0">
+                                <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                     <ContainerSpaceBetween Class="ma-0 pa-0">
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Temperature</MudButton>
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => hotend.SetHotendTemperature(0)">Turn Off</MudButton>
@@ -162,10 +162,12 @@
                                 </MudItem>
                             </MudGrid>
                         </MudItem>
+                        <MudDivider />
+
                     </MudGrid>
 
-                    <MudGrid>
-                        <MudItem md="6" Style="align-content:space-around;">
+                    <MudGrid Class="pb-6">
+                        <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                             <ContainerSpaceBetween Class="pt-0 mt-0">
                                 <MudText>Current Bed Temperature:</MudText>
                                 <MudText>@bed.currentBedTemperature</MudText>
@@ -175,12 +177,12 @@
                                 <MudText>@bed.targetBedTemperature</MudText>
                             </ContainerSpaceBetween>
                         </MudItem>
-                        <MudItem md="6">
+                        <MudItem xs="12" sm="12" md="6">
                             <MudGrid Style="align-items: center;">
-                                <MudItem xs="6" md="12">
+                                <MudItem xs="12" sm="6" md="12">
                                     <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                                 </MudItem>
-                                <MudItem xs="6" md="12" Class="my-0 py-0">
+                                <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                     <ContainerSpaceBetween Class="ma-0 pa-0">
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Temperature</MudButton>
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Off</MudButton>
@@ -189,10 +191,12 @@
 
                             </MudGrid>
                         </MudItem>
+                        <MudDivider />
+
                     </MudGrid>
 
-                    <MudGrid>
-                        <MudItem md="6" Style="align-content:space-around;">
+                    <MudGrid Class="pb-6">
+                        <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                             <ContainerSpaceBetween Class="pt-0 mt-0">
                                 <MudText>Current Chamber Temperature:</MudText>
                                 <MudText>@chamber.currentChamberTemperature</MudText>
@@ -202,12 +206,12 @@
                                 <MudText>@chamber.targetChamberTemperature</MudText>
                             </ContainerSpaceBetween>
                         </MudItem>
-                        <MudItem md="6">
+                        <MudItem xs="12" sm="12" md="6">
                             <MudGrid Style="align-items: center;">
-                                <MudItem xs="6" md="12">
+                                <MudItem xs="12" sm="6" md="12">
                                     <MudNumericField @bind-Value="chamber.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                                 </MudItem>
-                                <MudItem xs="6" md="12" Class="my-0 py-0">
+                                <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                     <ContainerSpaceBetween Class="ma-0 pa-0">
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => chamber.SetChamberTemperature(chamber.setChamberTemperature)">Set Temperature</MudButton>
                                         <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => chamber.SetChamberTemperature(0)">Turn Off</MudButton>
@@ -215,14 +219,27 @@
                                 </MudItem>
                             </MudGrid>
                         </MudItem>
+                        <MudDivider />
+
                     </MudGrid>
 
-                    <ContainerSpaceBetween Class="pt-10">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
-                    </ContainerSpaceBetween>
-                    <MudDivider Class="pt-5" />
+                    <MudGrid>
+                        <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
+                            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
+                        </MudItem>
+                        <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
+                            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
+                        </MudItem>
+                        <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
+                            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
+                        </MudItem>
+                        <MudDivider Class="pt-5" />
+                    </MudGrid>@*
+                <ContainerSpaceBetween Class="pt-10">
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
+                </ContainerSpaceBetween> *@
 
                     @* Preheating Profiles -------------------------------------------------------------- *@
 
@@ -238,8 +255,7 @@
                                     <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeed)%</MudText>
                                 </div>
                                 <div Style="display: flex; justify-content: center;" class="pt-2">
-
-                                    <MudButton Class="mr-5" Variant="Variant.Text" Color="Color.Primary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
+                                    <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => printer.DeletePreheatingProfile(profile)" />
                                 </div>
                             </MudCarouselItem>
@@ -252,26 +268,28 @@
         @* Bed Leveling -------------------------------------------------------------- *@
 
         <MudItem xs="12" md="6" Class="pa-0">
-            <MudCardContent>
-                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
-
-                @if (!print._isPrinting)
-                {
-                    <MudButton FullWidth="true" Disabled="@print._processing" OnClick="print.CalibrateBed" Variant="Variant.Filled" Color="Color.Primary">
-                        @if (print._processing)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Measuring Bed</MudText>
-                        }
-                        else
-                        {
-                            <MudText>CALIBRATE BED</MudText>
-                        }
-                    </MudButton>
-                }
-            </MudCardContent>
+            <MudGrid Class="pl-6">
+                <MudItem xs="12" sm="12" md="12" lg="12" Class="pb-0 mb-0">
+                    <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="12" Class="pt-0 mt-0">
+                    @if (!print._isPrinting)
+                    {
+                        <MudButton FullWidth="true" Disabled="@print._processing" OnClick="print.CalibrateBed" Variant="Variant.Filled" Color="Color.Tertiary">
+                            @if (print._processing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Measuring Bed</MudText>
+                            }
+                            else
+                            {
+                                <MudText>CALIBRATE BED</MudText>
+                            }
+                        </MudButton>
+                    }
+                </MudItem>
+            </MudGrid>
         </MudItem>
-
         @* Temperature Graph -------------------------------------------------------------- *@
 
         <MudItem xs="12" md="6" Class="pa-0 mr-0">

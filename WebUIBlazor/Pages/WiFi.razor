@@ -1,0 +1,36 @@
+﻿@page "/send"
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text
+
+<h3>Send a message</h3>
+
+<p>Enter a message to send to the device:</p>
+<input @bind="message" />
+
+<button @onclick="SendMessage">Send</button>
+
+<p>Response from the device: @response</p>
+
+@code {
+    private string message;
+    private string response;
+
+    [Inject]
+    HttpClient Http { get; set; }
+
+    private async Task SendMessage()
+    {
+        var content = new StringContent(message, Encoding.UTF8, "text/plain");
+        var httpResponse = await Http.PostAsync("http://192.168.4.1/api/endpoint", content);
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            response = await httpResponse.Content.ReadAsStringAsync();
+        }
+        else
+        {
+            response = "Error sending message";
+        }
+    }
+
+}
