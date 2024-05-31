@@ -2,7 +2,8 @@
 
 
 <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(Connection ? Severity.Success : Severity.Error)" Variant="Variant.Text">
-    @(new MarkupString(Connection ? $"Selected Printer:<strong>{SelectedPrinter}</strong> Status: <strong>Connected</strong>" : "Disconnected"))
+    @* @(new MarkupString(Connection ? $"Selected Printer:<strong>{SelectedPrinter}</strong> Status: <strong>Connected</strong>" : "Disconnected")) *@
+    @(new MarkupString(Connection ? $"<strong>Connected</strong>" : "Disconnected"))
 </MudAlert>
 
 

@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<ConnectionServiceSerial>();
+builder.Services.AddScoped<ConnectionServiceSerial>();
 builder.Services.AddScoped<HotendTemperatureService>();
 builder.Services.AddScoped<BedTemperatureService>();
 builder.Services.AddScoped<ChamberTemperatureService>();

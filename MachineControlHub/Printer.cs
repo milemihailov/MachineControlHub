@@ -15,13 +15,47 @@ namespace MachineControlHub
     {
 
         public string Name { get; set; }
+
         public string Id { get; set; }
+
         /// <summary>
         /// Gets or sets the model of the 3D printer.
         /// </summary>
         public string Model { get; set; }
 
-        public int NumberOfExtruders = 1;
+        public int NumberOfExtruders { get; set; }
+
+        public bool HasBinaryFileTransfer { get; set; }
+
+        public bool HasAutoReportTemperature { get; set; }
+
+        public bool HasAutoReportPosition { get; set; }
+
+        public bool HasAutoReportSDStatus { get; set; }
+
+        public bool HasSoftwarePowerControl { get; set; }
+
+        public bool HasEmergencyParser { get; set; }
+
+        public bool HasToggleLights { get; set; }
+
+        public bool HasHostActionCommands { get; set; }
+
+        public bool HasPromptSupport { get; set; }
+        public bool HasEEPROM { get; set; }
+
+        public bool HasSDCardSupport { get; set; }
+
+        public bool HasLongFilenameSupport { get; set; }
+
+        public bool HasCustomFirmwareUpload { get; set; }
+
+        public bool HasExtendedM20 { get; set; }
+
+        public bool HasThermalProtection { get; set; }
+
+        public bool HasBabystep { get; set; }
+
 
         /// <summary>
         /// Gets or sets the firmware version installed on the printer.

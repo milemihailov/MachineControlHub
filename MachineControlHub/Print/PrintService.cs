@@ -83,18 +83,13 @@ namespace MachineControlHub.Print
             Console.WriteLine(PRINT_ABORT_MESSAGE);
         }
 
-        
 
 
-        public List<string> ListSDFiles(string inputText)
+
+        public List<(string FileName, string FileSize)> ListSDFiles(string inputText)
         {
-
             string pattern = @"Begin file list([\s\S]+?)End file list";
 
-            //_connection.Write(CommandMethods.BuildListSDCardCommand());
-            //Thread.Sleep(200);
-            //string inputText = _connection.ReadAll();
-            Console.WriteLine(inputText);
             Match match = Regex.Match(inputText, pattern, RegexOptions.None);
 
             string parsedString = "";
@@ -104,15 +99,38 @@ namespace MachineControlHub.Print
                 parsedString = match.Groups[1].Value.Trim();
             }
 
-            List<string> files = new List<string>();
+            List<(string FileName, string FileSize)> files = new List<(string FileName, string FileSize)>();
 
             string[] extractedSdFiles = parsedString.Split('\n');
 
             foreach (string sdFile in extractedSdFiles)
             {
-                files.Add(sdFile);
+                string[] parts = sdFile.Split(' ');
+                if (parts.Length >= 2)
+                {
+                    string fileName = parts[0];
+                    string fileSize = parts[1];
+                    files.Add((fileName, fileSize));
+                }
             }
             return files;
         }
+
+        public List<(string FileName, string FileSize)> ListLongNameSDFiles(string input)
+        {
+            string pattern = @"(\d+)\s0x[A-Fa-f0-9]+\s(.+?)\r?\n";
+            MatchCollection matches = Regex.Matches(input, pattern);
+
+            List<(string FileName, string FileSize)> files = new List<(string FileName, string FileSize)>();
+
+            foreach (Match match in matches)
+            {
+                files.Add((match.Groups[2].Value, match.Groups[1].Value));
+            }
+            Console.WriteLine(files);
+            return files;
+        }
     }
+
+    
 }

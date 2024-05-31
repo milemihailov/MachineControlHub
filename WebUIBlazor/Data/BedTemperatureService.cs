@@ -33,19 +33,22 @@ namespace WebUI.Data
             _snackbar.Add($"Bed temperature set to {setTemp}°C", Severity.Info);
         }
 
-        public void ParseCurrentBedTemperature(string input)
+        public async Task ParseCurrentBedTemperature(string input)
         {
-            bed.ParseCurrentTemperature(input);
-            currentBedTemperature = bed.CurrentTemp;
-            if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
-            {
-                targetBedTemperature = bed.TargetTemp;
-            }
+            await Task.Run(() => {
+                bed.ParseCurrentTemperature(input);
+                currentBedTemperature = bed.CurrentTemp;
+                if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
+                {
+                    targetBedTemperature = bed.TargetTemp;
+                }
+            } );
+            
         }
 
         public void SetBedPIDValues()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDBedTemp, PIDBedCycles, true));
+            _background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
             _snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
         }
     }

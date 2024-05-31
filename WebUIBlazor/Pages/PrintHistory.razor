@@ -1,6 +1,42 @@
 ﻿@page "/printhistory"
+@using MachineControlHub.Print
 
-<h3>PrintHistory</h3>
+@inject Data.PrintingService printingService
+@inject Data.PrinterDataServiceTest printerDataServiceTest
+
+<div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
+    <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Print History</MudText>
+</div>
+
+@foreach (var printJob in printerDataServiceTest.printHistory)
+{
+    <div style="display:flex; justify-content:center; align-items: center;">
+        <div style="width:30%;">
+            <ContainerSpaceBetween>
+                <MudText>File name:</MudText>
+                <MudText>@printJob.FileName</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText>Total print time:</MudText>
+                <MudText>@printJob.TotalPrintTime</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText>Start time of print:</MudText>
+                <MudText>@printJob.StartTimeOfPrint</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText>File size:</MudText>
+                <MudText>@Math.Round(printJob.ConvertToMB(printJob.FileSize), 2)MB</MudText>
+            </ContainerSpaceBetween>
+            <MudDivider/>
+            @* <ContainerSpaceBetween>
+        <MudText>End time of print: @printJob.EndTimeOfPrint</MudText>
+        </ContainerSpaceBetween> *@
+        </div>
+
+    </div>
+
+}
 
 @code {
 

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
@@ -12,7 +13,6 @@ namespace WebUI.Data
 
 
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
-        public readonly PeriodicTimer _timer2 = new(TimeSpan.FromMilliseconds(1000));
 
         public CancellationTokenSource _cts = new();
 
@@ -21,10 +21,10 @@ namespace WebUI.Data
         public event Action<string> MessageReceived;
         public event Action BusyStatusChanged;
 
-        public string message { get; set; }
+        public string Message { get; set; }
 
         [Parameter]
-        public bool isBusy { get; set; }
+        public bool IsBusy { get; set; }
         BackgroundTimer()
         {
             ConnectionServiceSerial = new ConnectionServiceSerial();
@@ -47,13 +47,13 @@ namespace WebUI.Data
         public void StartTimer()
         {
             _ = DoWorkAsync();
-            //_ = DoWorkEachSecondAsync();
         }
 
         public void StopTimer()
         {
             _cts.Cancel();
         }
+        public Stopwatch stopwatch = new Stopwatch();
 
         public async Task DoWorkAsync()
         {
@@ -66,6 +66,7 @@ namespace WebUI.Data
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
+
                     i++;
                     if (i % 100 == 0 && ConnectionServiceSerial.IsConnected)
                     {
@@ -74,37 +75,38 @@ namespace WebUI.Data
 
                     if (ConnectionServiceSerial != null && ConnectionServiceSerial.HasData())
                     {
-                        string readData = ConnectionServiceSerial.Read();
-                        string data = "";
-                        data += readData;
+                        ConnectionServiceSerial.IsConnected = true;
+                        string readData = await ConnectionServiceSerial.printerConnection.ReadAsync();
+                        //string data = "";
+                        //data += readData;
                         string echoMessage = "";
 
-                        if (data.ToLower().Contains("echo"))
-                        {
-                            isBusy = true;
-                            //BusyStatusChanged?.Invoke();
-                            await Task.Run(async () =>
-                            {
-                                if(readData.ToLower().Contains("echo:busy: processing"))
-                                {
-                                    Console.WriteLine("Printer is busy");
-                                    await Task.Delay(1500);
-                                    readData = ConnectionServiceSerial.printerConnection.ReadAll();
-                                    Console.WriteLine(echoMessage);
-                                }
-                            });
-                            isBusy = false;
-                            //BusyStatusChanged?.Invoke();
-                        }
-                        message = $"{readData} \n";
+                        //if (data.ToLower().Contains("echo"))
+                        //{
+                        //    isBusy = true;
+                        //    //BusyStatusChanged?.Invoke();
+                        //    await Task.Run(async () =>
+                        //    {
+                        //        if(readData.ToLower().Contains("echo:busy: processing"))
+                        //        {
+                        //            //Console.WriteLine("Printer is busy");
+                        //            await Task.Delay(1500);
+                        //            readData = await ConnectionServiceSerial.printerConnection.ReadAllAsync();
+                        //            //Console.WriteLine(echoMessage);
+                        //        }
+                        //    });
+                        //    isBusy = false;
+                        //    //BusyStatusChanged?.Invoke();
+                        //}
+                        Message = $"{readData} \n";
 
                         if (echoMessage != "")
                         {
-                            message = FilterData(echoMessage);
+                            Message = FilterData(echoMessage);
                         }
 
-                        MessageReceived?.Invoke(message);
-                        Console.WriteLine(message);
+                        MessageReceived?.Invoke(Message);
+                        Console.WriteLine(Message);
                     }
                 }
             }
@@ -114,13 +116,27 @@ namespace WebUI.Data
             }
         }
 
-
         public string FilterData(string data)
         {
             var lines = data.Split('\n');
             var filteredLines = lines.Where(line => !line.Contains("echo"));
             var filteredData = string.Join('\n', filteredLines);
             return filteredData;
+        }
+
+        public void StartStopwatch()
+        {
+            stopwatch.Start();
+        }
+
+        public void StopStopwatch()
+        {
+            stopwatch.Stop();
+        }
+
+        public void ResetStopwatch()
+        {
+            stopwatch.Reset();
         }
 
     }

@@ -31,15 +31,18 @@ namespace WebUI.Data
             _lastChangeTime = DateTime.Now; // Update the timestamp
             _snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
         }
-        public void ParseCurrentHotendTemperature(string input)
+        public async Task ParseCurrentHotendTemperature(string input)
         {
-            hotend.ParseCurrentTemperature(input);
-            currentHotendTemperature = hotend.CurrentTemp;
-
-            if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
+            await Task.Run(() =>
             {
-                targetHotendTemperature = hotend.TargetTemp;
-            }
+                hotend.ParseCurrentTemperature(input);
+                currentHotendTemperature = hotend.CurrentTemp;
+
+                if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
+                {
+                    targetHotendTemperature = hotend.TargetTemp;
+                }
+            } );
         }
 
         public void ChangeFilament()
@@ -62,7 +65,7 @@ namespace WebUI.Data
 
         public void SetHotendPIDValues()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDHotendTemp, PIDHotendCycles, true));
+            _background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
             _snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }

@@ -17,8 +17,9 @@
 @using MachineControlHub.Motion;
 @using MachineControlHub.Print;
 @using System.Text
+@using System.Diagnostics
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 <PrinterState />
 
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
@@ -29,7 +30,15 @@
         <!-- Container for controlling print operations -->
         <ContainerSpaceBetween>
             <!-- Button to start printing -->
-            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="print.ConfirmStartAsync">Start</MudButton>
+            @if (print._isPrinting)
+            {
+                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.ConfirmStartAsync">Start</MudButton>
+            }
+            else
+            {
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.ConfirmStartAsync">Start</MudButton>
+
+            }
             <!-- Button to pause printing -->
             <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.PausePrint">Pause</MudButton>
             <!-- Button to resume printing -->
@@ -44,7 +53,7 @@
         <MudGrid Justify="Justify.SpaceAround">
             <MudItem xs="12" md="4" lg="4" Class="pr-0 pl-5">
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
-                    <!--Upload button--> 
+                    <!--Upload button-->
                     <ButtonTemplate>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
@@ -67,7 +76,7 @@
                                 <!-- Displaying file name -->
                                 <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
                                 <!-- Displaying file size -->
-                                <MudText Typo="Typo.overline">@Math.Round(print.printProgress.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                                <MudText Typo="Typo.overline">@Math.Round(print.printJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
                                 <!-- Progress indicator -->
                                 <MudProgressCircular Color="Color.Default" Indeterminate=@print.isTransferring />
                                 <!-- Button to start adding file to media -->
@@ -110,25 +119,31 @@
             </MudSelect>
         }
 
-        <!-- Select dropdown for choosing SD files -->
         <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
             @if (background.ConnectionServiceSerial.IsConnected)
             {
-                @if (print.files != null)
+                @if (print.SDFiles != null)
                 {
-                    @foreach (var file in print.files)
+                    @foreach (var file in print.SDFiles)
                     {
-                        <MudSelectItem Value="@file" />
+                        <MudSelectItem Value="@file.FileName">
+                            <div style="display: flex; justify-content: space-around;">
+                                <span>@file.FileName</span>
+                                <span>@($"{Math.Round(print.printJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+                            </div>
+                        </MudSelectItem>
                     }
                 }
             }
         </MudSelect>
 
+
+
         <!-- Displaying print details -->
         <div>
             <ContainerSpaceBetween Class="pt-8">
                 <MudText>File printing:</MudText>
-                <MudText><strong>@print.printName</strong></MudText>
+                <MudText><strong>@print.printJob.PrintingFileName</strong></MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Estimated print time:</MudText>
@@ -136,18 +151,30 @@
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Elapsed print time:</MudText>
-                <MudText>@print.timeElapsed</MudText>
+                <MudText>
+                    @background.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+                </MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Start time:</MudText>
                 <MudText><strong>@print.printJob.FormattedStartTime</strong></MudText>
             </ContainerSpaceBetween>
+
             <ContainerSpaceBetween>
                 <MudText>File Size:</MudText>
-                <MudText><strong>@print.fileSize MB</strong></MudText>
+                <MudText><strong>@Math.Round(print.printJob.ConvertToMB(print.printJob.FileSize), 2)MB</strong></MudText>
             </ContainerSpaceBetween>
+            @if (print._isPrinting)
+            {
+                <ContainerSpaceBetween>
+                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="print.progress" Class="pb-9">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+                            <b> @Math.Round((print.printJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((print.printJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+                        </MudText>
+                    </MudProgressLinear>
+                </ContainerSpaceBetween>
+            }
         </div>
-
     </MudItem>
 
     <!-- Temperatures ---------------------------------------------------------------->
@@ -155,11 +182,6 @@
         <!-- Container for controlling temperature settings -->
         <MudGrid>
             <MudItem xs="12" sm="12" md="12" lg="12">
-                <MudContainer>
-                    <MudText>Turn off if temperatures are not updating </MudText>
-                    <!-- Switch for enabling/disabling automatic temperature reporting if problems with updating the temps-->
-                    <MudSwitch @bind-Value="@print.autoReportTemps" Color="Color.Success" Class="mr-n2 mb-6"></MudSwitch>
-                </MudContainer>
                 <!-- Grid for displaying hotend temperature settings -->
                 <MudGrid Class="pb-6">
                     <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
@@ -295,7 +317,8 @@
                             <!-- Div for preheat and delete buttons -->
                             <div Style="display: flex; justify-content: center;" class="pt-2">
                                 <!-- Button to start preheating -->
-                                <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton>
+                                @* <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton> *@
+                                <MudIconButton Icon="@Icons.Material.Filled.Whatshot" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)" />
                                 <!-- Button to delete preheating profile -->
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => printer.DeletePreheatingProfile(profile)" />
                             </div>
@@ -446,7 +469,7 @@
     /// Handles updates from the printer.
     /// </summary>
     /// <param name="message">The message received from the printer.</param>
-    public void OnUpdate(string message)
+    public async void OnUpdate(string message)
     {
 
         // get the list of files on the SD card
@@ -459,7 +482,7 @@
         }
 
         // update elapsed print time
-        print.ElapsedPrintTime(message);
+        // print.ElapsedPrintTime(message);
 
         // get the bed leveling data
         if (fileMessage.Contains("Bilinear"))
@@ -487,11 +510,9 @@
         }
 
         // parse the current hotend and bed temperatures
-        hotend.ParseCurrentHotendTemperature(message);
-        bed.ParseCurrentBedTemperature(message);
-
-        // calculate and display the estimated print time remaining
-        print.DisplayEstimatedTimeRemaining();
+        await hotend.ParseCurrentHotendTemperature(message);
+        await bed.ParseCurrentBedTemperature(message);
+        await InvokeAsync(StateHasChanged);
     }
 
     /// <summary>
@@ -505,7 +526,7 @@
             Task.Run(async () =>
             {
                 // If automatic temperature reporting is not enabled, request temperature data
-                if (!print.autoReportTemps)
+                if (!printer.Printer.HasAutoReportTemperature)
                 {
                     background.ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
                 }
@@ -527,14 +548,16 @@
 
                 // Asynchronously get the status of the drives
                 await Task.Run(() => print.GetDrives());
-                await InvokeAsync(StateHasChanged);
-            });
 
-            // If printing is in progress, request print time elapsed
-            if (print._isPrinting)
-            {
-                background.ConnectionServiceSerial.Write("M31");
-            }
+                // If printing is in progress, request print time elapsed
+                if (print._isPrinting)
+                {
+                    // background.ConnectionServiceSerial.Write("M31");
+                    await print.DisplayEstimatedTimeRemaining();
+                }
+                await InvokeAsync(StateHasChanged);
+
+            });
         }
     }
 

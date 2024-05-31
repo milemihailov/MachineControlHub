@@ -37,6 +37,7 @@ namespace WebUI.Data
         public string selectedShape;
 
         public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
+        public List<CurrentPrintJob> printHistory = new List<CurrentPrintJob>();
         public List<Printer> Printers { get; set; }
         public List<PrinterHead> Extruders { get; set; }
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
@@ -53,18 +54,23 @@ namespace WebUI.Data
             this.background = background;
             Printer = new Printer();
             _snackbar = snackbar;
-            Printer.HotendTemperatures = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
-            Printer.BedTemperatures = new BedTemps(background.ConnectionServiceSerial.printerConnection);
-            Printer.ChamberTemperatures = new ChamberTemps(background.ConnectionServiceSerial.printerConnection);
+
+            if(background.ConnectionServiceSerial != null)
+            {
+                Printer.HotendTemperatures = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
+                Printer.BedTemperatures = new BedTemps(background.ConnectionServiceSerial.printerConnection);
+                Printer.ChamberTemperatures = new ChamberTemps(background.ConnectionServiceSerial.printerConnection);
+                Printer.HotendTemperatures.PIDHotendValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
+                Printer.BedTemperatures.PIDBedValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
+                Printer.CurrentPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection);
+            }
+
             Printer.Camera = new Camera();
             Printer.Head = new PrinterHead();
             Printer.PreheatingProfiles = new PreheatingProfiles();
             Printer.MotionSettings = new MotionSettingsData();
             Printer.PrintHistory = new PrintHistory();
-            Printer.CurrentPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection);
             Printer.TouchScreen = new TouchScreen();
-            Printer.HotendTemperatures.PIDHotendValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
-            Printer.BedTemperatures.PIDBedValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
             Extruders = new List<PrinterHead>();
             Printer.Bed = new PrinterBed();
             Printers = new List<Printer>();
@@ -96,6 +102,18 @@ namespace WebUI.Data
         //    }
         //}
 
+        public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
+        {
+            var newPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection)
+            {
+                FileName = currentPrintJob.PrintingFileName,
+                TotalPrintTime = currentPrintJob.TotalPrintTime,
+                StartTimeOfPrint = currentPrintJob.StartTimeOfPrint,
+                FileSize = currentPrintJob.FileSize
+            };
+            printHistory.Insert(0, newPrintJob);
+        }
+
         public string GenerateUniquePrinterId()
         {
             Random random = new Random();
@@ -111,7 +129,7 @@ namespace WebUI.Data
 
         //public void CreatePrinterProfile()
         //{
-        //    var newPrinter = new Printer();
+        //var newPrinter = new Printer();
         //    newPrinter.Extruders = new List<PrinterHead>();
         //    newPrinter.Bed = new PrinterBed();
         //    newPrinter.Name = Printer.Name;
@@ -209,6 +227,11 @@ namespace WebUI.Data
             background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
+        public void GetFirmwareSettings()
+        {
+            background.ConnectionServiceSerial.Write("M115");
+        }
+
         public void GetBedVolume()
         {
             background.ConnectionServiceSerial.Write("M211");
@@ -237,6 +260,25 @@ namespace WebUI.Data
                 GetHotendPIDValues(message);
                 GetBedPIDValues(message);
                 GetZProbeOffsets(message);
+                GetFirmwareVersion(message);
+                GetBinaryFileTransferState(message);
+                GetAutoReportState(message);
+                GetExtruderCount(message);
+                GetEEPROMState(message);
+                GetFilamentRunoutSensorState(message);
+                GetAutoLevelState(message);
+                GetZProbeState(message);
+                GetSoftwarePowerState(message);
+                GetEmergencyParserState(message);
+                GetToggleLightsState(message);
+                GetHostActionCommandsState(message);
+                GetPromptSupportState(message);
+                GetSDCardSupportState(message);
+                GetLongFilenameSupportState(message);
+                GetCustomFirmwareUploadState(message);
+                GetExtendedM20Support(message);
+                GetThermalProtectionState(message);
+                GetBabyStepState(message);
             });
             await SetBedVolume(message);
         }
@@ -247,11 +289,11 @@ namespace WebUI.Data
             var linearUnits = input.Split('\n').Where(x => x.Contains("G21") || x.Contains("G20")).FirstOrDefault();
             if (linearUnits.Contains("G21"))
             {
-                return "milimeters";
+                return "Milimeters";
             }
             else if (linearUnits.Contains("G20"))
             {
-                return "inches";
+                return "Inches";
             }
             return null;
         }
@@ -395,6 +437,190 @@ namespace WebUI.Data
             }
         }
 
+        public void GetFirmwareVersion(string message)
+        {
+            var match = Regex.Match(message, @"FIRMWARE_NAME:([^ ]* [^ ]*)");
+            if (match.Success)
+            {
+                Printer.PrinterFirmwareVersion = match.Groups[1].Value;
+
+            }
+        }
+
+        public void GetBinaryFileTransferState(string message)
+        {
+            var match = Regex.Match(message, @"BINARY_FILE_TRANSFER:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasBinaryFileTransfer = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetAutoReportState(string message)
+        {
+            var matchPosition = Regex.Match(message, @"AUTOREPORT_POS:(\d+)");
+            if(matchPosition.Success)
+            {
+                Printer.HasAutoReportPosition = BoolOutput(int.Parse(matchPosition.Groups[1].Value));
+            }
+
+            var matchTemperature = Regex.Match(message, @"AUTOREPORT_TEMP:(\d+)");
+            if (matchTemperature.Success)
+            {
+                Printer.HasAutoReportTemperature = BoolOutput(int.Parse(matchTemperature.Groups[1].Value));
+            }
+
+            var matchSDStatus = Regex.Match(message, @"AUTOREPORT_SD_STATUS:(\d+)");
+            if (matchSDStatus.Success)
+            {
+                Printer.HasAutoReportSDStatus = BoolOutput(int.Parse(matchSDStatus.Groups[1].Value));
+            }
+        }
+
+        public void GetExtruderCount(string message)
+        {
+            var match = Regex.Match(message, @"EXTRUDER_COUNT:(\d+)");
+            if (match.Success)
+            {
+                Printer.NumberOfExtruders = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        public void GetEEPROMState(string message)
+        {
+            var match = Regex.Match(message, @"EEPROM:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasEEPROM = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetFilamentRunoutSensorState(string message)
+        {
+            var match = Regex.Match(message, @"RUNOUT:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasFilamentRunoutSensor = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetAutoLevelState(string message)
+        {
+            var match = Regex.Match(message, @"AUTOLEVEL:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasAutoBedLevel = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetZProbeState(string message)
+        {
+            var match = Regex.Match(message, @"Z_PROBE:(\d+)");
+            if (match.Success)
+            {
+                Printer.Head.ProbePresent = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetSoftwarePowerState(string message)
+        {
+            var match = Regex.Match(message, @"SOFTWARE_POWER:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasSoftwarePowerControl = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetEmergencyParserState(string message)
+        {
+            var match = Regex.Match(message, @"EMERGENCY_PARSER:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasEmergencyParser = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetToggleLightsState(string message)
+        {
+            var match = Regex.Match(message, @"TOGGLE_LIGHTS:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasToggleLights = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetHostActionCommandsState(string message)
+        {
+            var match = Regex.Match(message, @"HOST_ACTION_COMMANDS:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasHostActionCommands = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetPromptSupportState(string message)
+        {
+            var match = Regex.Match(message, @"PROMPT_SUPPORT:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasPromptSupport = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetSDCardSupportState(string message)
+        {
+            var match = Regex.Match(message, @"SDCARD:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasSDCardSupport = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetLongFilenameSupportState(string message)
+        {
+            var match = Regex.Match(message, @"LONG_FILENAME:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasLongFilenameSupport = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetCustomFirmwareUploadState(string message)
+        {
+            var match = Regex.Match(message, @"CUSTOM_FIRMWARE_UPLOAD:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasCustomFirmwareUpload = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetExtendedM20Support(string message)
+        {
+            var match = Regex.Match(message, @"EXTENDED_M20:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasExtendedM20 = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetThermalProtectionState(string message)
+        {
+            var match = Regex.Match(message, @"THERMAL_PROTECTION:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasThermalProtection = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
+        public void GetBabyStepState(string message)
+        {
+            var match = Regex.Match(message, @"BABYSTEPPING:(\d+)");
+            if (match.Success)
+            {
+                Printer.HasBabystep = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
         public async Task SetBedVolume(string input)
         {
             await Task.Run(() =>
@@ -409,7 +635,6 @@ namespace WebUI.Data
                     }
                 }
             });
-            
         }
 
         public void SetPrinterLinearUnits(bool input) => background.ConnectionServiceSerial.Write(input ? "G21" : "G20");
@@ -457,5 +682,15 @@ namespace WebUI.Data
                 _snackbar.Add("Preset added to printer", Severity.Success);
             });
         }
+
+        public bool BoolOutput(int input)
+        {
+            return input == 1 ? true : false;
+        }
+
+        public string StringOutput(bool input)
+        {
+            return input ? "Yes" : "No";
+        } 
     }
 }

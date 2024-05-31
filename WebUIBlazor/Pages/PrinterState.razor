@@ -15,12 +15,12 @@
     }
     else
     {
-        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.isBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
-            @if (background.isBusy)
+        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.IsBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
+            @if (background.IsBusy)
             {
                 <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
             }
-            @(new MarkupString(!background.isBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+            @(new MarkupString(!background.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
         </MudAlert>
     }
 }

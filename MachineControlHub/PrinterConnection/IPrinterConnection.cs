@@ -18,6 +18,8 @@
         /// </summary>
         void Connect();
 
+        void Close();
+
         /// <summary>
         /// Disconnects from the printer.
         /// </summary>
@@ -36,6 +38,10 @@
         string Read();
 
         string ReadAll();
+
+        Task<string> ReadAsync();
+
+        Task<string> ReadAllAsync();
 
         /// <summary>
         /// Retrieves a list of available printer connections.

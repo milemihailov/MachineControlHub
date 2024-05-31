@@ -106,6 +106,14 @@ namespace MachineControlHub.PrinterConnection
             }
         }
 
+        public void Close()
+        {
+            if (serialPort.IsOpen)
+            {
+                serialPort.Close();
+            }
+        }
+
 
         /// <summary>
         /// Close the serial port connection.
@@ -180,6 +188,38 @@ namespace MachineControlHub.PrinterConnection
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
                 IsConnected = false;
+                return null;
+            }
+        }
+
+        public async Task<string> ReadAsync()
+        {
+            serialPort.ReadTimeout = 5000;
+
+            try
+            {
+                string data = await Task.Run(() => serialPort.ReadLine());
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error reading from serial port: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<string> ReadAllAsync()
+        {
+            serialPort.ReadTimeout = 5000;
+
+            try
+            {
+                string data = await Task.Run(() => serialPort.ReadExisting());
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error reading from serial port: {ex.Message}");
                 return null;
             }
         }

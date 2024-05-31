@@ -1,4 +1,5 @@
-﻿namespace MachineControlHub.PrinterConnection
+﻿
+namespace MachineControlHub.PrinterConnection
 {
     public class WiFiConnection : IPrinterConnection
     {
@@ -40,6 +41,21 @@
         }
 
         bool IPrinterConnection.HasData()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ReadAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ReadAllAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Close()
         {
             throw new NotImplementedException();
         }

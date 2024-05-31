@@ -103,7 +103,7 @@
     <div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
 
         <MudTooltip Text="Refresh if some settings are missing">
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="printer.GetPrinterSettings" />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {printer.GetPrinterSettings(); printer.GetFirmwareSettings();}" />
         </MudTooltip>
         <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
     </div>
@@ -140,7 +140,7 @@
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Binary File Transfer: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasBinaryFileTransfer)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
@@ -152,163 +152,109 @@
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> EEPROM: </MudText>
-                            <MudText> </MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasEEPROM) </MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Auto Report Position: </MudText>
-                            <MudText> </MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasAutoReportPosition)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Auto Report Temperatures: </MudText>
-                            <MudText> </MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasAutoReportTemperature) </MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Auto Level: </MudText>
-                            <MudText> @printer.Printer.HasAutoBedLevel</MudText>
+                            <MudText> @printer.StringOutput(printer.Printer.HasAutoBedLevel)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Runout Sensor: </MudText>
-                            <MudText> @printer.Printer.HasFilamentRunoutSensor</MudText>
+                            <MudText> @printer.StringOutput(printer.Printer.HasFilamentRunoutSensor)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Z-Probe: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.Head.ProbePresent)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Leveling Data: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Software Power: </MudText>
-                            <MudText></MudText>
+                            <MudText Typo="Typo.subtitle2"> Software Power Control: </MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasSoftwarePowerControl)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Toggle Lights: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Case Light Brightness: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasToggleLights)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Emergency Parser: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasEmergencyParser)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Host Action Commands: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasHostActionCommands)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Prompt Support: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasPromptSupport)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> SD Card: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> SD Write: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasSDCardSupport)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Auto Report SD status: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasAutoReportSDStatus)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Long Filename: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasLongFilenameSupport)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Custom Firmware Upload: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasCustomFirmwareUpload)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Extended M20: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasExtendedM20)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Thermal Protection: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Motion Modes: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Arcs: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasThermalProtection)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Babystepping: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Chamber Temperature: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Cooler Temperature: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Meat Pack: </MudText>
-                            <MudText></MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Config Export: </MudText>
-                            <MudText></MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasBabystep)</MudText>
                         </ContainerSpaceBetween>
                     </MudPaper>
                 </MudItem>
