@@ -106,14 +106,6 @@ namespace MachineControlHub.PrinterConnection
             }
         }
 
-        public void Close()
-        {
-            if (serialPort.IsOpen)
-            {
-                serialPort.Close();
-            }
-        }
-
 
         /// <summary>
         /// Close the serial port connection.
@@ -148,11 +140,10 @@ namespace MachineControlHub.PrinterConnection
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error writing to serial port: {ex.Message}");
-                IsConnected = false;
+                //Logger.LogError($"Error writing to serial port: {ex.Message}");
+                //IsConnected = false;
             }
         }
-
 
         /// <summary>
         /// Read data from the serial port.

@@ -10,6 +10,9 @@ namespace MachineControlHub.Temps
     {
         private IPrinterConnection _printerConnection;
 
+
+        public PIDValues PIDValues { get; set; }
+
         public ChamberTemps(IPrinterConnection printerConnection)
         {
             _printerConnection = printerConnection;

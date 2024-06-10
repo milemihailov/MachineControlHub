@@ -29,6 +29,7 @@
         /// Gets or sets the length of the filament in meters.
         /// </summary>
         public double FilamentLength { get; set; }
+
     }
 
 }

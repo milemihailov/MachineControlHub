@@ -18,8 +18,6 @@
         /// </summary>
         void Connect();
 
-        void Close();
-
         /// <summary>
         /// Disconnects from the printer.
         /// </summary>

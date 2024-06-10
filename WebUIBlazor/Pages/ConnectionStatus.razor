@@ -8,10 +8,23 @@
 
 
 @code {
-
     [Parameter]
     public bool Connection { get; set; }
 
     [Parameter]
     public string SelectedPrinter { get; set; }
+
+    protected override void OnInitialized()
+    {
+        background.ConnectionStatusChanged += UpdateConnectionStatus;
+    }
+
+    private void UpdateConnectionStatus()
+    {
+        InvokeAsync(() =>
+        {
+            Connection = background.ConnectionServiceSerial.IsConnected;
+            StateHasChanged();
+        });
+    }
 }

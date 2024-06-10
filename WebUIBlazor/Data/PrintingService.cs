@@ -91,6 +91,7 @@ namespace WebUI.Data
                     printService.AbortCurrentPrint();
                     background.StopStopwatch();
                     progress = 0;
+                    FormatTotalPrintTime();
                     _isPrinting = false;
                     _printerDataServiceTest.AddPrintJobToHistory(printJob);
 
@@ -126,6 +127,12 @@ namespace WebUI.Data
             printJob.ParseStartTimeOfPrint();
         }
 
+        public void FormatTotalPrintTime()
+        {
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(_printerDataServiceTest.background.stopwatch.ElapsedMilliseconds);
+            printJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
+        }
+
         //public void ExtractPrintingSettings(string file)
         //{
         //    printJob.ParseExtractedSettingsFromPrintedFile(file);
@@ -137,7 +144,7 @@ namespace WebUI.Data
             var file = SDFiles.FirstOrDefault(f => f.FileName == input);
             if (file != default)
             {
-                printJob.PrintingFileName = file.FileName;
+                printJob.FileName = file.FileName;
                 printJob.FileSize = double.Parse(file.FileSize);
             }
         }
@@ -224,6 +231,7 @@ namespace WebUI.Data
                     _isPrinting = false;
                     background.StopStopwatch();
                     progress = 0;
+                    FormatTotalPrintTime();
                     _printerDataServiceTest.AddPrintJobToHistory(printJob);
                 }
             }

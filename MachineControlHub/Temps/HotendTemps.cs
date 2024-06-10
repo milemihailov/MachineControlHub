@@ -23,7 +23,7 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) values for controlling the hotend temperature.
         /// </summary>
-        public PIDValues PIDHotendValues { get; set; }
+        public PIDValues PIDValues { get; set; }
 
 
         public int CurrentTemp { get ; set ; }

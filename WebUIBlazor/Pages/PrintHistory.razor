@@ -28,10 +28,10 @@
                 <MudText>File size:</MudText>
                 <MudText>@Math.Round(printJob.ConvertToMB(printJob.FileSize), 2)MB</MudText>
             </ContainerSpaceBetween>
-            <MudDivider/>
-            @* <ContainerSpaceBetween>
+            <MudDivider />@*
+        <ContainerSpaceBetween>
         <MudText>End time of print: @printJob.EndTimeOfPrint</MudText>
-        </ContainerSpaceBetween> *@
+        </ContainerSpaceBetween>  *@
         </div>
 
     </div>
@@ -39,5 +39,9 @@
 }
 
 @code {
+    protected override void OnInitialized()
+    {
+        printerDataServiceTest.printHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataServiceTest.PRINT_HISTORY_PATH);
+    }
 
 }

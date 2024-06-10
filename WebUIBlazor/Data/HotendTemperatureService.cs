@@ -1,14 +1,18 @@
-﻿using MachineControlHub.Motion;
+﻿using MachineControlHub;
+using MachineControlHub.Motion;
+using MachineControlHub.PrinterConnection;
 using MachineControlHub.Temps;
 using MudBlazor;
+using WebUI.Pages;
 
 namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
-        public ITemperatures hotend ;
+        public ITemperatures hotend;
         private readonly ISnackbar _snackbar;
         private readonly BackgroundTimer _background;
+        public PIDValues PIDHotendValues { get; set; }
 
         public int currentHotendTemperature;
         public int setHotendTemperature;
@@ -19,10 +23,12 @@ namespace WebUI.Data
 
         public HotendTemperatureService(ISnackbar snackbar, BackgroundTimer background)
         {
-            this._background = background;
+            _background = background;
             hotend = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
             _snackbar = snackbar;
+            PIDHotendValues = hotend.PIDValues;
         }
+
         public void SetHotendTemperature(int setTemp)
         {
             hotend.SetTemperature(setTemp);
@@ -31,6 +37,7 @@ namespace WebUI.Data
             _lastChangeTime = DateTime.Now; // Update the timestamp
             _snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
         }
+
         public async Task ParseCurrentHotendTemperature(string input)
         {
             await Task.Run(() =>

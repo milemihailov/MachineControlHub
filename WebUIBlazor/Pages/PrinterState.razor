@@ -1,5 +1,6 @@
 ﻿@using MachineControlHub.Motion
 @using System.Text.RegularExpressions
+@inject Data.PrinterDataServiceTest PrintHandler
 @inject Data.BackgroundTimer background
 @inject Data.PrintingService printingService
 
@@ -13,16 +14,17 @@
             </MudText>
         </MudProgressLinear>
     }
-    else
-    {
-        <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.IsBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
+    @*         <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.IsBusy ? Severity.Success :  Severity.Warning)" Variant="Variant.Text">
             @if (background.IsBusy)
             {
                 <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
             }
             @(new MarkupString(!background.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
-        </MudAlert>
-    }
+        </MudAlert> *@
+
+    <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
+        <MudText Typo="Typo.h6" Color="Color.Primary">@background.Notification</MudText>
+    </MudAlert>
 }
 
 @code {
@@ -30,7 +32,6 @@
     protected override void OnInitialized()
     {
         background.BusyStatusChanged += OnBusyChanged;
-        background.SecondElapsed += OnSecondElapsed;
         background.MessageReceived += OnMessageReceived;
     }
 
@@ -39,14 +40,6 @@
         Task.Run(() =>
         {
             InvokeAsync(StateHasChanged);
-        });
-    }
-
-    public void OnSecondElapsed()
-    {
-        Task.Run(() =>
-        {
-            // background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSDStatus());
         });
     }
 
@@ -60,5 +53,6 @@
     public void Dispose()
     {
         background.BusyStatusChanged -= OnBusyChanged;
+        background.MessageReceived -= OnMessageReceived;
     }
 }

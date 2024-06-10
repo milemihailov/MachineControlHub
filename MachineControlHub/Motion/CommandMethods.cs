@@ -213,12 +213,13 @@ namespace MachineControlHub.Motion
         }
 
 
-        public static string BuildReportSDStatus()
+        public static string BuildReportSDStatus(int interval)
         {
             var reportSDStatus = new GCodeCommands
             {
                 Type = M_PREFIX,
-                Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSdPrintStatus
+                Instruction = (int)GCodeInstructionsEnums.MCommands.ReportSdPrintStatus,
+                Parameters = new List<string>() { $"S{interval}" }
             };
 
             return GCodeMethods.GCodeString(reportSDStatus);
@@ -438,6 +439,17 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(tempReport);
         }
 
+        public static string BuildAutoReportTemperaturesCommand(int interval)
+        {
+            var tempReport = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.TemperatureAutoReport,
+                Parameters = new List<string>() { $"S{interval}" }
+            };
+
+            return GCodeMethods.GCodeString(tempReport);
+        }
 
         /// <summary>
         /// Turn on one of the fans and set its speed. If no fan index is given, the print cooling fan is selected.
@@ -650,5 +662,87 @@ namespace MachineControlHub.Motion
 
         }
 
+        public static string BuildSetStartingAccelerationCommand(MotionSettingsData motion)
+        {
+            var startingAcceleration = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetStartingAcceleration,
+                Parameters = new List<string>() { $"P{motion.PrintAcceleration} ", $"R{motion.RetractAcceleration} " , $"T{motion.TravelAcceleration} " }
+            };
+
+            return GCodeMethods.GCodeString(startingAcceleration);
+        }
+
+        public static string BuildSetMaxAccelerationCommand(MotionSettingsData motion)
+        {
+            var maxAcceleration = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.PrintTravelMoveLimits,
+                Parameters = new List<string>() { motion.AxisString(MotionSettingsData.Axis.E, motion.EMaxAcceleration), $"F{motion.PlannerFrequencyLimit} ", $"S{motion.PlannerXYFrequencyMinimumSpeedPercentage} ",$"T{motion.TargetExtruder} ", motion.AxisString(MotionSettingsData.Axis.X, motion.XMaxAcceleration), motion.AxisString(MotionSettingsData.Axis.Y, motion.YMaxAcceleration), motion.AxisString(MotionSettingsData.Axis.Z, motion.ZMaxAcceleration) }
+            };
+
+            return GCodeMethods.GCodeString(maxAcceleration);
+        }
+
+        public static string BuildSetAdvancedSettingsCommand(MotionSettingsData motion)
+        {
+            var advancedSettings = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetAdvancedSettings,
+                Parameters = new List<string>() { $"B{motion.MinSegmentTime} ", $"E{motion.EMaxJerk} ", $"J{motion.JunctionDeviation} ", $"S{motion.MinPrintFeedrate} ", $"T{motion.MinTravelFeedrate} ", $"X{motion.XMaxJerk} ", $"Y{motion.YMaxJerk} ", $"Z{motion.ZMaxJerk} " }
+            };
+
+            return GCodeMethods.GCodeString(advancedSettings);
+        }
+
+        public static string BuildSetHomeOffsetsCommand(MotionSettingsData motion)
+        {
+            var homeOffsets = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
+                Parameters = new List<string>() { motion.AxisString(MotionSettingsData.Axis.X, motion.XHomeOffset), motion.AxisString(MotionSettingsData.Axis.Y, motion.YHomeOffset), motion.AxisString(MotionSettingsData.Axis.Z, motion.ZHomeOffset) }
+            };
+
+            return GCodeMethods.GCodeString(homeOffsets);
+        }
+
+        public static string BuildHostKeepAliveCommand(int interval)
+        {
+            var hostKeepAlive = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.HostKeepAlive,
+                Parameters = new List<string>() { $"S{interval}" }
+            };
+
+            return GCodeMethods.GCodeString(hostKeepAlive);
+        }
+
+        public static string BuildSetSoftwareEndstopsCommand(bool enable)
+        {
+            var softwareEndstops = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SoftwareEndstops,
+                Parameters = new List<string>() { enable ? "S1" : "S0" }
+            };
+
+            return GCodeMethods.GCodeString(softwareEndstops);
+        }
+
+        public static string BuildCheckSoftwareEndstopsCommand()
+        {
+            var checkSoftwareEndstops = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SoftwareEndstops
+            };
+
+            return GCodeMethods.GCodeString(checkSoftwareEndstops);
+        }
     }
 }

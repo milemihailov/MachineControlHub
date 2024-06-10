@@ -18,6 +18,10 @@ namespace MachineControlHub
 
         public string Id { get; set; }
 
+        public string LinearUnit { get; set; }
+
+        public string TemperatureUnit { get; set; }
+
         /// <summary>
         /// Gets or sets the model of the 3D printer.
         /// </summary>
@@ -42,6 +46,7 @@ namespace MachineControlHub
         public bool HasHostActionCommands { get; set; }
 
         public bool HasPromptSupport { get; set; }
+
         public bool HasEEPROM { get; set; }
 
         public bool HasSDCardSupport { get; set; }

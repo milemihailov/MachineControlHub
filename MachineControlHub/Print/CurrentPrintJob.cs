@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Print
@@ -26,7 +27,10 @@ namespace MachineControlHub.Print
             _connection = connection;
             PrintProgressRecords = new List<PrintProgressRecord>();
         }
+        public CurrentPrintJob()
+        {
 
+        }
         /// <summary>
         /// Gets the name of the printed file.
         /// </summary>
@@ -52,9 +56,9 @@ namespace MachineControlHub.Print
         /// <summary>
         /// Gets or sets the total print time for the job in seconds.
         /// </summary>
-        public int TotalPrintTime { get; set; }
+        public string TotalPrintTime { get; set; }
 
-
+        [JsonIgnore]
         /// <summary>
         /// Gets or sets the real-time printing speed in millimeters per second (mm/s).
         /// </summary>

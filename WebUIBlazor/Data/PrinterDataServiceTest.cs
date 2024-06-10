@@ -16,6 +16,8 @@ namespace WebUI.Data
         public const string PRINTER_DATA_PATH = "printers.json";
         public const string PREHEATING_PROFILES_PATH = "preheatingProfiles.json";
         public const string SELECTED_PRINTER_SETTINGS_PATH = "selectedPrinter.json";
+        public const string PRINT_HISTORY_PATH = "printHistory.json";
+
         const string _sTEPS_PER_UNIT_PATTERN = @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
         const string _mAX_FEEDRATES_PATTERN = @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
         const string _mAX_ACCELERATIONS_PATTERN = @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
@@ -28,13 +30,16 @@ namespace WebUI.Data
 
 
 
-        public Printer Printer;
-        public readonly ConnectionServiceSerial serialConnection;
+        public Printer Printer = new();
+        public ConnectionServiceSerial serialConnection;
+        public readonly BackgroundTimer background;
+        public readonly HotendTemperatureService HotendTemperatureService;
+        public readonly BedTemperatureService BedTemperatureService;
+        public readonly ChamberTemperatureService ChamberTemperatureService;
+        public readonly BedLevelingService BedLevelDataService;
         private readonly ISnackbar _snackbar;
 
         public bool IsConnected { get; set; }
-
-        public string selectedShape;
 
         public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
         public List<CurrentPrintJob> printHistory = new List<CurrentPrintJob>();
@@ -42,27 +47,23 @@ namespace WebUI.Data
         public List<PrinterHead> Extruders { get; set; }
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
         public PrinterBed Bed { get; set; }
-        private readonly BackgroundTimer background;
 
         public Printer SelectedPrinter;
-        public bool HasCamera { get; set; }
-        public string linearUnits = "";
-        public string temperatureUnits = "";
 
-        public PrinterDataServiceTest(ISnackbar snackbar, BackgroundTimer background)
+        public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar)
         {
             this.background = background;
-            Printer = new Printer();
             _snackbar = snackbar;
+            Printer = new Printer();
 
             if(background.ConnectionServiceSerial != null)
             {
-                Printer.HotendTemperatures = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
-                Printer.BedTemperatures = new BedTemps(background.ConnectionServiceSerial.printerConnection);
-                Printer.ChamberTemperatures = new ChamberTemps(background.ConnectionServiceSerial.printerConnection);
-                Printer.HotendTemperatures.PIDHotendValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
-                Printer.BedTemperatures.PIDBedValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
-                Printer.CurrentPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection);
+                HotendTemperatureService = new HotendTemperatureService(snackbar, background);
+                BedTemperatureService = new BedTemperatureService(snackbar, background);
+                ChamberTemperatureService = new ChamberTemperatureService(snackbar, background);
+                HotendTemperatureService.PIDHotendValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
+                BedTemperatureService.PIDBedValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
+                BedLevelDataService = new BedLevelingService();
             }
 
             Printer.Camera = new Camera();
@@ -78,17 +79,17 @@ namespace WebUI.Data
             background.MessageReceived += (message) => _ = OnUpdateSettings(message);
         }
 
-        public void ChoosePrinter(Printer printer)
-        {
-            SelectedPrinter = printer;
-            SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
-        }
+        //public void ChoosePrinter(Printer printer)
+        //{
+        //    SelectedPrinter = printer;
+        //    SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
+        //}
 
-        public void RemovePrinter(Printer printer)
-        {
-            Printers.Remove(printer);
-            SavePrinterData(PRINTER_DATA_PATH, Printers);
-        }
+        //public void RemovePrinter(Printer printer)
+        //{
+        //    Printers.Remove(printer);
+        //    SavePrinterData(PRINTER_DATA_PATH, Printers);
+        //}
 
         //public void UpdateExtruders(int newValue)
         //{
@@ -106,26 +107,27 @@ namespace WebUI.Data
         {
             var newPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection)
             {
-                FileName = currentPrintJob.PrintingFileName,
+                FileName = currentPrintJob.FileName,
                 TotalPrintTime = currentPrintJob.TotalPrintTime,
                 StartTimeOfPrint = currentPrintJob.StartTimeOfPrint,
                 FileSize = currentPrintJob.FileSize
             };
             printHistory.Insert(0, newPrintJob);
+            SavePrinterData(PRINT_HISTORY_PATH, printHistory);
         }
 
-        public string GenerateUniquePrinterId()
-        {
-            Random random = new Random();
-            string newId;
-            do
-            {
-                newId = $"#{random.Next(1, 10000)}";
-            }
-            while (Printers.Any(p => p.Id == newId));
+        //public string GenerateUniquePrinterId()
+        //{
+        //    Random random = new Random();
+        //    string newId;
+        //    do
+        //    {
+        //        newId = $"#{random.Next(1, 10000)}";
+        //    }
+        //    while (Printers.Any(p => p.Id == newId));
 
-            return newId;
-        }
+        //    return newId;
+        //}
 
         //public void CreatePrinterProfile()
         //{
@@ -243,11 +245,11 @@ namespace WebUI.Data
             {
                 if (message.Contains("G21") || message.Contains("G20"))
                 {
-                    linearUnits = GetPrinterLinearUnits(message);
+                    Printer.LinearUnit = GetPrinterLinearUnits(message);
                 }
                 if (message.Contains("M149"))
                 {
-                    temperatureUnits = GetTemperatureUnits(message);
+                    Printer.TemperatureUnit = GetTemperatureUnits(message);
                 }
 
                 GetStepsPerUnit(message);
@@ -376,7 +378,7 @@ namespace WebUI.Data
             if (match.Success)
             {
                 Printer.MotionSettings.MinSegmentTime = (int)double.Parse(match.Groups[1].Value);
-                Printer.MotionSettings.MinFeedrate = (int)double.Parse(match.Groups[2].Value);
+                Printer.MotionSettings.MinPrintFeedrate = (int)double.Parse(match.Groups[2].Value);
                 Printer.MotionSettings.MinTravelFeedrate = (int)double.Parse(match.Groups[3].Value);
                 Printer.MotionSettings.JunctionDeviation = double.Parse(match.Groups[4].Value);
             }
@@ -409,9 +411,9 @@ namespace WebUI.Data
             var match = Regex.Match(input, PIDValues.PARSE_HOTEND_PID_PATTERN);
             if (match.Success)
             {
-                Printer.HotendTemperatures.PIDHotendValues.Proportional = double.Parse(match.Groups[1].Value);
-                Printer.HotendTemperatures.PIDHotendValues.Integral = double.Parse(match.Groups[2].Value);
-                Printer.HotendTemperatures.PIDHotendValues.Derivative = double.Parse(match.Groups[3].Value);
+                HotendTemperatureService.PIDHotendValues.Proportional = double.Parse(match.Groups[1].Value);
+                HotendTemperatureService.PIDHotendValues.Integral = double.Parse(match.Groups[2].Value);
+                HotendTemperatureService.PIDHotendValues.Derivative = double.Parse(match.Groups[3].Value);
             }
         }
 
@@ -420,9 +422,9 @@ namespace WebUI.Data
             var match = Regex.Match(input, PIDValues.PARSE_BED_PID_PATTERN);
             if (match.Success)
             {
-                Printer.BedTemperatures.PIDBedValues.Proportional = double.Parse(match.Groups[1].Value);
-                Printer.BedTemperatures.PIDBedValues.Integral = double.Parse(match.Groups[2].Value);
-                Printer.BedTemperatures.PIDBedValues.Derivative = double.Parse(match.Groups[3].Value);
+                BedTemperatureService.PIDBedValues.Proportional = double.Parse(match.Groups[1].Value);
+                BedTemperatureService.PIDBedValues.Integral = double.Parse(match.Groups[2].Value);
+                BedTemperatureService.PIDBedValues.Derivative = double.Parse(match.Groups[3].Value);
             }
         }
 
@@ -459,7 +461,7 @@ namespace WebUI.Data
         public void GetAutoReportState(string message)
         {
             var matchPosition = Regex.Match(message, @"AUTOREPORT_POS:(\d+)");
-            if(matchPosition.Success)
+            if (matchPosition.Success)
             {
                 Printer.HasAutoReportPosition = BoolOutput(int.Parse(matchPosition.Groups[1].Value));
             }
@@ -637,9 +639,13 @@ namespace WebUI.Data
             });
         }
 
-        public void SetPrinterLinearUnits(bool input) => background.ConnectionServiceSerial.Write(input ? "G21" : "G20");
-
-        public void SetMaximumFeedrates() => background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+        public void SetMaximumFeedrates()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+            }
+        }
 
         public void SetStepsPerUnit()
         {
@@ -649,6 +655,40 @@ namespace WebUI.Data
 
             }
         }
+
+        public void SetStartingAccelerations()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStartingAccelerationCommand(Printer.MotionSettings));
+            }
+        }
+
+        public void SetMaximumAccelerations()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetMaxAccelerationCommand(Printer.MotionSettings));
+            }
+        }
+
+        public void SetAdvancedSettings()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetAdvancedSettingsCommand(Printer.MotionSettings));
+            }
+        }
+
+        public void SetOffsetSettings()
+        {
+            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHomeOffsetsCommand(Printer.MotionSettings));
+            }
+        }
+
+
         public void SetBedLevelingOn()
         {
             if (background.ConnectionServiceSerial.printerConnection.IsConnected)
@@ -691,6 +731,6 @@ namespace WebUI.Data
         public string StringOutput(bool input)
         {
             return input ? "Yes" : "No";
-        } 
+        }
     }
 }

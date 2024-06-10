@@ -9,9 +9,17 @@
     {
         public enum Axis { X, Y, Z, E }
 
-        public int? MinFeedrate { get; set; }
-
         public int? MinTravelFeedrate { get; set; }
+
+        public int? MinPrintFeedrate { get; set; }
+
+        public int? XMaxJerk { get; set; }
+
+        public int? YMaxJerk { get; set; }
+
+        public int? ZMaxJerk { get; set; }
+
+        public int? EMaxJerk { get; set; }
 
         public int? MinSegmentTime { get; set; }
 
@@ -94,7 +102,6 @@
         /// </summary>
         public int? TravelAcceleration { get; set; }
 
-
         /// <summary>
         /// Gets or sets the number of steps per unit.
         /// </summary>
@@ -156,6 +163,11 @@
         /// </summary>
         public double ZHomePos { get; set; }
 
+        public int? PlannerFrequencyLimit { get; set; }
+
+        public int? PlannerXYFrequencyMinimumSpeedPercentage { get; set; }
+
+        public int? TargetExtruder { get; set; }
 
         /// Generates a G-code string for the feed rate if the value is not null.
         /// </summary>

@@ -25,11 +25,6 @@ namespace WebUI.Data
             printerConnection.Connect();
         }
 
-        public void Close()
-        {
-            printerConnection.Close();
-        }
-
         public void Initialize(string connectionString)
         {
             printerConnection.Initialize(connectionString);

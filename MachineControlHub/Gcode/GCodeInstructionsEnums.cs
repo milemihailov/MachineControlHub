@@ -419,6 +419,8 @@
             /// </summary>
             SetAutoRetract,
 
+            SoftwareEndstops = 211,
+
             /// <summary>
             /// Sets hotend offsets.
             /// </summary>

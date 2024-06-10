@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace WebUI.Data
 {
@@ -15,16 +16,23 @@ namespace WebUI.Data
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
 
         public CancellationTokenSource _cts = new();
+        public Stopwatch stopwatch = new Stopwatch();
+
+        public List<string> ConnectionsHistory = new List<string>();
+        public PrinterDataServiceTest PrinterDataService;
 
         public event Action SecondElapsed;
         public event Action FiveSecondElapsed;
         public event Action<string> MessageReceived;
         public event Action BusyStatusChanged;
+        public event Action ConnectionStatusChanged;
 
         public string Message { get; set; }
+        public string Notification { get; set; }
 
         [Parameter]
         public bool IsBusy { get; set; }
+
         BackgroundTimer()
         {
             ConnectionServiceSerial = new ConnectionServiceSerial();
@@ -44,6 +52,14 @@ namespace WebUI.Data
             }
         }
 
+        public void SavePortName()
+        {
+            if (!ConnectionsHistory.Contains(PrinterDataService.serialConnection.portName))
+            {
+                ConnectionsHistory.Add(PrinterDataService.serialConnection.portName);
+            }
+        }
+
         public void StartTimer()
         {
             _ = DoWorkAsync();
@@ -53,20 +69,22 @@ namespace WebUI.Data
         {
             _cts.Cancel();
         }
-        public Stopwatch stopwatch = new Stopwatch();
+
 
         public async Task DoWorkAsync()
         {
-            //foreach (var p in Data.PrinterDataServiceTest.Printers)
+            //foreach (var p in PrinterDataServiceTest.Printers)
             //{
             //    Console.WriteLine(p);
             //}
+
             int i = 0;
+            DateTime lastDataReceivedTime = DateTime.Now;
+
             try
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
-
                     i++;
                     if (i % 100 == 0 && ConnectionServiceSerial.IsConnected)
                     {
@@ -137,6 +155,35 @@ namespace WebUI.Data
         public void ResetStopwatch()
         {
             stopwatch.Reset();
+        }
+
+        public void ParseNotifications(string data)
+        {
+            string patternNotification = @"//action:notification\s*(.*)";
+            string patternPrompt = @"//action:prompt\s*(.*)";
+
+            if (data.Contains("//action:notification"))
+            {
+                Match match = Regex.Match(data, patternNotification);
+                if (match.Success)
+                {
+                    string result = match.Groups[1].Value;
+                    Notification = result;
+                    Console.WriteLine(result);
+                }
+            }
+
+
+            if (data.Contains("//action:prompt"))
+            {
+                Match match = Regex.Match(data, patternPrompt);
+                if (match.Success)
+                {
+                    string result = match.Groups[1].Value;
+                    //Notification = result;
+                    Console.WriteLine(result);
+                }
+            }
         }
 
     }

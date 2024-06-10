@@ -14,6 +14,7 @@ namespace MachineControlHub.Temps
 
         private IPrinterConnection _connection;
 
+        public PIDValues PIDValues { get; set; }
         public BedTemps(IPrinterConnection connection)
         {
             _connection = connection;
@@ -22,7 +23,7 @@ namespace MachineControlHub.Temps
         /// <summary>
         /// Gets or sets the PID (Proportional-Integral-Derivative) control values for the bed temperature.
         /// </summary>
-        public PIDValues PIDBedValues { get; set; }
+        //public PIDValues PIDBedValues { get; set; }
 
         public int CurrentTemp { get; set; }
         public int MaxTemp { get; set; }

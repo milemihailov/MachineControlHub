@@ -1,15 +1,14 @@
 ﻿@page "/print"
-@inject Data.PrintingService print
-@inject Data.BedLevelingService levelBed
+@inject Data.PrintingService PrintManager
+@inject Data.PrinterDataServiceTest PrinterDataHandler
 @inject NavigationManager MyNavigationManager
-@inject Data.HotendTemperatureService hotend
-@inject Data.BedTemperatureService bed
-@inject Data.ChamberTemperatureService chamber
 @inject Data.BackgroundTimer background
-@inject Data.PrinterDataServiceTest printer
+@inject Data.BedLevelingService levelBed
+
 @inject ISnackbar Snackbar
 
 @implements IDisposable
+
 @using MachineControlHub.Temps
 @using System.Globalization
 @using Plotly.Blazor.Interop
@@ -30,21 +29,21 @@
         <!-- Container for controlling print operations -->
         <ContainerSpaceBetween>
             <!-- Button to start printing -->
-            @if (print._isPrinting)
+            @if (PrintManager._isPrinting)
             {
-                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.ConfirmStartAsync">Start</MudButton>
+                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.ConfirmStartAsync">Start</MudButton>
             }
             else
             {
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.ConfirmStartAsync">Start</MudButton>
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.ConfirmStartAsync">Start</MudButton>
 
             }
             <!-- Button to pause printing -->
-            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.PausePrint">Pause</MudButton>
+            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.PausePrint">Pause</MudButton>
             <!-- Button to resume printing -->
-            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.ResumePrint">Resume</MudButton>
+            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.ResumePrint">Resume</MudButton>
             <!-- Button to stop printing -->
-            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="print.StopPrint">Stop</MudButton>
+            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.StopPrint">Stop</MudButton>
         </ContainerSpaceBetween>
 
         <MudDivider Class="pt-5" />
@@ -69,18 +68,18 @@
             <!-- MudExpansionPanel for displaying uploaded files -->
             <MudItem xs="12" md="8" lg="8">
                 <MudExpansionPanel Text="Uploaded Files">
-                    @foreach (var file in print.uploadedFiles)
+                    @foreach (var file in PrintManager.uploadedFiles)
                     {
                         <MudListItem>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <!-- Displaying file name -->
                                 <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
                                 <!-- Displaying file size -->
-                                <MudText Typo="Typo.overline">@Math.Round(print.printJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                                <MudText Typo="Typo.overline">@Math.Round(PrintManager.printJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
                                 <!-- Progress indicator -->
-                                <MudProgressCircular Color="Color.Default" Indeterminate=@print.isTransferring />
+                                <MudProgressCircular Color="Color.Default" Indeterminate=@PrintManager.isTransferring />
                                 <!-- Button to start adding file to media -->
-                                <MudButton OnClick="() => print.WriteFileToPort(print.chosenPort,file.FileName)">Add to media</MudButton>
+                                <MudButton OnClick="() => PrintManager.WriteFileToPort(PrintManager.chosenPort,file.FileName)">Add to media</MudButton>
                             </div>
                         </MudListItem>
                     }
@@ -92,24 +91,24 @@
         <MudGrid Justify="Justify.SpaceAround">
             <MudItem xs="6" lg="6" Class="px-0">
                 <!-- Button to release media -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="print.ReleaseMedia">Release Media</MudButton>
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="PrintManager.ReleaseMedia">Release Media</MudButton>
             </MudItem>
             <MudItem xs="6" lg="6" Class="px-0">
                 <!-- Button to attach media -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="print.AttachMedia">Attach Media</MudButton>
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="PrintManager.AttachMedia">Attach Media</MudButton>
             </MudItem>
         </MudGrid>
 
         <!-- Select dropdown for choosing media -->
-        @if (print.PortsAvailable != null)
+        @if (PrintManager.PortsAvailable != null)
         {
-            <MudSelect Label="Select Media" T="string" @bind-Value="print.chosenPort" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                @foreach (var port in print.PortsAvailable)
+            <MudSelect Label="Select Media" T="string" @bind-Value="PrintManager.chosenPort" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var port in PrintManager.PortsAvailable)
                 {
                     <MudSelectItem Value="@port.DriveName">
                         <div style="display: flex; justify-content: space-between;">
                             <MudText> @port.DriveName @port.VolumeLabel </MudText>
-                            @if (print.chosenPort == port.DriveName)
+                            @if (PrintManager.chosenPort == port.DriveName)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                             }
@@ -119,23 +118,25 @@
             </MudSelect>
         }
 
-        <MudSelect @bind-Value="@print.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-            @if (background.ConnectionServiceSerial.IsConnected)
-            {
-                @if (print.SDFiles != null)
+        @if (background.ConnectionServiceSerial.IsConnected)
+        {
+            <MudSelect @bind-Value="@PrintManager.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+
+                @if (PrintManager.SDFiles != null)
                 {
-                    @foreach (var file in print.SDFiles)
+                    @foreach (var file in PrintManager.SDFiles)
                     {
                         <MudSelectItem Value="@file.FileName">
                             <div style="display: flex; justify-content: space-around;">
                                 <span>@file.FileName</span>
-                                <span>@($"{Math.Round(print.printJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+                                <span>@($"{Math.Round(PrintManager.printJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
                             </div>
                         </MudSelectItem>
                     }
                 }
-            }
-        </MudSelect>
+
+            </MudSelect>
+        }
 
 
 
@@ -143,11 +144,11 @@
         <div>
             <ContainerSpaceBetween Class="pt-8">
                 <MudText>File printing:</MudText>
-                <MudText><strong>@print.printJob.PrintingFileName</strong></MudText>
+                <MudText><strong>@PrintManager.printJob.FileName</strong></MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Estimated print time:</MudText>
-                <MudText>@print.estimatedTime</MudText>
+                <MudText>@PrintManager.estimatedTime</MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Elapsed print time:</MudText>
@@ -157,19 +158,19 @@
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Start time:</MudText>
-                <MudText><strong>@print.printJob.FormattedStartTime</strong></MudText>
+                <MudText><strong>@PrintManager.printJob.FormattedStartTime</strong></MudText>
             </ContainerSpaceBetween>
 
             <ContainerSpaceBetween>
                 <MudText>File Size:</MudText>
-                <MudText><strong>@Math.Round(print.printJob.ConvertToMB(print.printJob.FileSize), 2)MB</strong></MudText>
+                <MudText><strong>@Math.Round(PrintManager.printJob.ConvertToMB(PrintManager.printJob.FileSize), 2)MB</strong></MudText>
             </ContainerSpaceBetween>
-            @if (print._isPrinting)
+            @if (PrintManager._isPrinting)
             {
                 <ContainerSpaceBetween>
-                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="print.progress" Class="pb-9">
+                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrintManager.progress" Class="pb-9">
                         <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-                            <b> @Math.Round((print.printJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((print.printJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+                            <b> @Math.Round((PrintManager.printJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((PrintManager.printJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
                         </MudText>
                     </MudProgressLinear>
                 </ContainerSpaceBetween>
@@ -188,26 +189,26 @@
                         <!-- Container with text for current hotend temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Hotend Temperature:</MudText>
-                            <MudText Color="@(hotend.currentHotendTemperature >= @hotend.targetHotendTemperature - 3 && hotend.currentHotendTemperature <= @hotend.targetHotendTemperature + 3 ? Color.Success : Color.Secondary)">  @hotend.currentHotendTemperature</MudText>
+                            <MudText Color="@(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature >= @PrinterDataHandler.HotendTemperatureService.targetHotendTemperature - 3 && PrinterDataHandler.HotendTemperatureService.currentHotendTemperature <= @PrinterDataHandler.HotendTemperatureService.targetHotendTemperature + 3 ? Color.Success : Color.Secondary)">  @PrinterDataHandler.HotendTemperatureService.currentHotendTemperature</MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target hotend temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Hotend Temperature:</MudText>
-                            <MudText Color="Color.Success">@hotend.targetHotendTemperature</MudText>
+                            <MudText Color="Color.Success">@PrinterDataHandler.HotendTemperatureService.targetHotendTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <!-- MudNumericField for setting hotend temperature -->
                             <MudItem xs="12" sm="6" md="12">
-                                <MudNumericField @bind-Value="hotend.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="PrinterDataHandler.HotendTemperatureService.setHotendTemperature" Label="Set Hotend Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set hotend temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.SetHotendTemperature(hotend.setHotendTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.HotendTemperatureService.SetHotendTemperature(PrinterDataHandler.HotendTemperatureService.setHotendTemperature)">Set Temperature</MudButton>
                                     <!-- Button to turn off hotend temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => hotend.SetHotendTemperature(0)">Turn Off</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => PrinterDataHandler.HotendTemperatureService.SetHotendTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
                             </MudItem>
                         </MudGrid>
@@ -220,26 +221,26 @@
                         <!-- Container with text for current bed temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Bed Temperature:</MudText>
-                            <MudText>@bed.currentBedTemperature</MudText>
+                            <MudText>@PrinterDataHandler.BedTemperatureService.currentBedTemperature</MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target bed temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Bed Temperature:</MudText>
-                            <MudText>@bed.targetBedTemperature</MudText>
+                            <MudText>@PrinterDataHandler.BedTemperatureService.targetBedTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting bed temperature -->
-                                <MudNumericField @bind-Value="bed.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="PrinterDataHandler.BedTemperatureService.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => bed.SetBedTemperature(bed.setBedTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.BedTemperatureService.SetBedTemperature(PrinterDataHandler.BedTemperatureService.setBedTemperature)">Set Temperature</MudButton>
                                     <!-- Button to turn off bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => bed.SetBedTemperature(0)">Turn Off</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => PrinterDataHandler.BedTemperatureService.SetBedTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
                             </MudItem>
                         </MudGrid>
@@ -252,26 +253,26 @@
                         <!-- Container with text for current chamber temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Chamber Temperature:</MudText>
-                            <MudText>@chamber.currentChamberTemperature</MudText>
+                            <MudText>@PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature</MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target chamber temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Chamber Temperature:</MudText>
-                            <MudText>@chamber.targetChamberTemperature</MudText>
+                            <MudText>@PrinterDataHandler.ChamberTemperatureService.targetChamberTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting chamber temperature -->
-                                <MudNumericField @bind-Value="chamber.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="PrinterDataHandler.ChamberTemperatureService.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => chamber.SetChamberTemperature(chamber.setChamberTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.ChamberTemperatureService.SetChamberTemperature(PrinterDataHandler.ChamberTemperatureService.setChamberTemperature)">Set Temperature</MudButton>
                                     <!-- Button to turn off chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => chamber.SetChamberTemperature(0)">Turn Off</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => PrinterDataHandler.ChamberTemperatureService.SetChamberTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
                             </MudItem>
                         </MudGrid>
@@ -282,22 +283,22 @@
                 <MudGrid>
                     <!-- Button to change filament -->
                     <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.ChangeFilament()">Change Filament</MudButton>
+                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.HotendTemperatureService.ChangeFilament()">Change Filament</MudButton>
                     </MudItem>
                     <!-- Button to load filament -->
                     <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.LoadFilament()">Load Filament</MudButton>
+                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.HotendTemperatureService.LoadFilament()">Load Filament</MudButton>
                     </MudItem>
                     <!-- Button to unload filament -->
                     <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => hotend.UnloadFilament()">Unload Filament</MudButton>
+                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.HotendTemperatureService.UnloadFilament()">Unload Filament</MudButton>
                     </MudItem>
                     <MudDivider Class="pt-5" />
                 </MudGrid>
 
                 <!-- Preheating Profiles -------------------------------------------------------------->
                 <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)" EnableSwipeGesture="true" Elevation="1">
-                    @foreach (var profile in printer.preheatingProfiles)
+                    @foreach (var profile in PrinterDataHandler.preheatingProfiles)
                     {
                         <!-- MudCarouselItem to display a preheating profile -->
                         <MudCarouselItem Transition="MudBlazor.Transition.Slide" Color="@Color.Surface">
@@ -318,9 +319,9 @@
                             <div Style="display: flex; justify-content: center;" class="pt-2">
                                 <!-- Button to start preheating -->
                                 @* <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton> *@
-                                <MudIconButton Icon="@Icons.Material.Filled.Whatshot" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Whatshot" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => PrinterDataHandler.StartPreheating(profile)" />
                                 <!-- Button to delete preheating profile -->
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => printer.DeletePreheatingProfile(profile)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
                             </div>
                         </MudCarouselItem>
                     }
@@ -341,12 +342,12 @@
             <!-- Grid item containing the Calibrate Bed button -->
             <MudItem xs="12" sm="12" md="12" lg="12" Class="pt-0 mt-0">
                 <!-- Check if printing is not in progress -->
-                @if (!print._isPrinting)
+                @if (!PrintManager._isPrinting)
                 {
                     <!-- Button to initiate bed calibration -->
-                    <MudButton FullWidth="true" Disabled="@print._processing" OnClick="print.CalibrateBed" Variant="Variant.Filled" Color="Color.Tertiary">
+                    <MudButton FullWidth="true" Disabled="@PrintManager._processing" OnClick="PrintManager.CalibrateBed" Variant="Variant.Filled" Color="Color.Tertiary">
                         <!-- Show a progress indicator and text when processing -->
-                        @if (print._processing)
+                        @if (PrintManager._processing)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
                             <MudText Class="ms-2">Measuring Bed</MudText>
@@ -367,12 +368,12 @@
         <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
             <!-- MudChart component displaying a line chart -->
             <MudChart ChartType="ChartType.Line"
-                      ChartSeries="@print.Series"
-                      @bind-SelectedIndex="print.Index"
-                      XAxisLabels="@print.XAxisLabels"
+                      ChartSeries="@PrintManager.Series"
+                      @bind-SelectedIndex="PrintManager.Index"
+                      XAxisLabels="@PrintManager.XAxisLabels"
                       Width="100%"
                       Height="350px"
-                      ChartOptions="print.Options" />
+                      ChartOptions="PrintManager.Options" />
         </div>
     </MudItem>
 
@@ -435,13 +436,13 @@
                 }
             };
         // Load preheating profiles from the specified path
-        printer.preheatingProfiles = printer.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
+        PrinterDataHandler.preheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
 
         // Load the selected printer settings from the specified path
-        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
+        PrinterDataHandler.SelectedPrinter = PrinterDataHandler.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
 
         // Load the bed mesh CSV data from the specified path
-        levelBed.CSVData = printer.LoadPrinterData<string>("meshData.json");
+        PrinterDataHandler.BedLevelDataService.CSVData = PrinterDataHandler.LoadPrinterData<string>("meshData.json");
     }
 
     /// <summary>
@@ -477,7 +478,7 @@
         if (message.Contains("End"))
         {
             sdFiles = string.Join("\n", fileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
-            print.ListSDFiles(sdFiles);
+            PrintManager.ListSDFiles(sdFiles);
             fileMessage = "";
         }
 
@@ -490,10 +491,10 @@
             calibrateMessage += message;
             if (message.Contains("X:"))
             {
-                levelBed.CSVData = "";
-                levelBed.CSVData = levelBed.bedData.GetGrid(calibrateMessage);
-                levelBed.meshData = levelBed.GetSurfaceData();
-                print._processing = false;
+                PrinterDataHandler.BedLevelDataService.CSVData = "";
+                PrinterDataHandler.BedLevelDataService.CSVData = PrinterDataHandler.BedLevelDataService.bedData.GetGrid(calibrateMessage);
+                PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
+                PrintManager._processing = false;
                 fileMessage = "";
                 calibrateMessage = "";
 
@@ -503,15 +504,15 @@
                     File.Delete("meshData.json");
                 }
                 // save the new bed leveling data
-                printer.SavePrinterData("meshData.json", levelBed.CSVData);
+                PrinterDataHandler.SavePrinterData("meshData.json", PrinterDataHandler.BedLevelDataService.CSVData);
                 LoadPlotlyData();
                 MyNavigationManager.NavigateTo("/print", true);
             }
         }
 
         // parse the current hotend and bed temperatures
-        await hotend.ParseCurrentHotendTemperature(message);
-        await bed.ParseCurrentBedTemperature(message);
+        await PrinterDataHandler.HotendTemperatureService.ParseCurrentHotendTemperature(message);
+        await PrinterDataHandler.BedTemperatureService.ParseCurrentBedTemperature(message);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -526,7 +527,7 @@
             Task.Run(async () =>
             {
                 // If automatic temperature reporting is not enabled, request temperature data
-                if (!printer.Printer.HasAutoReportTemperature)
+                if (!PrinterDataHandler.Printer.HasAutoReportTemperature)
                 {
                     background.ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
                 }
@@ -540,20 +541,20 @@
                 }
 
                 // Add the current temperature data to the graph
-                Data.PrintingService.hotendGraph.Add(hotend.currentHotendTemperature);
-                Data.PrintingService.bedGraph.Add(bed.currentBedTemperature);
+                Data.PrintingService.hotendGraph.Add(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature);
+                Data.PrintingService.bedGraph.Add(PrinterDataHandler.BedTemperatureService.currentBedTemperature);
 
                 // Update the graph data with the latest values
-                print.UpdateGraphData();
+                PrintManager.UpdateGraphData();
 
                 // Asynchronously get the status of the drives
-                await Task.Run(() => print.GetDrives());
+                await Task.Run(() => PrintManager.GetDrives());
 
                 // If printing is in progress, request print time elapsed
-                if (print._isPrinting)
+                if (PrintManager._isPrinting)
                 {
                     // background.ConnectionServiceSerial.Write("M31");
-                    await print.DisplayEstimatedTimeRemaining();
+                    await PrintManager.DisplayEstimatedTimeRemaining();
                 }
                 await InvokeAsync(StateHasChanged);
 
@@ -569,14 +570,14 @@
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         // Read the file's content into the print.file variable
-        print.file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        PrintManager.file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
 
         // Get the file name and size from the event arguments
         var fileName = e.File.Name;
         var fileSize = e.File.Size;
 
         // Add the file's information to the list of uploaded files
-        print.uploadedFiles.Add((fileName, print.file, fileSize));
+        PrintManager.uploadedFiles.Add((fileName, PrintManager.file, fileSize));
 
         // Extract the printing settings from the file
         // print.ExtractPrintingSettings(print.file);
@@ -589,22 +590,22 @@
     private void LoadPlotlyData()
     {
         // Check if there is CSV data to process
-        if (levelBed.CSVData != null)
+        if (PrinterDataHandler.BedLevelDataService.CSVData != null)
         {
             // Get the surface data from the CSV
-            levelBed.meshData = levelBed.GetSurfaceData();
+            PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
 
             Task.Run(async () =>
             {
                 // Iterate over each trace in the mesh data
-                foreach (var trace in await levelBed.meshData)
+                foreach (var trace in await PrinterDataHandler.BedLevelDataService.meshData)
                 {
                     // Add the trace to the chart asynchronously and delay briefly between each addition
                     await InvokeAsync(async () => await chart.AddTrace(trace));
                     await Task.Delay(100);
                 }
 
-                levelBed._isInitialized = true;
+                PrinterDataHandler.BedLevelDataService._isInitialized = true;
             });
         }
     }

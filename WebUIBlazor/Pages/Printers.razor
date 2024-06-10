@@ -2,7 +2,7 @@
 @inject Data.PrinterDataServiceTest printer
 @inject Data.BackgroundTimer background
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.IsConnected" />
+<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="printer.serialConnection.IsConnected" />
 
 <MudCard>
     <MudExpansionPanels MultiExpansion="true">
@@ -55,7 +55,7 @@
                     }
 
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => ChooseAndCollapse(p)">Select</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.RemovePrinter(p)">Delete Profile</MudButton>
+                    @* <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.RemovePrinter(p)">Delete Profile</MudButton> *@
 
                 </MudList>
             </MudExpansionPanel>
@@ -80,7 +80,7 @@
 
     private void ChooseAndCollapse(MachineControlHub.Printer p)
     {
-        printer.ChoosePrinter(p);
+        // printer.ChoosePrinter(p);
         PanelRefs[p].Collapse(false);
     }
 }

@@ -54,10 +54,5 @@ namespace MachineControlHub.PrinterConnection
         {
             throw new NotImplementedException();
         }
-
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
