@@ -36,6 +36,7 @@ namespace WebUI.Data
         BackgroundTimer()
         {
             ConnectionServiceSerial = new ConnectionServiceSerial();
+
             StartTimer();
         }
 
@@ -54,9 +55,9 @@ namespace WebUI.Data
 
         public void SavePortName()
         {
-            if (!ConnectionsHistory.Contains(PrinterDataService.serialConnection.portName))
+            if (!ConnectionsHistory.Contains(ConnectionServiceSerial.portName))
             {
-                ConnectionsHistory.Add(PrinterDataService.serialConnection.portName);
+                ConnectionsHistory.Add(ConnectionServiceSerial.portName);
             }
         }
 
@@ -122,6 +123,8 @@ namespace WebUI.Data
                         {
                             Message = FilterData(echoMessage);
                         }
+
+                        ParseNotifications(Message);
 
                         MessageReceived?.Invoke(Message);
                         Console.WriteLine(Message);

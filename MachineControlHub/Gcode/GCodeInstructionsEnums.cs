@@ -67,6 +67,8 @@
             /// </summary>
             SingleZProbe,
 
+            ZSteppersAutoAlignment = 34,
+
             /// <summary>
             /// Command to save the current position.
             /// </summary>

@@ -32,7 +32,7 @@ namespace WebUI.Data
 
         public Printer Printer = new();
         public ConnectionServiceSerial serialConnection;
-        public readonly BackgroundTimer background;
+        public readonly BackgroundTimer Background;
         public readonly HotendTemperatureService HotendTemperatureService;
         public readonly BedTemperatureService BedTemperatureService;
         public readonly ChamberTemperatureService ChamberTemperatureService;
@@ -52,11 +52,10 @@ namespace WebUI.Data
 
         public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar)
         {
-            this.background = background;
+            this.Background = background;
             _snackbar = snackbar;
             Printer = new Printer();
-
-            if(background.ConnectionServiceSerial != null)
+            if (background.ConnectionServiceSerial != null)
             {
                 HotendTemperatureService = new HotendTemperatureService(snackbar, background);
                 BedTemperatureService = new BedTemperatureService(snackbar, background);
@@ -103,9 +102,17 @@ namespace WebUI.Data
         //    }
         //}
 
+        public void AddMe()
+        {
+            foreach (var connection in Background.ConnectionsHistory)
+            {
+                Console.WriteLine(connection);
+            }
+        }
+
         public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
         {
-            var newPrintJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection)
+            var newPrintJob = new CurrentPrintJob(Background.ConnectionServiceSerial.printerConnection)
             {
                 FileName = currentPrintJob.FileName,
                 TotalPrintTime = currentPrintJob.TotalPrintTime,
@@ -174,9 +181,9 @@ namespace WebUI.Data
 
         public void StartPreheating(PreheatingProfiles profile)
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
+            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
+            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
+            Background.ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
             _snackbar.Add("Preheating Started", Severity.Success);
         }
 
@@ -189,7 +196,7 @@ namespace WebUI.Data
 
         public void SaveToEEPROM()
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
+            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
         public void SavePrinterData<T>(string filePath, List<T> list)
@@ -226,17 +233,17 @@ namespace WebUI.Data
 
         public void GetPrinterSettings()
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
+            Background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
         public void GetFirmwareSettings()
         {
-            background.ConnectionServiceSerial.Write("M115");
+            Background.ConnectionServiceSerial.Write("M115");
         }
 
         public void GetBedVolume()
         {
-            background.ConnectionServiceSerial.Write("M211");
+            Background.ConnectionServiceSerial.Write("M211");
         }
 
         public async Task OnUpdateSettings(string message)
@@ -281,6 +288,7 @@ namespace WebUI.Data
                 GetExtendedM20Support(message);
                 GetThermalProtectionState(message);
                 GetBabyStepState(message);
+                GetPowerLossRecoveryState(message);
             });
             await SetBedVolume(message);
         }
@@ -623,6 +631,15 @@ namespace WebUI.Data
             }
         }
 
+        public void GetPowerLossRecoveryState(string message)
+        {
+            var match = Regex.Match(message, @"M413 S(\d+)");
+            if (match.Success)
+            {
+                Printer.HasPowerLossRecovery = BoolOutput(int.Parse(match.Groups[1].Value));
+            }
+        }
+
         public async Task SetBedVolume(string input)
         {
             await Task.Run(() =>
@@ -641,75 +658,75 @@ namespace WebUI.Data
 
         public void SetMaximumFeedrates()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
             }
         }
 
         public void SetStepsPerUnit()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
 
             }
         }
 
         public void SetStartingAccelerations()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStartingAccelerationCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStartingAccelerationCommand(Printer.MotionSettings));
             }
         }
 
         public void SetMaximumAccelerations()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetMaxAccelerationCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetMaxAccelerationCommand(Printer.MotionSettings));
             }
         }
 
         public void SetAdvancedSettings()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetAdvancedSettingsCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetAdvancedSettingsCommand(Printer.MotionSettings));
             }
         }
 
         public void SetOffsetSettings()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHomeOffsetsCommand(Printer.MotionSettings));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHomeOffsetsCommand(Printer.MotionSettings));
             }
         }
 
 
         public void SetBedLevelingOn()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
                 if (Printer.HasAutoBedLevel)
                 {
-                    background.ConnectionServiceSerial.Write("M420 S0");
+                    Background.ConnectionServiceSerial.Write("M420 S0");
                     _snackbar.Add("Bed leveling turned off", Severity.Warning);
                 }
                 else
                 {
-                    background.ConnectionServiceSerial.Write("M420 S1");
+                    Background.ConnectionServiceSerial.Write("M420 S1");
                     _snackbar.Add("Bed leveling turned on", Severity.Success);
                 }
             }
         }
         public void SetFadeHeight()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                background.ConnectionServiceSerial.Write($"M420 Z{Printer.MotionSettings.FadeHeight}");
+                Background.ConnectionServiceSerial.Write($"M420 Z{Printer.MotionSettings.FadeHeight}");
                 _snackbar.Add($"Fade height set to {Printer.MotionSettings.FadeHeight}mm", Severity.Success);
             }
         }
@@ -718,7 +735,7 @@ namespace WebUI.Data
         {
             preheatingProfiles.ForEach(profile =>
             {
-                background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
                 _snackbar.Add("Preset added to printer", Severity.Success);
             });
         }

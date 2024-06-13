@@ -77,6 +77,17 @@ namespace WebUI.Data
             background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
 
+        public void BabySteps(double input)
+        {
+            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBabySteppingCommand(input));
+        }
+
+        public void ZSteppersAutoAlignment()
+        {
+
+           background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAdjustDualZMotorCommand());
+        }
+
 
         public void AdjustFreeMoveFeedRate()
         {

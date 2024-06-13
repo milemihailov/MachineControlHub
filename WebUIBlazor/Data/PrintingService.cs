@@ -129,7 +129,7 @@ namespace WebUI.Data
 
         public void FormatTotalPrintTime()
         {
-            TimeSpan elapsed = TimeSpan.FromMilliseconds(_printerDataServiceTest.background.stopwatch.ElapsedMilliseconds);
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(_printerDataServiceTest.Background.stopwatch.ElapsedMilliseconds);
             printJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
         }
 
@@ -270,6 +270,7 @@ namespace WebUI.Data
         {
             _processing = true;
             background.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
+            Console.WriteLine("starting");
         }
 
         public async Task WriteFileToPort(string driveName, string fileName)

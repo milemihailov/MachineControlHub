@@ -744,5 +744,28 @@ namespace MachineControlHub.Motion
 
             return GCodeMethods.GCodeString(checkSoftwareEndstops);
         }
+
+        public static string BuildBabySteppingCommand(double value)
+        {
+            var babyStepping = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.BabyStep,
+                Parameters = new List<string>() { $"Z{value}" }
+            };
+
+            return GCodeMethods.GCodeString(babyStepping);
+        }
+
+        public static string BuildAdjustDualZMotorCommand()
+        {
+            var adjustDualZMotor = new GCodeCommands
+            {
+                Type = G_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.GCommands.ZSteppersAutoAlignment
+            };
+
+            return GCodeMethods.GCodeString(adjustDualZMotor);
+        }
     }
 }

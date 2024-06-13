@@ -61,6 +61,7 @@ namespace MachineControlHub
 
         public bool HasBabystep { get; set; }
 
+        public bool HasPowerLossRecovery { get; set; }
 
         /// <summary>
         /// Gets or sets the firmware version installed on the printer.

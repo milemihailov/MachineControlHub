@@ -10,7 +10,6 @@ namespace WebUI.Data
         public ITemperatures bed;
         private readonly ISnackbar _snackbar;
         private readonly BackgroundTimer _background;
-        private IPrinterConnection _connection;
         public PIDValues PIDBedValues { get; set; }
         private DateTime _lastChangeTime;
 

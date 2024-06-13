@@ -44,6 +44,7 @@
             background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
             background.ConnectionServiceSerial.IsConnected = true;
             background.ConnectionServiceSerial.Connect();
+            background.SavePortName();
             printer.GetPrinterSettings();
             printer.GetFirmwareSettings();
             //set the host keep alive command to 1 second after connection

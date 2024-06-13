@@ -189,12 +189,21 @@
                         <!-- Container with text for current hotend temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Hotend Temperature:</MudText>
-                            <MudText Color="@(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature >= @PrinterDataHandler.HotendTemperatureService.targetHotendTemperature - 3 && PrinterDataHandler.HotendTemperatureService.currentHotendTemperature <= @PrinterDataHandler.HotendTemperatureService.targetHotendTemperature + 3 ? Color.Success : Color.Secondary)">  @PrinterDataHandler.HotendTemperatureService.currentHotendTemperature</MudText>
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (PrinterDataHandler.HotendTemperatureService.currentHotendTemperature < PrinterDataHandler.HotendTemperatureService.targetHotendTemperature)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                             Size="Size.Large"
+                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Class="pr-2 mr-2" />
+                                }
+                                @PrinterDataHandler.HotendTemperatureService.currentHotendTemperature
+                            </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target hotend temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Hotend Temperature:</MudText>
-                            <MudText Color="Color.Success">@PrinterDataHandler.HotendTemperatureService.targetHotendTemperature</MudText>
+                            <MudText>@PrinterDataHandler.HotendTemperatureService.targetHotendTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
@@ -221,7 +230,16 @@
                         <!-- Container with text for current bed temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Bed Temperature:</MudText>
-                            <MudText>@PrinterDataHandler.BedTemperatureService.currentBedTemperature</MudText>
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (PrinterDataHandler.BedTemperatureService.currentBedTemperature < PrinterDataHandler.BedTemperatureService.targetBedTemperature)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                             Size="Size.Large"
+                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Class="pr-2 mr-2" />
+                                }
+                                @PrinterDataHandler.BedTemperatureService.currentBedTemperature
+                            </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target bed temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
@@ -253,7 +271,16 @@
                         <!-- Container with text for current chamber temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Chamber Temperature:</MudText>
-                            <MudText>@PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature</MudText>
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature < PrinterDataHandler.ChamberTemperatureService.targetChamberTemperature)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                             Size="Size.Large"
+                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Class="pr-2 mr-2" />
+                                }
+                                @PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature
+                            </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target chamber temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
@@ -293,7 +320,6 @@
                     <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
                         <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.HotendTemperatureService.UnloadFilament()">Unload Filament</MudButton>
                     </MudItem>
-                    <MudDivider Class="pt-5" />
                 </MudGrid>
 
                 <!-- Preheating Profiles -------------------------------------------------------------->
@@ -319,14 +345,17 @@
                             <div Style="display: flex; justify-content: center;" class="pt-2">
                                 <!-- Button to start preheating -->
                                 @* <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton> *@
-                                <MudIconButton Icon="@Icons.Material.Filled.Whatshot" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => PrinterDataHandler.StartPreheating(profile)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                               Size="Size.Medium" 
+                                               Variant="Variant.Text" 
+                                               Color="Color.Warning" 
+                                               OnClick="() => PrinterDataHandler.StartPreheating(profile)" />
                                 <!-- Button to delete preheating profile -->
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
                             </div>
                         </MudCarouselItem>
                     }
                 </MudCarousel>
-
             </MudItem>
         </MudGrid>
     </MudItem>
@@ -388,7 +417,7 @@
     string fileMessage = "";
     string sdFiles = "";
     string calibrateMessage = "";
-
+    bool _isPrimaryColor = true;
 
     /// <summary>
     /// Method that is called when the component is initialized.
@@ -509,10 +538,10 @@
                 MyNavigationManager.NavigateTo("/print", true);
             }
         }
-
         // parse the current hotend and bed temperatures
         await PrinterDataHandler.HotendTemperatureService.ParseCurrentHotendTemperature(message);
         await PrinterDataHandler.BedTemperatureService.ParseCurrentBedTemperature(message);
+        await PromptHandler(message);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -556,6 +585,8 @@
                     // background.ConnectionServiceSerial.Write("M31");
                     await PrintManager.DisplayEstimatedTimeRemaining();
                 }
+                _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
+
                 await InvokeAsync(StateHasChanged);
 
             });
@@ -609,6 +640,70 @@
             });
         }
     }
+
+    public async Task PromptHandler(string message)
+    {
+        await InvokeAsync(async () =>
+        {
+            if (message.Contains("Insert filament"))
+            {
+                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                "Filament Change",
+                "Insert filament and click continue!",
+                yesText: "Continue");
+
+                if (result == true)
+                {
+                    background.ConnectionServiceSerial.Write("M876 S1");
+                }
+            }
+
+            if (message.Contains("action:prompt_begin Heater Timeout"))
+            {
+                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                "Filament Change",
+                "Heater timeout reheat to continue!",
+                yesText: "Reheat");
+
+                if (result == true)
+                {
+                    background.ConnectionServiceSerial.Write("M876 S1");
+                }
+            }
+
+            if (message.Contains("action:prompt_begin Reheat Done"))
+            {
+                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                "Filament Change",
+                "Reheat done add new filament and click continue!",
+                yesText: "Change");
+
+                if (result == true)
+                {
+                    background.ConnectionServiceSerial.Write("M876 S1");
+                }
+            }
+
+            if (message.Contains("action:prompt_button PurgeMore"))
+            {
+                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                "Filament Change",
+                "Purge more or continue!",
+                yesText: "Continue", noText: "Purge More");
+
+                if (result == true)
+                {
+                    background.ConnectionServiceSerial.Write("M876 S1");
+                }
+                else
+                {
+                    background.ConnectionServiceSerial.Write("M876 S0");
+                    PrintManager._snackbar.Add("Purging", Severity.Info);
+                }
+            }
+        });
+    }
+
 
     public void Dispose()
     {

@@ -106,6 +106,7 @@
     </div>
     <MudTabs>
         @* Printer Information --------------------------------------------------------------------------------------------*@
+        <MudButton OnClick="printer.AddMe"> Update Printer Profile</MudButton>
 
         <MudTabPanel Text="Printer Information">
             <MudGrid>
@@ -144,6 +145,12 @@
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Extruder Count: </MudText>
                             <MudText> @printer.Printer.NumberOfExtruders</MudText>
+                        </ContainerSpaceBetween>
+                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+
+                        <ContainerSpaceBetween>
+                            <MudText Typo="Typo.subtitle2"> Power Loss Recovery: </MudText>
+                            <MudText>@printer.StringOutput(printer.Printer.HasPowerLossRecovery)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
@@ -531,7 +538,7 @@
                         </div>
                         <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
                         <ExpansionPanel>
-                            <MudNumericField Label="X Max Acceleration" @bind-Value="printer.Printer.MotionSettings.XMaxAcceleration" Immediate="true" Variant="Variant.Outlined"/>
+                            <MudNumericField Label="X Max Acceleration" @bind-Value="printer.Printer.MotionSettings.XMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="Y Max Acceleration" @bind-Value="printer.Printer.MotionSettings.YMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="Z Max Acceleration" @bind-Value="printer.Printer.MotionSettings.ZMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="E Max Acceleration" @bind-Value="printer.Printer.MotionSettings.EMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
@@ -702,6 +709,15 @@
                             <MudButton OnClick="printer.SetPreheatingProfiles" Color="Color.Tertiary">Send Presets To Printer</MudButton>
                         </MudContainer>
                     </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- Filament Settings ------------------------------------------------------------------------------------->
+        <MudTabPanel Text="Filament Settings">
+            <MudGrid>
+                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+
                 </MudItem>
             </MudGrid>
         </MudTabPanel>
