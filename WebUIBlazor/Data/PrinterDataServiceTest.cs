@@ -69,6 +69,7 @@ namespace WebUI.Data
             Printer.Head = new PrinterHead();
             Printer.PreheatingProfiles = new PreheatingProfiles();
             Printer.MotionSettings = new MotionSettingsData();
+            Printer.StepperDrivers = new StepperDriversData();
             Printer.PrintHistory = new PrintHistory();
             Printer.TouchScreen = new TouchScreen();
             Extruders = new List<PrinterHead>();
@@ -239,6 +240,7 @@ namespace WebUI.Data
         public void GetFirmwareSettings()
         {
             Background.ConnectionServiceSerial.Write("M115");
+            Background.ConnectionServiceSerial.Write("M569 ");
         }
 
         public void GetBedVolume()
@@ -289,6 +291,9 @@ namespace WebUI.Data
                 GetThermalProtectionState(message);
                 GetBabyStepState(message);
                 GetPowerLossRecoveryState(message);
+                GetStepperDriverCurrents(message);
+                GetStepperDriverMode(message);
+                GetHomingSensitivityValues(message);
             });
             await SetBedVolume(message);
         }
@@ -457,6 +462,114 @@ namespace WebUI.Data
             }
         }
 
+        public void GetExtruderCount(string message)
+        {
+            var match = Regex.Match(message, @"EXTRUDER_COUNT:(\d+)");
+            if (match.Success)
+            {
+                Printer.NumberOfExtruders = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        public void GetStepperDriverCurrents(string message)
+        {
+            var match = Regex.Match(message, @"M906 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)");
+            if (match.Success)
+            {
+                Printer.StepperDrivers.XDriverCurrent = double.Parse(match.Groups[1].Value);
+                Printer.StepperDrivers.YDriverCurrent = double.Parse(match.Groups[2].Value);
+                Printer.StepperDrivers.ZDriverCurrent = double.Parse(match.Groups[3].Value);
+            }
+
+            var matchE = Regex.Match(message, @"M906 T(\d+) E(\d+\.?\d*)");
+            if (matchE.Success)
+            {
+                int extruderIndex = int.Parse(matchE.Groups[1].Value);
+                double current = double.Parse(matchE.Groups[2].Value);
+
+                switch (extruderIndex)
+                {
+                    case 0:
+                        Printer.StepperDrivers.EDriverCurrent = current;
+                        break;
+                    case 1:
+                        Printer.StepperDrivers.E2DriverCurrent = current;
+                        break;
+                    case 2:
+                        Printer.StepperDrivers.E3DriverCurrent = current;
+                        break;
+                    case 3:
+                        Printer.StepperDrivers.E4DriverCurrent = current;
+                        break;
+                    case 4:
+                        Printer.StepperDrivers.E5DriverCurrent = current;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid extruder index");
+                        break;
+                }
+            }
+
+            var matchMultpleZ = Regex.Match(message, @"M906 I([1-9]\d*) Z(\d+\.?\d*)");
+            if (matchMultpleZ.Success)
+            {
+                int zDriverIndex = int.Parse(matchMultpleZ.Groups[1].Value);
+                double current = double.Parse(matchMultpleZ.Groups[2].Value);
+
+                switch (zDriverIndex)
+                {
+                    case 1:
+                        Printer.StepperDrivers.Z2DriverCurrent = current;
+                        break;
+                    case 2:
+                        Printer.StepperDrivers.Z3DriverCurrent = current;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid Z driver index");
+                        break;
+                }
+            }
+        }
+
+        public void GetStepperDriverMode(string message)
+        {
+            var match = Regex.Match(message, @"(\w+)\s+driver mode:\s+(\w+)");
+
+            if (match.Success)
+            {
+                var propertyMap = new Dictionary<string, Action<string>>
+                    {
+                        { "X", value => Printer.StepperDrivers.XDriverSteppingMode = value },
+                        { "Y", value => Printer.StepperDrivers.YDriverSteppingMode = value },
+                        { "Z", value => Printer.StepperDrivers.ZDriverSteppingMode = value },
+                        { "Z2", value => Printer.StepperDrivers.Z2DriverSteppingMode = value },
+                        { "Z3", value => Printer.StepperDrivers.Z3DriverSteppingMode = value },
+                        { "E", value => Printer.StepperDrivers.EDriverSteppingMode = value },
+                        { "E2", value => Printer.StepperDrivers.E2DriverSteppingMode = value },
+                    };
+
+                string group1 = match.Groups[1].Value;
+                string group2 = match.Groups[2].Value;
+
+                if (propertyMap.ContainsKey(group1))
+                {
+                    propertyMap[group1].Invoke(group2);
+                }
+            }
+        }
+
+        public void GetHomingSensitivityValues(string message)
+        {
+            var match = Regex.Match(message, @"M914 X(\d+\.?\d*) Y(\d+\.?\d*)(?: Z(\d+\.?\d*))?");
+
+            if (match.Success)
+            {
+                Printer.StepperDrivers.XStallGuardTreshold = double.Parse(match.Groups[1].Value);
+                Printer.StepperDrivers.YStallGuardTreshold = double.Parse(match.Groups[2].Value);
+                Printer.StepperDrivers.ZStallGuardTreshold = double.Parse(match.Groups[3].Value);
+            }
+        }
+
         public void GetBinaryFileTransferState(string message)
         {
             var match = Regex.Match(message, @"BINARY_FILE_TRANSFER:(\d+)");
@@ -484,15 +597,6 @@ namespace WebUI.Data
             if (matchSDStatus.Success)
             {
                 Printer.HasAutoReportSDStatus = BoolOutput(int.Parse(matchSDStatus.Groups[1].Value));
-            }
-        }
-
-        public void GetExtruderCount(string message)
-        {
-            var match = Regex.Match(message, @"EXTRUDER_COUNT:(\d+)");
-            if (match.Success)
-            {
-                Printer.NumberOfExtruders = int.Parse(match.Groups[1].Value);
             }
         }
 
@@ -738,6 +842,30 @@ namespace WebUI.Data
                 Background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
                 _snackbar.Add("Preset added to printer", Severity.Success);
             });
+        }
+
+        public void SetDriverCurrents()
+        {
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverCurrentsCommand(Printer.StepperDrivers));
+            }
+        }
+
+        public void SetDriverSteppingMode()
+        {
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverSteppingMode(Printer.StepperDrivers));
+            }
+        }
+
+        public void SetBumpSensitivty()
+        {
+            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            {
+                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBumpSensitivity(Printer.StepperDrivers));
+            }
         }
 
         public bool BoolOutput(int input)

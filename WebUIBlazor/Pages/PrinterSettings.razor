@@ -105,8 +105,8 @@
         <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
     </div>
     <MudTabs>
+
         @* Printer Information --------------------------------------------------------------------------------------------*@
-        <MudButton OnClick="printer.AddMe"> Update Printer Profile</MudButton>
 
         <MudTabPanel Text="Printer Information">
             <MudGrid>
@@ -320,7 +320,6 @@
             </MudGrid>
         </MudTabPanel>
 
-
         @* Extruder Settings --------------------------------------------------------------------------------------------*@
 
         <MudTabPanel Text="Extruder Settings">
@@ -436,7 +435,7 @@
                             <MudNumericField Label="Y Steps" @bind-Value="printer.Printer.MotionSettings.YStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="Z Steps" @bind-Value="printer.Printer.MotionSettings.ZStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="E Steps" @bind-Value="printer.Printer.MotionSettings.EStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="@printer.SetStepsPerUnit"> Update Steps</MudButton>
+                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="@printer.SetStepsPerUnit"> Update Values</MudButton>
                             <MudText Class="pt-4">
                                 <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
                                 <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M092.html">Check Marlin website for more info</MudLink>
@@ -473,7 +472,7 @@
                             <MudNumericField Label="Y Feedrate" @bind-Value="printer.Printer.MotionSettings.YMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="Z Feedrate" @bind-Value="printer.Printer.MotionSettings.ZMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
                             <MudNumericField Label="E Feedrate" @bind-Value="printer.Printer.MotionSettings.EMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetMaximumFeedrates">Update Feedrates</MudButton>
+                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetMaximumFeedrates">Update Values</MudButton>
                             <MudText Class="pt-4">
                                 <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
                                 <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M203.html">Check Marlin website for more info</MudLink>
@@ -713,11 +712,218 @@
             </MudGrid>
         </MudTabPanel>
 
-        <!-- Filament Settings ------------------------------------------------------------------------------------->
-        <MudTabPanel Text="Filament Settings">
-            <MudGrid>
-                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+        <!-- Steppers Settings ------------------------------------------------------------------------------------->
 
+        <MudTabPanel Text="Stepper Motor Settings">
+            <MudGrid Style="width:100vw;">
+                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                        <div style="min-height:250px">
+                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                <MudText Color="Color.Primary" Typo="Typo.button">Stepper Driver Current</MudText>
+                            </MudCardHeader>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">X Stepper Current:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.XDriverCurrent</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Y Stepper Current:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.YDriverCurrent</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z Stepper Current:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.ZDriverCurrent</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z1 Stepper Current:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.Z2DriverCurrent</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">E Stepper Current:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.EDriverCurrent</MudText>
+                            </ContainerSpaceBetween>
+                        </div>
+
+                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                        <ExpansionPanel>
+                            <MudNumericField Label="X Driver Current" @bind-Value="printer.Printer.StepperDrivers.XDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Y Driver Current" @bind-Value="printer.Printer.StepperDrivers.YDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Z Driver Current" @bind-Value="printer.Printer.StepperDrivers.ZDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Z1 Driver Current" @bind-Value="printer.Printer.StepperDrivers.Z2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Z2 Driver Current" @bind-Value="printer.Printer.StepperDrivers.Z3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="E Driver Current" @bind-Value="printer.Printer.StepperDrivers.EDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="E2 Driver Current" @bind-Value="printer.Printer.StepperDrivers.E2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="E3 Driver Current" @bind-Value="printer.Printer.StepperDrivers.E3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetDriverCurrents">Update Values</MudButton>
+                            <MudText Class="pt-4">
+                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M906.html">Check Marlin website for more info</MudLink>
+                            </MudText>
+                        </ExpansionPanel>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                        <div style="min-height:250px">
+                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                <MudText Color="Color.Primary" Typo="Typo.button">Driver Stepping Mode</MudText>
+                            </MudCardHeader>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">X Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.XDriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Y Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.YDriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.ZDriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z2 Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.Z2DriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z3 Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.Z3DriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">E Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.EDriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">E2 Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.E2DriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">E3 Stepper Mode:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.E3DriverSteppingMode</MudText>
+                            </ContainerSpaceBetween>
+                        </div>
+
+                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                        <ExpansionPanel>
+                            <ContainerSpaceBetween>
+                                <MudText>X Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.XDriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>Y Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.YDriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>Z Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.ZDriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>Z2 Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.Z2DriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>Z3 Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.Z3DriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>E Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.EDriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>E2 Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.E2DriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText>E3 Stepper Mode:</MudText>
+                                <MudRadioGroup @bind-Value="@printer.Printer.StepperDrivers.E3DriverSteppingMode">
+                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                </MudRadioGroup>
+                            </ContainerSpaceBetween>
+
+                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetDriverSteppingMode">Update Values</MudButton>
+                            <MudText Class="pt-4">
+                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M569.html">Check Marlin website for more info</MudLink>
+                            </MudText>
+                        </ExpansionPanel>
+                    </MudPaper>
+                </MudItem>
+                @*                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+                <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                <MudText Color="Color.Primary" Typo="Typo.button">Stepper Driver Microstepping</MudText>
+                </MudCardHeader>
+                <MudContainer>
+                <MudText Typo="Typo.subtitle2">X Stepper Microstepping:</MudText>
+                <MudText>@printer.Printer.StepperDrivers.XDriverMicrosteps</MudText>
+                </MudContainer>
+                <MudContainer>
+                <MudText Typo="Typo.subtitle2">Y Stepper Microstepping:</MudText>
+                <MudText>@printer.Printer.StepperDrivers.YDriverMicrosteps</MudText>
+                </MudContainer>
+                <MudContainer>
+                <MudText Typo="Typo.subtitle2">Z Stepper Microstepping:</MudText>
+                <MudText>@printer.Printer.StepperDrivers.ZDriverMicrosteps</MudText>
+                </MudContainer>
+                <MudContainer>
+                <MudText Typo="Typo.subtitle2">E Stepper Microstepping:</MudText>
+                <MudText>@printer.Printer.StepperDrivers.EDriverMicrosteps</MudText>
+                </MudContainer>
+                </MudPaper>
+                </MudItem> *@
+                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                        <div style="min-height:250px">
+                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                <MudText Color="Color.Primary" Typo="Typo.button">Bump Sensitivty</MudText>
+                            </MudCardHeader>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">X Bump Sensitivity:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.XStallGuardTreshold</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Y Bump Sensitivity:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.YStallGuardTreshold</MudText>
+                            </ContainerSpaceBetween>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2">Z Bump Sensitivity:</MudText>
+                                <MudText>@printer.Printer.StepperDrivers.ZStallGuardTreshold</MudText>
+                            </ContainerSpaceBetween>
+                        </div>
+
+                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                        <ExpansionPanel>
+                            <MudNumericField Label="X Bump Sensitivity" @bind-Value="printer.Printer.StepperDrivers.XStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Y Bump Sensitivity" @bind-Value="printer.Printer.StepperDrivers.YStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                            <MudNumericField Label="Z Bump Sensitivity" @bind-Value="printer.Printer.StepperDrivers.ZStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetBumpSensitivty">Update Values</MudButton>
+                            <MudText Class="pt-4">
+                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M914.html">Check Marlin website for more info</MudLink>
+                            </MudText>
+                        </ExpansionPanel>
+                    </MudPaper>
                 </MudItem>
             </MudGrid>
         </MudTabPanel>
@@ -748,5 +954,6 @@
         _expanded = !_expanded;
     }
     private MudTheme Theme = new MudTheme();
+    MudChip selected;
 }
 

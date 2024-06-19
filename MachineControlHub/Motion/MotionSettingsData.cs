@@ -191,7 +191,7 @@
         /// <returns>
         /// A G-code string representing the specified axis and its value, or null if the value is null.
         /// </returns>
-        public string AxisString(Axis axis, object value)
+        public static string AxisString(Axis axis, object value)
         {
             if (value == null)
             {

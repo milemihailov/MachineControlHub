@@ -140,7 +140,7 @@ namespace MachineControlHub.PrinterConnection
             }
             catch (Exception ex)
             {
-                //Logger.LogError($"Error writing to serial port: {ex.Message}");
+                Logger.LogError($"Error writing to serial port: {ex.Message}");
                 //IsConnected = false;
             }
         }

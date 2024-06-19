@@ -567,6 +567,8 @@
             /// Sets stepper motor current.
             /// </summary>
             StepperMotorCurrent = 906,
+
+            TMCBumpSensitivity = 914,
         }
 
     }

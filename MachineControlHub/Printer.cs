@@ -155,6 +155,8 @@ namespace MachineControlHub
         public MotionSettingsData MotionSettings { get; set; }
 
 
+        public StepperDriversData StepperDrivers { get; set; }
+
         public IPrinterConnection PrinterConnection { get; set; }
     }
 
