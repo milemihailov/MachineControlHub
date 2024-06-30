@@ -2,7 +2,7 @@
 
 namespace WebUI.Data
 {
-    public class ConnectionServiceSerial
+    public class SerialConnectionService
     {
         public IPrinterConnection printerConnection;
         public string portName = "";
@@ -10,7 +10,7 @@ namespace WebUI.Data
 
         public bool IsConnected { get; set; }
 
-        public ConnectionServiceSerial()
+        public SerialConnectionService()
         {
             printerConnection = new SerialConnection();
             var ports = GetPorts();
@@ -43,7 +43,7 @@ namespace WebUI.Data
         public void Disconnect()
         {
             printerConnection.Disconnect();
-            printerConnection.IsConnected = false;
+            IsConnected = false;
         }
 
         public List<string> GetPorts()

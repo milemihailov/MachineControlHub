@@ -4,12 +4,13 @@
 @inject Data.PrintingService printingService
 @inject Data.PrinterDataServiceTest printerDataServiceTest
 
-<div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
-    <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Print History</MudText>
-</div>
-
-<MudGrid>
+<MudGrid Class="mt-9" Style="width: 100vw;">
     <MudItem xl="6">
+        <div style="text-align:center;">
+            <!-- Add this div with text-align style -->
+            <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
+        </div>
+
         @foreach (var printJob in printerDataServiceTest.printHistory)
         {
             <div style="display:flex; justify-content:center; align-items: center;">
@@ -35,12 +36,42 @@
                 <MudText>End time of print: @printJob.EndTimeOfPrint</MudText>
                 </ContainerSpaceBetween>  *@
                 </div>
-
             </div>
         }
     </MudItem>
     <MudItem xl="6">
-        <MudText>All Time Stats</MudText>
+        <div style="text-align:center;">
+            <!-- Add this div with text-align style -->
+            <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print Alltime Stats</MudText>
+        </div>
+        <div style="display:flex; justify-content:center; align-items: center;">
+            <div style="width:60%;">
+                <ContainerSpaceBetween>
+                    <MudText>Number of prints:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalPrints</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Finished prints:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalFinishedPrints</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Failed prints:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalFailedPrints</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Total print time:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalPrintTime</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Longest print job:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.LongestPrintJob</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Filament used:</MudText>
+                    <MudText>@printerDataServiceTest.Printer.PrintHistory.FilamentUsed</MudText>
+                </ContainerSpaceBetween>
+            </div>
+        </div>
     </MudItem>
 </MudGrid>
 

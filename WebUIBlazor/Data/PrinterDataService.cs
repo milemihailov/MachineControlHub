@@ -6,7 +6,7 @@ namespace WebUI.Data
 {
     public class PrinterData
     {
-        public readonly ConnectionServiceSerial serialConnection;
+        public readonly SerialConnectionService serialConnection;
         //public PrinterData Printer { get; set; }
         public bool IsConnected { get; set; }
 

@@ -1,29 +1,47 @@
-﻿@inject Data.BackgroundTimer background
+﻿@inject Data.PortConnectionManager connection
+@inject Data.PrinterDataServiceTest printerData
+@inject Data.BackgroundTimer background
 
 
-<MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(Connection ? Severity.Success : Severity.Error)" Variant="Variant.Text">
-    @* @(new MarkupString(Connection ? $"Selected Printer:<strong>{SelectedPrinter}</strong> Status: <strong>Connected</strong>" : "Disconnected")) *@
-    @(new MarkupString(Connection ? $"<strong>Connected</strong>" : "Disconnected"))
-</MudAlert>
+@foreach (var bs in printerData.serialConnection.connections.Values)
+{
+    <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.ConnectionServiceSerial.IsConnected ? Severity.Success : Severity.Error)" Variant="Variant.Text">
+        @(new MarkupString(bs.ConnectionServiceSerial.IsConnected ? $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Connected" : $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Disconnected"))
+    </MudAlert>
+}
+
+<MudSelect T="string" Label="Connected Printers" @bind-Value="connection.SelectedPrinter" Immediate="true">
+    @foreach (var printer in connection.connections.Values)
+    {
+        <MudSelectItem Value="@printer.ConnectionServiceSerial.portName">@printer.ConnectionServiceSerial.portName</MudSelectItem>
+    }
+</MudSelect>
+<MudButton Color="Color.Tertiary" @onclick="() => connection.SelectPrinter(connection.SelectedPrinter)">Select</MudButton>
 
 
 @code {
+
     [Parameter]
     public bool Connection { get; set; }
 
-    [Parameter]
-    public string SelectedPrinter { get; set; }
-
     protected override void OnInitialized()
     {
-        background.ConnectionStatusChanged += UpdateConnectionStatus;
+
+        if (connection.connections != null)
+        {
+            foreach (var bs in connection.connections.Values)
+            {
+                bs.ConnectionStatusChanged += UpdateConnectionStatus;
+            }
+        }
+        StateHasChanged();
     }
 
     private void UpdateConnectionStatus()
     {
         InvokeAsync(() =>
         {
-            Connection = background.ConnectionServiceSerial.IsConnected;
+            // Connection = background.ConnectionServiceSerial.IsConnected;
             StateHasChanged();
         });
     }

@@ -6,6 +6,7 @@ using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
 using MachineControlHub.Print;
+using MachineControlHub.PrinterConnection;
 using MachineControlHub.Temps;
 using MudBlazor;
 
@@ -31,7 +32,7 @@ namespace WebUI.Data
 
 
         public Printer Printer = new();
-        public ConnectionServiceSerial serialConnection;
+        public PortConnectionManager serialConnection;
         public readonly BackgroundTimer Background;
         public readonly HotendTemperatureService HotendTemperatureService;
         public readonly BedTemperatureService BedTemperatureService;
@@ -42,13 +43,17 @@ namespace WebUI.Data
         public bool IsConnected { get; set; }
 
         public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
+
         public List<CurrentPrintJob> printHistory = new List<CurrentPrintJob>();
         public List<Printer> Printers { get; set; }
         public List<PrinterHead> Extruders { get; set; }
+
         public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
         public PrinterBed Bed { get; set; }
 
         public Printer SelectedPrinter;
+
+        public List<string> printJobStats = new List<string>();
 
         public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar)
         {
@@ -65,6 +70,8 @@ namespace WebUI.Data
                 BedLevelDataService = new BedLevelingService();
             }
 
+
+            serialConnection = new PortConnectionManager();
             Printer.Camera = new Camera();
             Printer.Head = new PrinterHead();
             Printer.PreheatingProfiles = new PreheatingProfiles();
@@ -76,7 +83,49 @@ namespace WebUI.Data
             Printer.Bed = new PrinterBed();
             Printers = new List<Printer>();
             SelectedPrinter = new Printer();
-            background.MessageReceived += (message) => _ = OnUpdateSettings(message);
+
+            if (serialConnection.connections != null)
+            {
+                foreach (var connection in serialConnection.connections)
+                {
+                    connection.Value.InputReceived += (message) => _ = OnUpdateSettings(message);
+                    serialConnection.connection = connection.Value;
+                    Console.WriteLine(connection);
+                }
+            }
+
+        }
+
+        public void ConnectionConfiguration()
+        {
+            try
+            {
+                serialConnection.CreateConnection(serialConnection.connection.ConnectionServiceSerial.portName, $"{serialConnection.connection.ConnectionServiceSerial.baudRate}");
+
+                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial
+                    .Initialize($"{serialConnection.connection.ConnectionServiceSerial.portName},{serialConnection.connection.ConnectionServiceSerial.baudRate}");
+
+                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].IsConnected = true;
+                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Connect();
+
+                serialConnection.connection = serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName];
+
+                serialConnection.connection.InputReceived += (message) => _ = OnUpdateSettings(message);
+
+                GetPrinterSettings();
+                GetFirmwareSettings();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public void Disconnect()
+        {
+            serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Disconnect();
+            serialConnection.connections.Remove(serialConnection.connection.ConnectionServiceSerial.portName);
+            Console.WriteLine($"Disconecting port{serialConnection.connection.ConnectionServiceSerial.portName}");
         }
 
         //public void ChoosePrinter(Printer printer)
@@ -102,14 +151,6 @@ namespace WebUI.Data
         //        ExtruderSettings.RemoveAt(ExtruderSettings.Count - 1);
         //    }
         //}
-
-        public void AddMe()
-        {
-            foreach (var connection in Background.ConnectionsHistory)
-            {
-                Console.WriteLine(connection);
-            }
-        }
 
         public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
         {
@@ -234,13 +275,14 @@ namespace WebUI.Data
 
         public void GetPrinterSettings()
         {
-            Background.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
+            serialConnection.connection.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
         public void GetFirmwareSettings()
         {
-            Background.ConnectionServiceSerial.Write("M115");
-            Background.ConnectionServiceSerial.Write("M569 ");
+            serialConnection.connection.ConnectionServiceSerial.Write("M115");
+            serialConnection.connection.ConnectionServiceSerial.Write("M569");
+            serialConnection.connection.ConnectionServiceSerial.Write("M78");
         }
 
         public void GetBedVolume()
@@ -294,6 +336,7 @@ namespace WebUI.Data
                 GetStepperDriverCurrents(message);
                 GetStepperDriverMode(message);
                 GetHomingSensitivityValues(message);
+                GetPrintJobStats(message);
             });
             await SetBedVolume(message);
         }
@@ -567,6 +610,54 @@ namespace WebUI.Data
                 Printer.StepperDrivers.XStallGuardTreshold = double.Parse(match.Groups[1].Value);
                 Printer.StepperDrivers.YStallGuardTreshold = double.Parse(match.Groups[2].Value);
                 Printer.StepperDrivers.ZStallGuardTreshold = double.Parse(match.Groups[3].Value);
+            }
+        }
+
+        //public void GetPrintJobStats(string input)
+        //{
+        //    if (input.Contains("Stats"))
+        //    {
+        //        var newStats = input
+        //    .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries) // Split input into lines
+        //    .Select(line => line.StartsWith("Stats:") ? line.Substring("Stats:".Length) : line) // Remove "Stats:" from the start
+        //    .SelectMany(line => line.Split(new[] { ", " }, StringSplitOptions.None) // Split each line by ", "
+        //        .Select((part, index) => index == 0 ? part.Trim() : "\n" + part.Trim())) // Add newline except for the first part, trim spaces
+        //    .ToList();
+
+        //        // Append new stats to the existing list instead of overwriting it
+        //        printJobStats.AddRange(newStats);
+        //    }
+        //}
+
+        public void GetPrintJobStats(string input)
+        {
+            if (input.Contains("Stats"))
+            {
+                string printsPattern = @"Prints:\s*(\d+), Finished:\s*(\d+), Failed:\s*(\d+)";
+                string timePattern = @"Total time:\s*(\d+h)?\s*(\d+m)?\s*(\d+s)?,?\s*Longest job:\s*(\d+m)?\s*(\d+s)?";
+                string filamentPattern = @"Filament used:\s*([\d.]+m)";
+
+                Match printsMatch = Regex.Match(input, printsPattern);
+                Match timeMatch = Regex.Match(input, timePattern);
+                Match filamentMatch = Regex.Match(input, filamentPattern);
+
+                if (printsMatch.Success)
+                {
+                    Printer.PrintHistory.TotalPrints = int.Parse(printsMatch.Groups[1].Value);
+                    Printer.PrintHistory.TotalFinishedPrints = int.Parse(printsMatch.Groups[2].Value);
+                    Printer.PrintHistory.TotalFailedPrints = int.Parse(printsMatch.Groups[3].Value);
+                }
+
+                if (timeMatch.Success)
+                {
+                    Printer.PrintHistory.TotalPrintTime = $"{timeMatch.Groups[1].Value}{timeMatch.Groups[2].Value}{timeMatch.Groups[3].Value}";
+                    Printer.PrintHistory.LongestPrintJob = $"{timeMatch.Groups[4].Value}{timeMatch.Groups[5].Value}";
+                }
+
+                if (filamentMatch.Success)
+                {
+                    Printer.PrintHistory.FilamentUsed = filamentMatch.Groups[1].Value;
+                }
             }
         }
 

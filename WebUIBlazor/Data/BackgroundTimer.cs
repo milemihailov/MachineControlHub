@@ -10,8 +10,7 @@ namespace WebUI.Data
 {
     public class BackgroundTimer
     {
-        public ConnectionServiceSerial ConnectionServiceSerial;
-
+        public SerialConnectionService ConnectionServiceSerial;
 
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
 
@@ -33,11 +32,19 @@ namespace WebUI.Data
         [Parameter]
         public bool IsBusy { get; set; }
 
-        BackgroundTimer()
+        public BackgroundTimer(string portName = null)
         {
-            ConnectionServiceSerial = new ConnectionServiceSerial();
-
+            ConnectionServiceSerial = new SerialConnectionService();
+            if (portName != null)
+            {
+                ConnectionServiceSerial.portName = portName;
+            }
             StartTimer();
+        }
+
+        public override string ToString()
+        {
+            return $"BackgroundTimer Port: {ConnectionServiceSerial.portName}";
         }
 
         private static BackgroundTimer _instance;
@@ -52,6 +59,12 @@ namespace WebUI.Data
                 return _instance;
             }
         }
+
+        public void UpdateConnectionStatus()
+        {
+            ConnectionStatusChanged?.Invoke();
+        }
+
 
         public void SavePortName()
         {
@@ -86,6 +99,8 @@ namespace WebUI.Data
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
+                    SecondElapsed?.Invoke();
+
                     i++;
                     if (i % 100 == 0 && ConnectionServiceSerial.IsConnected)
                     {
@@ -127,7 +142,7 @@ namespace WebUI.Data
                         ParseNotifications(Message);
 
                         MessageReceived?.Invoke(Message);
-                        Console.WriteLine(Message);
+                        //Console.WriteLine(Message);
                     }
                 }
             }

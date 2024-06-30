@@ -106,10 +106,10 @@
     </div>
     <MudTabs>
 
-        @* Printer Information --------------------------------------------------------------------------------------------*@
+        <!-- Printer Information -------------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Printer Information">
-            <MudGrid>
+            <MudGrid Style="width: 100vw;">
                 <MudItem xs="12" md="4" lg="3">
                     <MudPaper Class="pa-4" Elevation="0">
                         <ContainerSpaceBetween>
@@ -265,7 +265,7 @@
             </MudGrid>
         </MudTabPanel>
 
-        @* Bed Settings --------------------------------------------------------------------------------------------*@
+        <!-- Bed Settings -------------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Bed Settings">
             <MudGrid Style="width:100vw;">
@@ -320,7 +320,7 @@
             </MudGrid>
         </MudTabPanel>
 
-        @* Extruder Settings --------------------------------------------------------------------------------------------*@
+        <!-- Extruder Settings -------------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Extruder Settings">
             <MudGrid Class="mb-0 pb-0" Style="width:100vw;">
@@ -402,12 +402,12 @@
             </MudGrid>
         </MudTabPanel>
 
-        @* Motion Settings --------------------------------------------------------------------------------------------*@
+        <!-- Motion Settings -------------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Motion Settings">
             <MudGrid Style="width:100vw;">
                 <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true" >
                         <div style="min-height:140px">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
                                 <MudText Color="Color.Primary" Typo="Typo.button"> Steps Per Unit</MudText>
@@ -629,12 +629,12 @@
             </MudGrid>
         </MudTabPanel>
 
-        @* Bed Leveling --------------------------------------------------------------------------------------------*@
+        <!-- Bed Leveling -------------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Bed Leveling">
-            <MudGrid>
+            <MudGrid Style="width: 100vw;">
                 <MudItem lg="12">
-                    <MudPaper MinHeight="550px" Class="pa-4 px-8" Outlined="true">
+                    <MudPaper MinHeight="550px" Class="pa-4 px-8" Outlined="true" Style="width: 100vw;">
                         <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
                             <MudText Color="Color.Primary" Typo="Typo.button">Bed Leveling State</MudText>
                         </MudCardHeader>
@@ -658,12 +658,12 @@
             </MudGrid>
         </MudTabPanel>
 
-        @* Preheating Profiles -------------------------------------------------------------------------------------*@
+        <!-- Preheating Profiles ------------------------------------------------------------------------------------->
 
         <MudTabPanel Text="Preheating Profiles">
-            <MudGrid>
-                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
+            <MudGrid Style="width: 100vw;">
+                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0" Style="width: 100vw;">
+                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true" >
                         <MudTextField Class="px-4" Label="Material" Immediate="true"
                                       @bind-Value="printer.Printer.PreheatingProfiles.MaterialName" />
                         <MudNumericField Label="Hotend Temperature" Class="px-4 mt-4" Immediate="true"
