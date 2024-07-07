@@ -2,6 +2,7 @@
 @inject Data.ControlPanelService control
 @inject Data.BackgroundTimer background
 @inject Data.PrinterDataServiceTest printer
+@inject Data.PortConnectionManagerService portManager
 @inject Data.PrintingService print
 
 @using Plotly.Blazor.Interop
@@ -12,7 +13,7 @@
 @implements IDisposable
 
 
-<ConnectionStatus SelectedPrinter="@printer.SelectedPrinter.Name" Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 <PrinterState />
 <MudGrid Style="width: 100vw;">
 
@@ -173,13 +174,18 @@
         {
             await Task.Run(() =>
             {
-                background.MessageReceived += OnUpdate;
+                if (portManager.connections != null)
+                {
+                    foreach (var port in portManager.connections.Values)
+                    {
+                        port.InputReceived += OnUpdate;
+                    }
+                }
             });
-
         }
     }
 
-    public void OnUpdate(string message)
+    public void OnUpdate(string message,SerialDataProcessorService source)
     {
         Series = new List<ChartSeries>
     {
@@ -221,6 +227,9 @@
 
     void IDisposable.Dispose()
     {
-        background.MessageReceived -= OnUpdate;
+        foreach (var port in portManager.connections.Values)
+        {
+            port.InputReceived -= OnUpdate;
+        }
     }
 }

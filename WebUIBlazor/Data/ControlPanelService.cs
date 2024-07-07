@@ -21,20 +21,17 @@ namespace WebUI.Data
 
         public MotionSettingsData feedRate;
         public Position positionToMove;
-        private readonly BackgroundTimer background;
+        private readonly PortConnectionManagerService _portConnectionManagerService;
         private readonly IJSRuntime JSRuntime;
-        private readonly PrinterDataServiceTest printer;
-        public ControlPanelService(BackgroundTimer background, IJSRuntime jsRuntime, PrinterDataServiceTest printer)
+        private readonly PrinterDataServiceTest _printer;
+        public ControlPanelService(PortConnectionManagerService portConnectionManager, IJSRuntime jsRuntime, PrinterDataServiceTest printer)
         {
-            this.background = background;
+            this._portConnectionManagerService = portConnectionManager;
             this.JSRuntime = jsRuntime;
-            this.printer = printer;
+            this._printer = printer;
             feedRate = new MotionSettingsData();
             positionToMove = new Position();
         }
-
-
- 
 
         /// <summary>
         /// Adjusts the specified axis position by the given value.
@@ -47,7 +44,7 @@ namespace WebUI.Data
             Position pos = new();
 
             // Send a command to set relative positioning
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildRelativePositionCommand());
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildRelativePositionCommand());
 
             // Determine the movement value based on whether it's an increment or decrement
             double moveValue = increment ? valueToMove : -valueToMove;
@@ -73,19 +70,19 @@ namespace WebUI.Data
             }
 
             // Send a command to perform a linear move with the specified values and feed rate
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
 
         public void BabySteps(double input)
         {
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildBabySteppingCommand(input));
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildBabySteppingCommand(input));
         }
 
         public void ZSteppersAutoAlignment()
         {
 
-           background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAdjustDualZMotorCommand());
+           _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildAdjustDualZMotorCommand());
         }
 
 
@@ -100,7 +97,7 @@ namespace WebUI.Data
         public void DisableSteppers()
         {
             // Send the command to disable the steppers to the printer
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildDisableSteppersCommand());
         }
 
 
@@ -113,7 +110,7 @@ namespace WebUI.Data
         public void HomeAxisCommand(bool x = false, bool y = false, bool z = false)
         {
             // Send the command to turn off the fan to the printer
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
         }
 
 
@@ -127,7 +124,7 @@ namespace WebUI.Data
         /// </remarks>
         public void SendGcodeViaTerminal(string command)
         {
-            background.ConnectionServiceSerial.printerConnection.Write(command);
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(command);
             sendCommand = null;
         }
 
@@ -138,7 +135,7 @@ namespace WebUI.Data
         public void SetFanOff()
         {
             // Send the fan speed command to the printer
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanOffCommand());
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildFanOffCommand());
         }
 
 
@@ -149,7 +146,7 @@ namespace WebUI.Data
         public void SetFanSpeed(int value)
         {   
             // Send the fan speed command to the printer
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(value));
             if (value > 0)
             {
                 SwitchValue = true;
@@ -158,12 +155,12 @@ namespace WebUI.Data
 
         public void SetFeedRatePercentage(int feedrate)
         {
-            background.ConnectionServiceSerial.printerConnection.Write($"M220 S{feedrate}");
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write($"M220 S{feedrate}");
         }
 
         public void SetPrintFlowPercentage(int flowrate)
         {
-            background.ConnectionServiceSerial.printerConnection.Write($"M221 S{flowrate}");
+            _portConnectionManagerService.connection.ConnectionServiceSerial.Write($"M221 S{flowrate}");
         }
 
         /// <summary>

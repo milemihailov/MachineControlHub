@@ -11,7 +11,7 @@ namespace WebUI.Data
     {
         public ITemperatures hotend;
         private readonly ISnackbar _snackbar;
-        private readonly BackgroundTimer _background;
+        private readonly PortConnectionManagerService _portConnectionManager;
         public PIDValues PIDHotendValues { get; set; }
 
         public int currentHotendTemperature;
@@ -21,10 +21,10 @@ namespace WebUI.Data
         public int PIDHotendTemp;
         private DateTime _lastChangeTime;
 
-        public HotendTemperatureService(ISnackbar snackbar, BackgroundTimer background)
+        public HotendTemperatureService(ISnackbar snackbar, PortConnectionManagerService portConnectionManager)
         {
-            _background = background;
-            hotend = new HotendTemps(background.ConnectionServiceSerial.printerConnection);
+            this._portConnectionManager = portConnectionManager;
+            hotend = new HotendTemps(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
             _snackbar = snackbar;
             PIDHotendValues = hotend.PIDValues;
         }
@@ -54,25 +54,25 @@ namespace WebUI.Data
 
         public void ChangeFilament()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildFilamentChangeCommand());
+            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildFilamentChangeCommand());
             _snackbar.Add("Filament Change Command Sent", Severity.Info);
         }
         
         public void LoadFilament()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildLoadFilamentCommand());
+            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildLoadFilamentCommand());
             _snackbar.Add("Filament Load Command Sent", Severity.Info);
         }
 
         public void UnloadFilament()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildUnloadFilamentCommand());
+            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildUnloadFilamentCommand());
             _snackbar.Add("Filament Unload Command Sent", Severity.Info);
         }
 
         public void SetHotendPIDValues()
         {
-            _background.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
+            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
             _snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }

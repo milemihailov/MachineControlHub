@@ -32,7 +32,7 @@ namespace WebUI.Data
 
 
         public Printer Printer = new();
-        public PortConnectionManager serialConnection;
+        public PortConnectionManagerService serialConnection;
         public readonly BackgroundTimer Background;
         public readonly HotendTemperatureService HotendTemperatureService;
         public readonly BedTemperatureService BedTemperatureService;
@@ -55,23 +55,22 @@ namespace WebUI.Data
 
         public List<string> printJobStats = new List<string>();
 
-        public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar)
+        public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar,PortConnectionManagerService serialConnection)
         {
             this.Background = background;
+            this.serialConnection = serialConnection;
             _snackbar = snackbar;
             Printer = new Printer();
-            if (background.ConnectionServiceSerial != null)
+            if (serialConnection.connection.ConnectionServiceSerial != null)
             {
-                HotendTemperatureService = new HotendTemperatureService(snackbar, background);
-                BedTemperatureService = new BedTemperatureService(snackbar, background);
-                ChamberTemperatureService = new ChamberTemperatureService(snackbar, background);
-                HotendTemperatureService.PIDHotendValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
-                BedTemperatureService.PIDBedValues = new PIDValues(background.ConnectionServiceSerial.printerConnection);
+                HotendTemperatureService = new HotendTemperatureService(snackbar, serialConnection);
+                BedTemperatureService = new BedTemperatureService(snackbar, serialConnection);
+                ChamberTemperatureService = new ChamberTemperatureService(snackbar, serialConnection);
+                HotendTemperatureService.PIDHotendValues = new PIDValues(serialConnection.connection.ConnectionServiceSerial.printerConnection);
+                BedTemperatureService.PIDBedValues = new PIDValues(serialConnection.connection.ConnectionServiceSerial.printerConnection);
                 BedLevelDataService = new BedLevelingService();
             }
 
-
-            serialConnection = new PortConnectionManager();
             Printer.Camera = new Camera();
             Printer.Head = new PrinterHead();
             Printer.PreheatingProfiles = new PreheatingProfiles();
@@ -84,49 +83,50 @@ namespace WebUI.Data
             Printers = new List<Printer>();
             SelectedPrinter = new Printer();
 
-            if (serialConnection.connections != null)
-            {
-                foreach (var connection in serialConnection.connections)
-                {
-                    connection.Value.InputReceived += (message) => _ = OnUpdateSettings(message);
-                    serialConnection.connection = connection.Value;
-                    Console.WriteLine(connection);
-                }
-            }
+            //if (serialConnection.connections != null)
+            //{
+            //    foreach (var connection in serialConnection.connections.Values)
+            //    {
+            //        connection.InputReceived += OnUpdateSettings;
+            //        Console.WriteLine(connection);
+            //    }
+            //}
 
         }
+        //public string portName = "";
+        //public int baudRate = 115200;
 
-        public void ConnectionConfiguration()
-        {
-            try
-            {
-                serialConnection.CreateConnection(serialConnection.connection.ConnectionServiceSerial.portName, $"{serialConnection.connection.ConnectionServiceSerial.baudRate}");
+        //public void ConnectionConfiguration()
+        //{
+        //    try
+        //    {
+        //        serialConnection.CreateConnection(portName, baudRate);
 
-                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial
-                    .Initialize($"{serialConnection.connection.ConnectionServiceSerial.portName},{serialConnection.connection.ConnectionServiceSerial.baudRate}");
+        //        serialConnection.connections[portName].ConnectionServiceSerial
+        //            .Initialize($"{portName},{baudRate}");
 
-                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].IsConnected = true;
-                serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Connect();
+        //        serialConnection.connections[portName].IsConnected = true;
+        //        serialConnection.connections[portName].ConnectionServiceSerial.Connect();
 
-                serialConnection.connection = serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName];
+        //        serialConnection.connection = serialConnection.connections[portName];
 
-                serialConnection.connection.InputReceived += (message) => _ = OnUpdateSettings(message);
+        //serialConnection.connection.InputReceived += (message) => _ = OnUpdateSettings(message);
 
-                GetPrinterSettings();
-                GetFirmwareSettings();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
+        //        //GetPrinterSettings();
+        ////        //GetFirmwareSettings();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(e);
+        //    }
+        //}
 
-        public void Disconnect()
-        {
-            serialConnection.connections[serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Disconnect();
-            serialConnection.connections.Remove(serialConnection.connection.ConnectionServiceSerial.portName);
-            Console.WriteLine($"Disconecting port{serialConnection.connection.ConnectionServiceSerial.portName}");
-        }
+        //public void Disconnect()
+        //{
+        //    serialConnection.connections[portName].ConnectionServiceSerial.Disconnect();
+        //    serialConnection.connections.Remove(portName);
+        //    Console.WriteLine($"Disconecting port{portName}");
+        //}
 
         //public void ChoosePrinter(Printer printer)
         //{
@@ -152,6 +152,12 @@ namespace WebUI.Data
         //    }
         //}
 
+        public void SendTestCommand()
+        {
+            serialConnection.connection.ConnectionServiceSerial.Write("M503");
+            Console.WriteLine(serialConnection.SelectPrinterString);
+        }
+
         public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
         {
             var newPrintJob = new CurrentPrintJob(Background.ConnectionServiceSerial.printerConnection)
@@ -165,53 +171,53 @@ namespace WebUI.Data
             SavePrinterData(PRINT_HISTORY_PATH, printHistory);
         }
 
-        //public string GenerateUniquePrinterId()
-        //{
-        //    Random random = new Random();
-        //    string newId;
-        //    do
-        //    {
-        //        newId = $"#{random.Next(1, 10000)}";
-        //    }
-        //    while (Printers.Any(p => p.Id == newId));
+        public string GenerateUniquePrinterId()
+        {
+            Random random = new Random();
+            string newId;
+            do
+            {
+                newId = $"#{random.Next(1, 10000)}";
+            }
+            while (Printers.Any(p => p.Id == newId));
 
-        //    return newId;
-        //}
+            return newId;
+        }
 
-        //public void CreatePrinterProfile()
-        //{
-        //var newPrinter = new Printer();
-        //    newPrinter.Extruders = new List<PrinterHead>();
-        //    newPrinter.Bed = new PrinterBed();
-        //    newPrinter.Name = Printer.Name;
-        //    newPrinter.Id = GenerateUniquePrinterId();
-        //    newPrinter.Model = Printer.Model;
-        //    newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
-        //    newPrinter.PrinterFirmwareVersion = Printer.PrinterFirmwareVersion;
-        //    newPrinter.HasAutoBedLevel = Printer.HasAutoBedLevel;
-        //    newPrinter.HasChamber = Printer.HasChamber;
-        //    newPrinter.HasHeatedBed = Printer.HasHeatedBed;
-        //    newPrinter.HasFilamentRunoutSensor = Printer.HasFilamentRunoutSensor;
-        //    newPrinter.ZMaxBuildVolume = Printer.ZMaxBuildVolume;
-        //    newPrinter.Bed.XSize = Printer.Bed.XSize;
-        //    newPrinter.Bed.YSize = Printer.Bed.YSize;
-        //    newPrinter.Bed.Diameter = Printer.Bed.Diameter;
+        public void CreatePrinterProfile()
+        {
+            var newPrinter = new Printer();
+            newPrinter.Extruders = new List<PrinterHead>();
+            newPrinter.Bed = new PrinterBed();
+            newPrinter.Name = Printer.Name;
+            newPrinter.PrinterConnection = (IPrinterConnection)new PortConnectionManagerService();
+            newPrinter.Id = GenerateUniquePrinterId();
+            newPrinter.Model = Printer.Model;
+            newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
+            newPrinter.PrinterFirmwareVersion = Printer.PrinterFirmwareVersion;
+            newPrinter.HasAutoBedLevel = Printer.HasAutoBedLevel;
+            newPrinter.HasChamber = Printer.HasChamber;
+            newPrinter.HasHeatedBed = Printer.HasHeatedBed;
+            newPrinter.HasFilamentRunoutSensor = Printer.HasFilamentRunoutSensor;
+            newPrinter.ZMaxBuildVolume = Printer.ZMaxBuildVolume;
+            newPrinter.Bed.XSize = Printer.Bed.XSize;
+            newPrinter.Bed.YSize = Printer.Bed.YSize;
+            newPrinter.Bed.Diameter = Printer.Bed.Diameter;
 
+            for (int i = 0; i < ExtruderSettings.Count; i++)
+            {
+                var newExtruder = new PrinterHead();
 
-        //    for (int i = 0; i < ExtruderSettings.Count; i++)
-        //    {
-        //        var newExtruder = new PrinterHead();
+                newExtruder.HasCoolingFan = ExtruderSettings[i].HasCoolingFan;
+                newExtruder.ProbePresent = ExtruderSettings[i].ProbePresent;
+                newExtruder.NozzleDiameter = ExtruderSettings[i].NozzleDiameter;
+                newExtruder.NozzleMaterial = ExtruderSettings[i].NozzleMaterial;
 
-        //        newExtruder.HasCoolingFan = ExtruderSettings[i].HasCoolingFan;
-        //        newExtruder.ProbePresent = ExtruderSettings[i].ProbePresent;
-        //        newExtruder.NozzleDiameter = ExtruderSettings[i].NozzleDiameter;
-        //        newExtruder.NozzleMaterial = ExtruderSettings[i].NozzleMaterial;
-
-        //        newPrinter.Extruders.Add(newExtruder);
-        //    }
-        //    Printers.Add(newPrinter);
-        //SavePrinterData(PRINTER_DATA_PATH, Printers);
-        //}
+                newPrinter.Extruders.Add(newExtruder);
+            }
+            Printers.Add(newPrinter);
+            SavePrinterData(PRINTER_DATA_PATH, Printers);
+        }
 
         public void CreatePreheatProfile()
         {
@@ -278,6 +284,7 @@ namespace WebUI.Data
             serialConnection.connection.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
+
         public void GetFirmwareSettings()
         {
             serialConnection.connection.ConnectionServiceSerial.Write("M115");
@@ -287,11 +294,13 @@ namespace WebUI.Data
 
         public void GetBedVolume()
         {
-            Background.ConnectionServiceSerial.Write("M211");
+            serialConnection.connection.ConnectionServiceSerial.Write("M211");
         }
 
-        public async Task OnUpdateSettings(string message)
+        public async void OnUpdateSettings(string message, SerialDataProcessorService source)
         {
+            var sourceport = source.ConnectionServiceSerial.portName;
+
             await Task.Run(() =>
             {
                 if (message.Contains("G21") || message.Contains("G20"))

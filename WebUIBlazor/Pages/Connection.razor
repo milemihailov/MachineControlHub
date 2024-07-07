@@ -1,26 +1,25 @@
 ﻿@page "/connection"
 @page "/"
 @using MachineControlHub.PrinterConnection
-@inject Data.BackgroundTimer background
 @inject Data.PrinterDataServiceTest printer
-@inject Data.PortConnectionManager PortManager
-@inject Data.SerialDataProcessor TestConnections
+@inject Data.PortConnectionManagerService PortManager
+@inject Data.SerialDataProcessorService TestConnections
 
 <PageTitle>Serial Connection</PageTitle>
-<ConnectionStatus Connection="TestConnections.ConnectionServiceSerial.printerConnection.IsConnected" />
+<ConnectionStatus Connection="PortManager.connection.IsConnected" />
 
 <MudPaper Height="500px" Width="100%" Elevation="0" Class="pt-10">
     <MudContainer MaxWidth="MaxWidth.Small">
         <MudPaper Style="display: flex; justify-content:center;" Class="pt-2" Elevation="0">
-            <MudButton Color="Color.Tertiary" @onclick="printer.ConnectionConfiguration">Connect</MudButton>
-            <MudButton Color="Color.Error" @onclick="printer.Disconnect"> Disconnect</MudButton>
+            <MudButton Color="Color.Tertiary" @onclick="ConnectionConfiguration">Connect</MudButton>
+            <MudButton Color="Color.Error" @onclick="Disconnect"> Disconnect</MudButton>
         </MudPaper>
     </MudContainer>
 
     <MudContainer MaxWidth="MaxWidth.ExtraSmall">
         <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="string" Label="Select Port" @bind-Value="printer.serialConnection.connection.ConnectionServiceSerial.portName" Immediate="true" Variant="Variant.Outlined">
-                @foreach (var template in background.ConnectionServiceSerial.GetPorts())
+            <MudSelect T="string" Label="Select Port" @bind-Value="PortManager.portName" Immediate="true" Variant="Variant.Outlined">
+                @foreach (var template in printer.serialConnection.connection.ConnectionServiceSerial.GetPorts())
                 {
                     <MudSelectItem Value=@template />
                 }
@@ -29,7 +28,7 @@
     </MudContainer>
     <MudContainer MaxWidth="MaxWidth.ExtraSmall">
         <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="int" Label="Select Baudrate" @bind-Value="printer.serialConnection.connection.ConnectionServiceSerial.baudRate" Variant="Variant.Outlined">
+            <MudSelect T="int" Label="Select Baudrate" @bind-Value="PortManager.baudRate" Variant="Variant.Outlined">
                 <MudSelectItem Value="115200" />
                 <MudSelectItem Value="250000" />
             </MudSelect>
@@ -39,52 +38,52 @@
 
 @code {
 
-    // public void ConnectionConfiguration()
-    // {
-    //     try
-    //     {
-    //         printer.serialConnection.CreateConnection(printer.serialConnection.connection.ConnectionServiceSerial.portName);
+    public async void ConnectionConfiguration()
+    {
+        try
+        {
+            PortManager.CreateConnection(PortManager.portName, PortManager.baudRate);
 
-    //         printer.serialConnection.connection = printer.serialConnection.connections[printer.serialConnection.connection.ConnectionServiceSerial.portName];
+            // // Initialize the connection with the selected COM port and baud rate
+            // selectedPort.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
+            // selectedPort.ConnectionServiceSerial.IsConnected = true;
+            // selectedPort.ConnectionServiceSerial.Connect();
+            // background.UpdateConnectionStatus();
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Initialize($"{PortManager.portName},{PortManager.baudRate}");
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.IsConnected = true;
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Connect();
+            // // background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
+            // // background.ConnectionServiceSerial.IsConnected = true;
+            // // background.ConnectionServiceSerial.Connect();
+            // // background.SavePortName();
+            // // xzy.CreateConnection(background.ConnectionServiceSerial.portName);
+            PortManager.connection = PortManager.connections[PortManager.portName];
+            // PortManager.connection.ConnectionServiceSerial.Write("M27 S1");
+            // //set the host keep alive command to 1 second after connection
+            // selectedPort.ConnectionServiceSerial.Write("M113 S1");
+            // //ask for bed volume
+            // selectedPort.ConnectionServiceSerial.Write("M211");
+            // //Report SD status every 2 seconds
+            // selectedPort.ConnectionServiceSerial.Write("M27 S2");
+            // //report temperature every 1 seconds
+            // selectedPort.ConnectionServiceSerial.Write("M155 S1");
+            // selectedPort.ConnectionServiceSerial.Initialize($"{TestConnections.ConnectionServiceSerial.portName},{TestConnections.ConnectionServiceSerial.baudRate}");
+            // selectedPort.ConnectionServiceSerial.IsConnected = true;
+            // selectedPort.ConnectionServiceSerial.Connect();
+            printer.GetPrinterSettings();
+            // printer.GetFirmwareSettings();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
 
-    //         // // Initialize the connection with the selected COM port and baud rate
-    //         // selectedPort.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
-    //         // selectedPort.ConnectionServiceSerial.IsConnected = true;
-    //         // selectedPort.ConnectionServiceSerial.Connect();
-    //         // background.UpdateConnectionStatus();
-    //         printer.serialConnection.connections[printer.serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Initialize($"{printer.serialConnection.connection.ConnectionServiceSerial.portName},{printer.serialConnection.connection.ConnectionServiceSerial.baudRate}");
-    //         printer.serialConnection.connections[printer.serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.IsConnected = true;
-    //         printer.serialConnection.connections[printer.serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Connect();
-    //         // // background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
-    //         // // background.ConnectionServiceSerial.IsConnected = true;
-    //         // // background.ConnectionServiceSerial.Connect();
-    //         // // background.SavePortName();
-    //         // // xzy.CreateConnection(background.ConnectionServiceSerial.portName);
-
-    //         // //set the host keep alive command to 1 second after connection
-    //         // selectedPort.ConnectionServiceSerial.Write("M113 S1");
-    //         // //ask for bed volume
-    //         // selectedPort.ConnectionServiceSerial.Write("M211");
-    //         // //Report SD status every 2 seconds
-    //         // selectedPort.ConnectionServiceSerial.Write("M27 S2");
-    //         // //report temperature every 1 seconds
-    //         // selectedPort.ConnectionServiceSerial.Write("M155 S1");
-    //         // selectedPort.ConnectionServiceSerial.Initialize($"{TestConnections.ConnectionServiceSerial.portName},{TestConnections.ConnectionServiceSerial.baudRate}");
-    //         // selectedPort.ConnectionServiceSerial.IsConnected = true;
-    //         // selectedPort.ConnectionServiceSerial.Connect();
-    //         printer.GetPrinterSettings();
-    //         printer.GetFirmwareSettings();
-    //         // TestConnections.ConnectionServiceSerial.Write("M503");
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Console.WriteLine(e);
-    //     }
-    // }
-
-    // public void Disconnect()
-    // {
-    //     printer.serialConnection.connections[printer.serialConnection.connection.ConnectionServiceSerial.portName].ConnectionServiceSerial.Disconnect();
-    //     Console.WriteLine($"Disconecting port{printer.serialConnection.connection.ConnectionServiceSerial.portName}");
-    // }
+    public void Disconnect()
+    {
+        PortManager.connections[PortManager.portName].ConnectionServiceSerial.Disconnect();
+        StateHasChanged();
+        Console.WriteLine($"Disconecting port{PortManager.portName}");
+    }
 }

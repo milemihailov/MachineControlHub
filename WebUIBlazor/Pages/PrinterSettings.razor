@@ -2,7 +2,8 @@
 @using MachineControlHub
 @using MachineControlHub.Material
 @using MachineControlHub.Motion
-@inject Data.PrinterDataServiceTest printer
+@inject PrinterDataServiceTest printer
+@inject PortConnectionManagerService PortManager
 
 
 
@@ -407,7 +408,7 @@
         <MudTabPanel Text="Motion Settings">
             <MudGrid Style="width:100vw;">
                 <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true" >
+                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
                         <div style="min-height:140px">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
                                 <MudText Color="Color.Primary" Typo="Typo.button"> Steps Per Unit</MudText>
@@ -663,7 +664,7 @@
         <MudTabPanel Text="Preheating Profiles">
             <MudGrid Style="width: 100vw;">
                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0" Style="width: 100vw;">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true" >
+                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
                         <MudTextField Class="px-4" Label="Material" Immediate="true"
                                       @bind-Value="printer.Printer.PreheatingProfiles.MaterialName" />
                         <MudNumericField Label="Hotend Temperature" Class="px-4 mt-4" Immediate="true"
@@ -955,5 +956,25 @@
     }
     private MudTheme Theme = new MudTheme();
     MudChip selected;
+
+    protected override void OnInitialized()
+    {
+        if (PortManager.connections != null)
+        {
+            foreach (var port in PortManager.connections.Values)
+            {
+                printer.GetPrinterSettings();
+                printer.GetFirmwareSettings();
+                port.InputReceived += OnUpdate;
+                // port.InputReceived += OnSecondElapsed;
+            }
+        }
+    }
+
+    public async void OnUpdate(string message, SerialDataProcessorService source)
+    {
+        printer.OnUpdateSettings(message,source);
+        await InvokeAsync(StateHasChanged);
+    }
 }
 

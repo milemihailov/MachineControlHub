@@ -18,6 +18,7 @@ namespace WebUI.Data
 
         public PrintService printService;
         public CurrentPrintJob printJob;
+        public PortConnectionManagerService portConnectionManager;
         public BackgroundTimer background;
         public readonly IDialogService _dialogService;
         public readonly ISnackbar _snackbar;
@@ -37,9 +38,9 @@ namespace WebUI.Data
         public string timeElapsed;
         public string file;
         public string fileToPrint = "";
-        public bool _processing = false;
+        public bool processing = false;
         public double progress = 0;
-        public bool _isPrinting = false;
+        public bool isPrinting = false;
 
         public ChartOptions Options = new ChartOptions();
         public string[] XAxisLabels = Array.Empty<string>();
@@ -47,16 +48,17 @@ namespace WebUI.Data
 
 
 
-        public PrintingService(IDialogService dialogService, ISnackbar snackbar, BackgroundTimer background, PrinterDataServiceTest printerDataServiceTest)
+        public PrintingService(IDialogService dialogService, ISnackbar snackbar, PortConnectionManagerService portConnectionManager, PrinterDataServiceTest printerDataServiceTest, BackgroundTimer background)
         {
-            this.background = background;
+            this.portConnectionManager = portConnectionManager;
             _printerDataServiceTest = printerDataServiceTest;
-            printService = new PrintService(background.ConnectionServiceSerial.printerConnection);
-            printJob = new CurrentPrintJob(background.ConnectionServiceSerial.printerConnection);
+            printService = new PrintService(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
+            printJob = new CurrentPrintJob(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
             _dialogService = dialogService;
             _snackbar = snackbar;
             _snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomLeft;
             _printerDataServiceTest = printerDataServiceTest;
+            this.background = background;
         }
 
         public void StartPrint(string fileName)
@@ -67,32 +69,32 @@ namespace WebUI.Data
 
         public void PausePrint()
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
+            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
             _snackbar.Add("Print Paused", Severity.Info);
         }
 
         public void ResumePrint()
         {
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
+            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
             _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
         public async Task StopPrint()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (portConnectionManager.connection.ConnectionServiceSerial.printerConnection.IsConnected)
             {
                 bool? result = await _dialogService.ShowMessageBox(
                 "Stop Print",
                 "Do you want to stop the print?",
                 yesText: "Stop!", cancelText: "Cancel");
 
-                if (result == true && _isPrinting)
+                if (result == true && isPrinting)
                 {
                     printService.AbortCurrentPrint();
                     background.StopStopwatch();
                     progress = 0;
                     FormatTotalPrintTime();
-                    _isPrinting = false;
+                    isPrinting = false;
                     _printerDataServiceTest.AddPrintJobToHistory(printJob);
 
                     _snackbar.Add("Print Stopped", Severity.Error);
@@ -166,7 +168,7 @@ namespace WebUI.Data
 
         public async Task ConfirmStartAsync()
         {
-            if (background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (portConnectionManager.connections[portConnectionManager.SelectPrinterString].ConnectionServiceSerial.IsConnected)
             {
                 bool? result = await _dialogService.ShowMessageBox(
                 "Start Print",
@@ -225,10 +227,10 @@ namespace WebUI.Data
         {
             if (progress > 0)
             {
-                _isPrinting = true;
+                isPrinting = true;
                 if (progress == 100)
                 {
-                    _isPrinting = false;
+                    isPrinting = false;
                     background.StopStopwatch();
                     progress = 0;
                     FormatTotalPrintTime();
@@ -268,8 +270,8 @@ namespace WebUI.Data
 
         public void CalibrateBed()
         {
-            _processing = true;
-            background.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
+            processing = true;
+            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
             Console.WriteLine("starting");
         }
 
@@ -306,13 +308,13 @@ namespace WebUI.Data
 
         public void ReleaseMedia()
         {
-            background.ConnectionServiceSerial.printerConnection.Write("M22");
+            portConnectionManager.connection.ConnectionServiceSerial.Write("M22");
             mediaAttached = false;
         }
 
         public void AttachMedia()
         {
-            background.ConnectionServiceSerial.printerConnection.Write("M21");
+            portConnectionManager.connection.ConnectionServiceSerial.Write("M21");
             mediaAttached = true;
         }
 

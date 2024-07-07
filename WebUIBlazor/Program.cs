@@ -20,8 +20,8 @@ builder.Services.AddScoped<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
 builder.Services.AddScoped<PrinterDataServiceTest>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
-builder.Services.AddSingleton<PortConnectionManager>();
-builder.Services.AddSingleton<SerialDataProcessor>();
+builder.Services.AddSingleton<PortConnectionManagerService>();
+builder.Services.AddScoped<SerialDataProcessorService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient();
 

@@ -1,22 +1,32 @@
-﻿@inject Data.PortConnectionManager connection
+﻿@inject Data.PortConnectionManagerService PortManager
+@inject Data.SerialDataProcessorService serialDataProcessor
 @inject Data.PrinterDataServiceTest printerData
 @inject Data.BackgroundTimer background
 
 
-@foreach (var bs in printerData.serialConnection.connections.Values)
+@foreach (var bs in PortManager.connections.Values)
 {
     <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.ConnectionServiceSerial.IsConnected ? Severity.Success : Severity.Error)" Variant="Variant.Text">
         @(new MarkupString(bs.ConnectionServiceSerial.IsConnected ? $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Connected" : $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Disconnected"))
     </MudAlert>
 }
 
-<MudSelect T="string" Label="Connected Printers" @bind-Value="connection.SelectedPrinter" Immediate="true">
-    @foreach (var printer in connection.connections.Values)
+<MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Success">
+        <MudText Typo="Typo.h6" Color="Color.Primary">Selected Printer: @PortManager.SelectPrinterString</MudText>
+</MudAlert>
+
+<MudSelect T="string" Label="Connected Printers" @bind-Value="PortManager.SelectPrinterString" Immediate="true">
+    @foreach (var printer in PortManager.connections.Values)
     {
-        <MudSelectItem Value="@printer.ConnectionServiceSerial.portName">@printer.ConnectionServiceSerial.portName</MudSelectItem>
+        if (printer.ConnectionServiceSerial.IsConnected)
+        {
+            <MudSelectItem Value="@printer.ConnectionServiceSerial.portName">@printer.ConnectionServiceSerial.portName</MudSelectItem>
+        }
     }
 </MudSelect>
-<MudButton Color="Color.Tertiary" @onclick="() => connection.SelectPrinter(connection.SelectedPrinter)">Select</MudButton>
+<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SelectPrinter(PortManager.SelectPrinterString)">Select</MudButton>
+<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SendTestCommand()">Send Test Command</MudButton>
+<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SendTestCommand1()">Send Test from printer data</MudButton>
 
 
 @code {
@@ -26,22 +36,30 @@
 
     protected override void OnInitialized()
     {
-
-        if (connection.connections != null)
-        {
-            foreach (var bs in connection.connections.Values)
-            {
-                bs.ConnectionStatusChanged += UpdateConnectionStatus;
-            }
-        }
-        StateHasChanged();
+        background.SecondElapsed += OnSecondElapsed;
     }
 
-    private void UpdateConnectionStatus()
+    private void UpdateConnectionStatus(string message, SerialDataProcessorService source)
+    {
+        // InvokeAsync(() =>
+        // {
+        //     // Connection = background.ConnectionServiceSerial.IsConnected;
+        //     Console.WriteLine($"Hi from {source.ConnectionServiceSerial.portName}");
+        //     StateHasChanged();
+        // });
+        if (PortManager.SelectPrinterString == source.ConnectionServiceSerial.portName)
+        {
+            // printingService.UpdatePrintProgress(message);
+            Console.WriteLine($"Hi from {source.ConnectionServiceSerial.portName}");
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSecondElapsed()
     {
         InvokeAsync(() =>
         {
-            // Connection = background.ConnectionServiceSerial.IsConnected;
             StateHasChanged();
         });
     }

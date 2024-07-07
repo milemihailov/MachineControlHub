@@ -20,8 +20,8 @@ namespace WebUI.Data
         public List<string> ConnectionsHistory = new List<string>();
         public PrinterDataServiceTest PrinterDataService;
 
+        public event Action TenMilisecondsElapsed;
         public event Action SecondElapsed;
-        public event Action FiveSecondElapsed;
         public event Action<string> MessageReceived;
         public event Action BusyStatusChanged;
         public event Action ConnectionStatusChanged;
@@ -42,11 +42,6 @@ namespace WebUI.Data
             StartTimer();
         }
 
-        public override string ToString()
-        {
-            return $"BackgroundTimer Port: {ConnectionServiceSerial.portName}";
-        }
-
         private static BackgroundTimer _instance;
         public static BackgroundTimer Instance
         {
@@ -65,14 +60,6 @@ namespace WebUI.Data
             ConnectionStatusChanged?.Invoke();
         }
 
-
-        public void SavePortName()
-        {
-            if (!ConnectionsHistory.Contains(ConnectionServiceSerial.portName))
-            {
-                ConnectionsHistory.Add(ConnectionServiceSerial.portName);
-            }
-        }
 
         public void StartTimer()
         {
@@ -99,10 +86,10 @@ namespace WebUI.Data
             {
                 while (await _timer.WaitForNextTickAsync(_cts.Token))
                 {
-                    SecondElapsed?.Invoke();
+                    TenMilisecondsElapsed?.Invoke();
 
                     i++;
-                    if (i % 100 == 0 && ConnectionServiceSerial.IsConnected)
+                    if (i % 100 == 0)
                     {
                         SecondElapsed?.Invoke();
                     }

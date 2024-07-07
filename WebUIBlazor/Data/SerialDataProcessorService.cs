@@ -1,38 +1,38 @@
 ﻿using System.Text.RegularExpressions;
+using WebUI.Pages;
 
 namespace WebUI.Data
 {
-    public class SerialDataProcessor
+    public class SerialDataProcessorService
     {
         public SerialConnectionService ConnectionServiceSerial;
 
         public BackgroundTimer BackgroundTimer;
 
-        public event Action<string> InputReceived;
+        public event Action<string, SerialDataProcessorService> InputReceived;
+
         public event Action ConnectionStatusChanged;
-
+        public string SelectedPort { get; set; }
         public bool IsConnected { get; set; }
-
         private string Input { get; set; }
-        private string Notification { get; set; }
+        public string Notification { get; set; }
 
-        public SerialDataProcessor(string portName = null, string baudRate = null)
+        public SerialDataProcessorService(string portName = null, int? baudRate = null)
         {
             ConnectionServiceSerial = new SerialConnectionService();
-            if (portName != null)
+            if (portName != null && baudRate.HasValue)
             {
                 ConnectionServiceSerial.portName = portName;
-                ConnectionServiceSerial.baudRate = int.Parse(baudRate);
+                ConnectionServiceSerial.baudRate = baudRate.Value;
             }
             BackgroundTimer = new BackgroundTimer();
-            BackgroundTimer.SecondElapsed += ReadFromPort;
+            BackgroundTimer.TenMilisecondsElapsed += ReadFromPort;
         }
 
         public async void ReadFromPort()
         {
-            if(ConnectionServiceSerial != null && ConnectionServiceSerial.HasData())
+            if (ConnectionServiceSerial != null && ConnectionServiceSerial.HasData())
             {
-                ConnectionStatusChanged?.Invoke();
                 ConnectionServiceSerial.IsConnected = true;
                 string readData = await ConnectionServiceSerial.printerConnection.ReadAsync();
                 string echoMessage = "";
@@ -46,11 +46,13 @@ namespace WebUI.Data
 
                 ParseNotifications(Input);
 
-                InputReceived?.Invoke(Input);
-
-                Console.WriteLine(readData);
+                InputReceived?.Invoke(Input, this);
+                //Console.WriteLine($"{ConnectionServiceSerial.portName} : {readData}");
+                //Console.WriteLine($"This is selected port: {SelectedPort}");
             }
         }
+
+        //maybe :) public List<string> Outupt { get; set; } = new();
 
         public string FilterData(string data)
         {
@@ -87,6 +89,12 @@ namespace WebUI.Data
                     Console.WriteLine(result);
                 }
             }
+        }
+
+        public void SelectPrinter(string comport)
+        {
+            SelectedPort = comport;
+            Console.WriteLine(SelectedPort);
         }
 
         public override string ToString()
