@@ -22,7 +22,7 @@ namespace WebUI.Data
         public BackgroundTimer background;
         public readonly IDialogService _dialogService;
         public readonly ISnackbar _snackbar;
-        public readonly PrinterDataServiceTest _printerDataServiceTest;
+        public PrinterDataServiceTest _printerDataServiceTest;
 
         public List<(string DriveName, string VolumeLabel)> PortsAvailable = new List<(string DriveName, string VolumeLabel)>();
         public List<(string FileName, string FileContent, long FileSize)> uploadedFiles = new List<(string FileName, string FileContent, long FileSize)>();
@@ -168,7 +168,7 @@ namespace WebUI.Data
 
         public async Task ConfirmStartAsync()
         {
-            if (portConnectionManager.connections[portConnectionManager.SelectPrinterString].ConnectionServiceSerial.IsConnected)
+            if (portConnectionManager.connections[portConnectionManager.SelectedPrinter].ConnectionServiceSerial.IsConnected)
             {
                 bool? result = await _dialogService.ShowMessageBox(
                 "Start Print",
@@ -271,7 +271,7 @@ namespace WebUI.Data
         public void CalibrateBed()
         {
             processing = true;
-            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
+            portConnectionManager.connections[portConnectionManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
             Console.WriteLine("starting");
         }
 

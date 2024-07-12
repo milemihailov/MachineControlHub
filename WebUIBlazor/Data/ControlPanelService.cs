@@ -26,9 +26,9 @@ namespace WebUI.Data
         private readonly PrinterDataServiceTest _printer;
         public ControlPanelService(PortConnectionManagerService portConnectionManager, IJSRuntime jsRuntime, PrinterDataServiceTest printer)
         {
-            this._portConnectionManagerService = portConnectionManager;
-            this.JSRuntime = jsRuntime;
-            this._printer = printer;
+            _portConnectionManagerService = portConnectionManager;
+            JSRuntime = jsRuntime;
+            _printer = printer;
             feedRate = new MotionSettingsData();
             positionToMove = new Position();
         }
@@ -172,7 +172,7 @@ namespace WebUI.Data
             fanSpeedInPercentage = Math.Round(value / 255 * 100);
         }
 
-        public async void UpdateParagraph(string message)
+        public void UpdateParagraph(string message)
         {
             double value;
             Match match = Regex.Match(message, FAN_PATTERN);
@@ -197,18 +197,18 @@ namespace WebUI.Data
 
             }
 
-            try
-            {
-                var isAtBottom = await JSRuntime.InvokeAsync<bool>("isAtBottom", "elementId");
-                if (isAtBottom)
-                {
-                    await JSRuntime.InvokeVoidAsync("scrollToBottom");
-                }
-            }
-            catch (TaskCanceledException)
-            {
+            //try
+            //{
+            //    var isAtBottom = await JSRuntime.InvokeAsync<bool>("isAtBottom", "elementId");
+            //    if (isAtBottom)
+            //    {
+            //        await JSRuntime.InvokeVoidAsync("scrollToBottom");
+            //    }
+            //}
+            //catch (TaskCanceledException)
+            //{
 
-            }
+            //}
         }
 
         public void ToggleValue()

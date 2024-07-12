@@ -9,7 +9,21 @@ namespace WebUI.Data
 
         public Dictionary<string, SerialDataProcessorService> connections = new();
 
-        public string SelectPrinterString = "";
+        private string _selectedPrinter = "";
+        public string SelectedPrinter
+        {
+            get => _selectedPrinter;
+            set
+            {
+                if (_selectedPrinter != value)
+                {
+                    _selectedPrinter = value;
+                    OnSelectedPrinterChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler SelectedPrinterChanged;
 
         public string portName = "";
         public int baudRate = 115200;
@@ -35,7 +49,7 @@ namespace WebUI.Data
 
         public void Output(string input, SerialDataProcessorService source)
         {
-            if(SelectPrinterString == source.ConnectionServiceSerial.portName)
+            if(SelectedPrinter == source.ConnectionServiceSerial.portName)
             {
                 //Console.WriteLine($"{source.ConnectionServiceSerial.portName}{input}");
                 //Console.WriteLine($"{source.ConnectionServiceSerial.portName}{source.Notification}");
@@ -44,7 +58,6 @@ namespace WebUI.Data
 
         public void SelectPrinter(string comport)
         {
-            Console.WriteLine("called");
             if (connections.ContainsKey(comport))
             {
                 connection = connections[comport];
@@ -57,14 +70,9 @@ namespace WebUI.Data
             }
         }
 
-        public void SendTestCommand()
+        protected virtual void OnSelectedPrinterChanged(EventArgs e)
         {
-            connections[SelectPrinterString].ConnectionServiceSerial.Write("M503");
-        }
-
-        public void SendTestCommand1()
-        {
-            connections[SelectPrinterString].ConnectionServiceSerial.Write("M27 S1");
+            SelectedPrinterChanged?.Invoke(this, e);
         }
     }
 }

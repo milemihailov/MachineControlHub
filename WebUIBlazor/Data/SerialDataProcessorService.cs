@@ -47,7 +47,7 @@ namespace WebUI.Data
                 ParseNotifications(Input);
 
                 InputReceived?.Invoke(Input, this);
-                //Console.WriteLine($"{ConnectionServiceSerial.portName} : {readData}");
+                Console.WriteLine($"{ConnectionServiceSerial.portName} : {readData}");
                 //Console.WriteLine($"This is selected port: {SelectedPort}");
             }
         }
@@ -90,17 +90,5 @@ namespace WebUI.Data
                 }
             }
         }
-
-        public void SelectPrinter(string comport)
-        {
-            SelectedPort = comport;
-            Console.WriteLine(SelectedPort);
-        }
-
-        public override string ToString()
-        {
-            return $"Port: {ConnectionServiceSerial.portName}";
-        }
-
     }
 }

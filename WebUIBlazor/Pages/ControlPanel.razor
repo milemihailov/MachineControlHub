@@ -4,6 +4,7 @@
 @inject Data.PrinterDataServiceTest printer
 @inject Data.PortConnectionManagerService portManager
 @inject Data.PrintingService print
+@inject NavigationManager MyNavigationManager
 
 @using Plotly.Blazor.Interop
 @using Plotly.Blazor.LayoutLib
@@ -13,7 +14,6 @@
 @implements IDisposable
 
 
-<ConnectionStatus Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 <PrinterState />
 <MudGrid Style="width: 100vw;">
 
@@ -111,7 +111,6 @@
     </MudItem>
 </MudGrid>
 
-
 @code {
 
     private int Index = -1;
@@ -126,12 +125,25 @@
     private Layout layout;
     private IList<ITrace> data;
     private IEnumerable<EventDataPoint> ClickInfos { get; set; }
+    int xSize;
+    int ySize;
 
     protected override void OnInitialized()
     {
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
-        int xSize = printer.Printer.Bed?.XSize ?? 0;
-        int ySize = printer.Printer.Bed?.XSize ?? 0;
+
+        if (portManager.connections != null && portManager.connections.Count > 0)
+        {
+            foreach (var port in portManager.connections.Values)
+            {
+                port.InputReceived += OnUpdate;
+            }
+            portManager.SelectedPrinterChanged += OnSelectedPrinter;
+            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.Write("M211");
+        }
+
+        xSize = printer.Printer.Bed?.XSize ?? 0;
+        ySize = printer.Printer.Bed?.YSize ?? 0;
 
         Series = new List<ChartSeries>
     {
@@ -147,13 +159,13 @@
                 Title = new Title
                 {
                     Text = "Interactive Bed",
- 
+
                 },
                 PaperBgColor = "#32333d",
                 PlotBgColor = "#6E9075",
                 Font = new Font
                 {
-                    Color = "#FFF" 
+                    Color = "#FFF"
                 }
             };
         data = new List<ITrace>
@@ -172,20 +184,32 @@
     {
         if (firstRender)
         {
-            await Task.Run(() =>
+            if (portManager.connections != null && portManager.connections.Count > 0)
             {
-                if (portManager.connections != null)
+                await Task.Run(() =>
                 {
-                    foreach (var port in portManager.connections.Values)
-                    {
-                        port.InputReceived += OnUpdate;
-                    }
-                }
-            });
+                });
+            }
         }
     }
 
-    public void OnUpdate(string message,SerialDataProcessorService source)
+    public async void OnSelectedPrinter(object sender, EventArgs e)
+    {
+        try
+        {
+            await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
+        }
+        catch (NavigationException navEx)
+        {
+            Console.WriteLine($"Navigation error: {navEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+
+    public void OnUpdate(string message, SerialDataProcessorService source)
     {
         Series = new List<ChartSeries>
     {
@@ -194,6 +218,7 @@
         Task.Run(() =>
         {
             control.UpdateParagraph(message);
+            printer.SetBedVolume(message);
             InvokeAsync(StateHasChanged);
         });
     }
@@ -219,9 +244,9 @@
             string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
             control.positionToMove.XMovePosition = double.Parse(x);
             control.positionToMove.YMovePosition = double.Parse(y);
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLinearMoveCommand(control.positionToMove, control.feedRate));
-            background.ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildRelativePositionCommand());
+            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLinearMoveCommand(control.positionToMove, control.feedRate));
+            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildRelativePositionCommand());
         }
     }
 
@@ -231,5 +256,6 @@
         {
             port.InputReceived -= OnUpdate;
         }
+        portManager.SelectedPrinterChanged -= OnSelectedPrinter;
     }
 }

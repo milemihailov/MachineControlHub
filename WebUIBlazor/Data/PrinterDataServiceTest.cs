@@ -32,7 +32,7 @@ namespace WebUI.Data
 
 
         public Printer Printer = new();
-        public PortConnectionManagerService serialConnection;
+        public PortConnectionManagerService PortManager;
         public readonly BackgroundTimer Background;
         public readonly HotendTemperatureService HotendTemperatureService;
         public readonly BedTemperatureService BedTemperatureService;
@@ -55,10 +55,10 @@ namespace WebUI.Data
 
         public List<string> printJobStats = new List<string>();
 
-        public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar,PortConnectionManagerService serialConnection)
+        public PrinterDataServiceTest(BackgroundTimer background, ISnackbar snackbar, PortConnectionManagerService serialConnection)
         {
             this.Background = background;
-            this.serialConnection = serialConnection;
+            this.PortManager = serialConnection;
             _snackbar = snackbar;
             Printer = new Printer();
             if (serialConnection.connection.ConnectionServiceSerial != null)
@@ -93,6 +93,7 @@ namespace WebUI.Data
             //}
 
         }
+
         //public string portName = "";
         //public int baudRate = 115200;
 
@@ -128,17 +129,17 @@ namespace WebUI.Data
         //    Console.WriteLine($"Disconecting port{portName}");
         //}
 
-        //public void ChoosePrinter(Printer printer)
-        //{
-        //    SelectedPrinter = printer;
-        //    SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
-        //}
+        public void ChoosePrinter(Printer printer)
+        {
+            SelectedPrinter = printer;
+            SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
+        }
 
-        //public void RemovePrinter(Printer printer)
-        //{
-        //    Printers.Remove(printer);
-        //    SavePrinterData(PRINTER_DATA_PATH, Printers);
-        //}
+        public void RemovePrinter(Printer printer)
+        {
+            Printers.Remove(printer);
+            SavePrinterData(PRINTER_DATA_PATH, Printers);
+        }
 
         //public void UpdateExtruders(int newValue)
         //{
@@ -152,15 +153,9 @@ namespace WebUI.Data
         //    }
         //}
 
-        public void SendTestCommand()
-        {
-            serialConnection.connection.ConnectionServiceSerial.Write("M503");
-            Console.WriteLine(serialConnection.SelectPrinterString);
-        }
-
         public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
         {
-            var newPrintJob = new CurrentPrintJob(Background.ConnectionServiceSerial.printerConnection)
+            var newPrintJob = new CurrentPrintJob(PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection)
             {
                 FileName = currentPrintJob.FileName,
                 TotalPrintTime = currentPrintJob.TotalPrintTime,
@@ -184,13 +179,12 @@ namespace WebUI.Data
             return newId;
         }
 
-        public void CreatePrinterProfile()
+        public void CreatePrinterProfile(string name)
         {
             var newPrinter = new Printer();
             newPrinter.Extruders = new List<PrinterHead>();
             newPrinter.Bed = new PrinterBed();
-            newPrinter.Name = Printer.Name;
-            newPrinter.PrinterConnection = (IPrinterConnection)new PortConnectionManagerService();
+            newPrinter.Name = name;
             newPrinter.Id = GenerateUniquePrinterId();
             newPrinter.Model = Printer.Model;
             newPrinter.NumberOfExtruders = Printer.NumberOfExtruders;
@@ -216,6 +210,10 @@ namespace WebUI.Data
                 newPrinter.Extruders.Add(newExtruder);
             }
             Printers.Add(newPrinter);
+            foreach (var printer in Printers)
+            {
+                Console.WriteLine(printer);
+            }
             SavePrinterData(PRINTER_DATA_PATH, Printers);
         }
 
@@ -229,9 +227,9 @@ namespace WebUI.Data
 
         public void StartPreheating(PreheatingProfiles profile)
         {
-            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
-            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
-            Background.ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
             _snackbar.Add("Preheating Started", Severity.Success);
         }
 
@@ -244,7 +242,7 @@ namespace WebUI.Data
 
         public void SaveToEEPROM()
         {
-            Background.ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
         public void SavePrinterData<T>(string filePath, List<T> list)
@@ -281,20 +279,20 @@ namespace WebUI.Data
 
         public void GetPrinterSettings()
         {
-            serialConnection.connection.ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildReportSettings());
         }
 
 
         public void GetFirmwareSettings()
         {
-            serialConnection.connection.ConnectionServiceSerial.Write("M115");
-            serialConnection.connection.ConnectionServiceSerial.Write("M569");
-            serialConnection.connection.ConnectionServiceSerial.Write("M78");
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M115");
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M569");
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M78");
         }
 
         public void GetBedVolume()
         {
-            serialConnection.connection.ConnectionServiceSerial.Write("M211");
+            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M211");
         }
 
         public async void OnUpdateSettings(string message, SerialDataProcessorService source)
@@ -346,8 +344,9 @@ namespace WebUI.Data
                 GetStepperDriverMode(message);
                 GetHomingSensitivityValues(message);
                 GetPrintJobStats(message);
+                SetBedVolume(message);
             });
-            await SetBedVolume(message);
+
         }
 
 
@@ -612,13 +611,21 @@ namespace WebUI.Data
 
         public void GetHomingSensitivityValues(string message)
         {
-            var match = Regex.Match(message, @"M914 X(\d+\.?\d*) Y(\d+\.?\d*)(?: Z(\d+\.?\d*))?");
+            var match = Regex.Match(message, @"M914 X(\d+\.?\d*) Y(\d+\.?\d*)?(?: Z(\d+\.?\d*))?");
 
             if (match.Success)
             {
                 Printer.StepperDrivers.XStallGuardTreshold = double.Parse(match.Groups[1].Value);
-                Printer.StepperDrivers.YStallGuardTreshold = double.Parse(match.Groups[2].Value);
-                Printer.StepperDrivers.ZStallGuardTreshold = double.Parse(match.Groups[3].Value);
+
+                if (match.Groups[2].Success && !string.IsNullOrEmpty(match.Groups[2].Value))
+                {
+                    Printer.StepperDrivers.YStallGuardTreshold = double.Parse(match.Groups[2].Value);
+                }
+
+                if (match.Groups[3].Success && !string.IsNullOrEmpty(match.Groups[3].Value))
+                {
+                    Printer.StepperDrivers.ZStallGuardTreshold = double.Parse(match.Groups[3].Value);
+                }
             }
         }
 
@@ -844,93 +851,90 @@ namespace WebUI.Data
             }
         }
 
-        public async Task SetBedVolume(string input)
+        public void SetBedVolume(string input)
         {
-            await Task.Run(() =>
+            if (input != null)
             {
-                if (input != null)
+                var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
+                if (match.Success)
                 {
-                    var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
-                    if (match.Success)
-                    {
-                        Printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);
-                        Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
-                    }
+                    Printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);
+                    Printer.Bed.YSize = (int)double.Parse(match.Groups[2].Value);
                 }
-            });
+            }
         }
 
         public void SetMaximumFeedrates()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildMaxFeedrateCommand(Printer.MotionSettings));
             }
         }
 
         public void SetStepsPerUnit()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetStepsPerUnitCommand(Printer.MotionSettings));
 
             }
         }
 
         public void SetStartingAccelerations()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetStartingAccelerationCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetStartingAccelerationCommand(Printer.MotionSettings));
             }
         }
 
         public void SetMaximumAccelerations()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetMaxAccelerationCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetMaxAccelerationCommand(Printer.MotionSettings));
             }
         }
 
         public void SetAdvancedSettings()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetAdvancedSettingsCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetAdvancedSettingsCommand(Printer.MotionSettings));
             }
         }
 
         public void SetOffsetSettings()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetHomeOffsetsCommand(Printer.MotionSettings));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetHomeOffsetsCommand(Printer.MotionSettings));
             }
         }
 
 
         public void SetBedLevelingOn()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
                 if (Printer.HasAutoBedLevel)
                 {
-                    Background.ConnectionServiceSerial.Write("M420 S0");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M420 S0");
                     _snackbar.Add("Bed leveling turned off", Severity.Warning);
                 }
                 else
                 {
-                    Background.ConnectionServiceSerial.Write("M420 S1");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M420 S1");
                     _snackbar.Add("Bed leveling turned on", Severity.Success);
                 }
             }
         }
         public void SetFadeHeight()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write($"M420 Z{Printer.MotionSettings.FadeHeight}");
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write($"M420 Z{Printer.MotionSettings.FadeHeight}");
                 _snackbar.Add($"Fade height set to {Printer.MotionSettings.FadeHeight}mm", Severity.Success);
             }
         }
@@ -939,32 +943,32 @@ namespace WebUI.Data
         {
             preheatingProfiles.ForEach(profile =>
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildMaterialPresetCommand(profile));
                 _snackbar.Add("Preset added to printer", Severity.Success);
             });
         }
 
         public void SetDriverCurrents()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverCurrentsCommand(Printer.StepperDrivers));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverCurrentsCommand(Printer.StepperDrivers));
             }
         }
 
         public void SetDriverSteppingMode()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverSteppingMode(Printer.StepperDrivers));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetDriverSteppingMode(Printer.StepperDrivers));
             }
         }
 
         public void SetBumpSensitivty()
         {
-            if (Background.ConnectionServiceSerial.printerConnection.IsConnected)
+            if (PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.IsConnected)
             {
-                Background.ConnectionServiceSerial.Write(CommandMethods.BuildSetBumpSensitivity(Printer.StepperDrivers));
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildSetBumpSensitivity(Printer.StepperDrivers));
             }
         }
 

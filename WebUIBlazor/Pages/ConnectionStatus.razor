@@ -3,31 +3,21 @@
 @inject Data.PrinterDataServiceTest printerData
 @inject Data.BackgroundTimer background
 
+<MudText Class="pr-9" Typo="Typo.h6" Color="@(PortManager.SelectedPrinter == PortManager.connection.ConnectionServiceSerial.portName && PortManager.connection.ConnectionServiceSerial.IsConnected ? Color.Tertiary : Color.Error)">@PortManager.SelectedPrinter</MudText>
 
-@foreach (var bs in PortManager.connections.Values)
-{
-    <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.ConnectionServiceSerial.IsConnected ? Severity.Success : Severity.Error)" Variant="Variant.Text">
-        @(new MarkupString(bs.ConnectionServiceSerial.IsConnected ? $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Connected" : $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Disconnected"))
-    </MudAlert>
-}
 
-<MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Success">
-        <MudText Typo="Typo.h6" Color="Color.Primary">Selected Printer: @PortManager.SelectPrinterString</MudText>
-</MudAlert>
-
-<MudSelect T="string" Label="Connected Printers" @bind-Value="PortManager.SelectPrinterString" Immediate="true">
-    @foreach (var printer in PortManager.connections.Values)
-    {
-        if (printer.ConnectionServiceSerial.IsConnected)
+<MudMenu Class="pr-12" Icon="@Icons.Material.Filled.AdUnits">
+    <ChildContent>
+        @foreach (var bs in PortManager.connections.Values)
         {
-            <MudSelectItem Value="@printer.ConnectionServiceSerial.portName">@printer.ConnectionServiceSerial.portName</MudSelectItem>
+            <MudMenuItem OnClick="() => OnPrinterSelected(bs.ConnectionServiceSerial.portName)" Disabled="@(!bs.ConnectionServiceSerial.IsConnected ? true : false)">
+                <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.ConnectionServiceSerial.IsConnected ? Severity.Success : Severity.Error )" Variant="Variant.Text">
+                    @(new MarkupString(bs.ConnectionServiceSerial.IsConnected ? $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Connected" : $"<strong>{bs.ConnectionServiceSerial.portName}</strong> - Disconnected"))
+                </MudAlert>
+            </MudMenuItem>
         }
-    }
-</MudSelect>
-<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SelectPrinter(PortManager.SelectPrinterString)">Select</MudButton>
-<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SendTestCommand()">Send Test Command</MudButton>
-<MudButton Color="Color.Tertiary" @onclick="() => PortManager.SendTestCommand1()">Send Test from printer data</MudButton>
-
+    </ChildContent>
+</MudMenu>
 
 @code {
 
@@ -47,10 +37,9 @@
         //     Console.WriteLine($"Hi from {source.ConnectionServiceSerial.portName}");
         //     StateHasChanged();
         // });
-        if (PortManager.SelectPrinterString == source.ConnectionServiceSerial.portName)
+        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
         {
             // printingService.UpdatePrintProgress(message);
-            Console.WriteLine($"Hi from {source.ConnectionServiceSerial.portName}");
         }
 
         InvokeAsync(StateHasChanged);
@@ -62,5 +51,16 @@
         {
             StateHasChanged();
         });
+    }
+
+    private void OnPrinterSelected(string portName)
+    {
+        PortManager.SelectedPrinter = portName;
+        PortManager.SelectPrinter(PortManager.SelectedPrinter);
+    }
+
+    public void Dispose()
+    {
+        background.SecondElapsed -= OnSecondElapsed;
     }
 }

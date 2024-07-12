@@ -1,4 +1,5 @@
 ﻿@page "/print"
+@page "/"
 @inject PrintingService PrintManager
 @inject PrinterDataServiceTest PrinterDataHandler
 @inject NavigationManager MyNavigationManager
@@ -19,7 +20,6 @@
 @using System.Text
 @using System.Diagnostics
 
-<ConnectionStatus Connection="background.ConnectionServiceSerial.printerConnection.IsConnected" />
 <PrinterState />
 
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
@@ -135,7 +135,6 @@
                         </MudSelectItem>
                     }
                 }
-
             </MudSelect>
         }
 
@@ -347,9 +346,9 @@
                                 <!-- Button to start preheating -->
                                 @* <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton> *@
                                 <MudIconButton Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                               Size="Size.Medium" 
-                                               Variant="Variant.Text" 
-                                               Color="Color.Warning" 
+                                               Size="Size.Medium"
+                                               Variant="Variant.Text"
+                                               Color="Color.Warning"
                                                OnClick="() => PrinterDataHandler.StartPreheating(profile)" />
                                 <!-- Button to delete preheating profile -->
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
@@ -427,14 +426,13 @@
     protected override void OnInitialized()
     {
         // Subscribe to the background service events
-        // background.MessageReceived += OnUpdate;
         background.SecondElapsed += OnSecondElapsed;
-
+        PortManager.SelectedPrinterChanged += OnSelectedPrinter;
         // Check if the serial connection is established and request SD card list if connected
-        if (PortManager.connection.ConnectionServiceSerial.IsConnected)
-        {
-            PortManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
-        }
+        // if (PortManager.connection.ConnectionServiceSerial.IsConnected)
+        // {
+        //     PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
+        // }
 
         // Initialize the configuration for Plotly chart
         config = new Config
@@ -492,8 +490,10 @@
 
                 // Load Plotly data if available
                 LoadPlotlyData();
-                if (PortManager.connections != null)
+                if (PortManager.connections != null && PortManager.connections.Count > 0)
                 {
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
+
                     foreach (var port in PortManager.connections.Values)
                     {
                         port.InputReceived += OnUpdate;
@@ -504,14 +504,31 @@
         }
     }
 
+    public async void OnSelectedPrinter(object sender, EventArgs e)
+    {
+        try
+        {
+            await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
+        }
+        catch (NavigationException navEx)
+        {
+            Console.WriteLine($"Navigation error: {navEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Handles updates from the printer.
     /// </summary>
     /// <param name="message">The message received from the printer.</param>
     public async void OnUpdate(string message, SerialDataProcessorService source)
     {
-        if(PortManager.SelectPrinterString == source.ConnectionServiceSerial.portName)
+        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
         {
+            Console.WriteLine(message);
             // get the list of files on the SD card
             fileMessage += message;
             if (message.Contains("End"))
@@ -545,9 +562,10 @@
                     // save the new bed leveling data
                     PrinterDataHandler.SavePrinterData("meshData.json", PrinterDataHandler.BedLevelDataService.CSVData);
                     LoadPlotlyData();
-                    MyNavigationManager.NavigateTo("/print", true);
+                    await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
                 }
             }
+
             // parse the current hotend and bed temperatures
             await PrinterDataHandler.HotendTemperatureService.ParseCurrentHotendTemperature(message);
             await PrinterDataHandler.BedTemperatureService.ParseCurrentBedTemperature(message);
@@ -562,44 +580,40 @@
     private void OnSecondElapsed()
     {
         // Check if the connection to the serial device is established
-        // if (PortManager.connections[PortManager.SelectPrinterString].ConnectionServiceSerial.IsConnected)
-        // {
-            Task.Run(async () =>
+        Task.Run(async () =>
+        {
+            // If automatic temperature reporting is not enabled, request temperature data
+            if (!PrinterDataHandler.Printer.HasAutoReportTemperature)
             {
-                // If automatic temperature reporting is not enabled, request temperature data
-                if (!PrinterDataHandler.Printer.HasAutoReportTemperature)
-                {
-                    PortManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
-                }
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
+            }
 
-                // Ensure the graph data does not exceed 30 entries by removing the oldest entries
-                if (Data.PrintingService.hotendGraph.Count >= 30)
-                {
-                    Data.PrintingService.hotendGraph.RemoveAt(0);
-                    Data.PrintingService.bedGraph.RemoveAt(0);
-                }
+            // Ensure the graph data does not exceed 30 entries by removing the oldest entries
+            if (PrintingService.hotendGraph.Count >= 30)
+            {
+                PrintingService.hotendGraph.RemoveAt(0);
+                PrintingService.bedGraph.RemoveAt(0);
+            }
 
-                // Add the current temperature data to the graph
-                Data.PrintingService.hotendGraph.Add(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature);
-                Data.PrintingService.bedGraph.Add(PrinterDataHandler.BedTemperatureService.currentBedTemperature);
+            // Add the current temperature data to the graph
+            PrintingService.hotendGraph.Add(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature);
+            PrintingService.bedGraph.Add(PrinterDataHandler.BedTemperatureService.currentBedTemperature);
 
-                // Update the graph data with the latest values
-                PrintManager.UpdateGraphData();
+            // Update the graph data with the latest values
+            PrintManager.UpdateGraphData();
 
-                // Asynchronously get the status of the drives
-                await Task.Run(() => PrintManager.GetDrives());
+            // Asynchronously get the status of the drives
+            await Task.Run(() => PrintManager.GetDrives());
 
-                // If printing is in progress, request print time elapsed
-                if (PrintManager.isPrinting)
-                {
-                    // background.ConnectionServiceSerial.Write("M31");
-                    await PrintManager.DisplayEstimatedTimeRemaining();
-                }
-                _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
+            // If printing is in progress, request print time elapsed
+            if (PrintManager.isPrinting)
+            {
+                await PrintManager.DisplayEstimatedTimeRemaining();
+            }
+            _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
 
-                await InvokeAsync(StateHasChanged);
-            });
-        // }
+            await InvokeAsync(StateHasChanged);
+        });
     }
 
     /// <summary>
@@ -663,7 +677,7 @@
 
                 if (result == true)
                 {
-                    PortManager.connection.ConnectionServiceSerial.Write("M876 S1");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
                 }
             }
 
@@ -676,7 +690,7 @@
 
                 if (result == true)
                 {
-                    PortManager.connection.ConnectionServiceSerial.Write("M876 S1");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
                 }
             }
 
@@ -689,7 +703,7 @@
 
                 if (result == true)
                 {
-                    PortManager.connection.ConnectionServiceSerial.Write("M876 S1");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
                 }
             }
 
@@ -702,17 +716,16 @@
 
                 if (result == true)
                 {
-                    PortManager.connection.ConnectionServiceSerial.Write("M876 S1");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
                 }
                 else
                 {
-                    PortManager.connection.ConnectionServiceSerial.Write("M876 S0");
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S0");
                     PrintManager._snackbar.Add("Purging", Severity.Info);
                 }
             }
         });
     }
-
 
     public void Dispose()
     {
@@ -726,5 +739,6 @@
         }
         background.SecondElapsed -= OnSecondElapsed;
 
+        PortManager.SelectedPrinterChanged -= OnSelectedPrinter;
     }
 }

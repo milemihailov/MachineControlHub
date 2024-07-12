@@ -1,42 +1,75 @@
-﻿@page "/connection"
-@page "/"
-@using MachineControlHub.PrinterConnection
+﻿@using MachineControlHub.PrinterConnection
 @inject Data.PrinterDataServiceTest printer
 @inject Data.PortConnectionManagerService PortManager
 @inject Data.SerialDataProcessorService TestConnections
+@*
+<MudButton OnClick="OnExpandCollapseClick">@(_expanded ? "Collapse" : "Expand")</MudButton>
+<MudDivider />
+<MudCollapse Expanded="_expanded">
+    <div style="display: flex; gap: 16px; padding: 0px 56px;">
+        <MudSelect T="string" Label="Select Port" @bind-Value="PortManager.portName" Immediate="true" Variant="Variant.Text" Style="max-width:160px;">
+            @foreach (var template in printer.PortManager.connection.ConnectionServiceSerial.GetPorts())
+            {
+                <MudSelectItem Value=@template />
+            }
+        </MudSelect>
+        <MudSelect T="int" Label="Select Baudrate" @bind-Value="PortManager.baudRate" Variant="Variant.Text" Style="max-width:160px;">
+            <MudSelectItem Value="115200" />
+            <MudSelectItem Value="250000" />
+        </MudSelect>
+    </div>
+    <MudButton Color="Color.Tertiary" @onclick="ConnectionConfiguration">Connect</MudButton>
+    <MudButton Color="Color.Error" @onclick="Disconnect"> Disconnect</MudButton>
+</MudCollapse> *@
 
-<PageTitle>Serial Connection</PageTitle>
-<ConnectionStatus Connection="PortManager.connection.IsConnected" />
+<MudContainer Style="display: flex; justify-content: center; align-items: center;" Class="pt-3">
+    <MudStack Spacing="2">
+        <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.PrivateConnectivity" Color="Color.Tertiary" OnClick="OnExpandCollapseClick"></MudFab>
+        <MudCollapse Expanded="_expanded">
+            <MudPaper >
+                <div style="display: flex; gap: 16px; padding: 0px 56px;">
+                    <MudSelect T="string" Label="Select Port" @bind-Value="PortManager.portName" Immediate="true" Variant="Variant.Text" Style="max-width:160px;">
+                        @foreach (var template in printer.PortManager.connection.ConnectionServiceSerial.GetPorts())
+                        {
+                            <MudSelectItem Value=@template />
+                        }
+                    </MudSelect>
+                    <MudSelect T="int" Label="Select Baudrate" @bind-Value="PortManager.baudRate" Variant="Variant.Text" Style="max-width:160px;">
+                        <MudSelectItem Value="115200" />
+                        <MudSelectItem Value="250000" />
+                    </MudSelect>
+                </div>
 
-<MudPaper Height="500px" Width="100%" Elevation="0" Class="pt-10">
-    <MudContainer MaxWidth="MaxWidth.Small">
-        <MudPaper Style="display: flex; justify-content:center;" Class="pt-2" Elevation="0">
-            <MudButton Color="Color.Tertiary" @onclick="ConnectionConfiguration">Connect</MudButton>
-            <MudButton Color="Color.Error" @onclick="Disconnect"> Disconnect</MudButton>
-        </MudPaper>
-    </MudContainer>
+                <MudGrid Class="pt-5">
+                    <!-- Button to change filament -->
+                    <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
+                        <MudButton Disabled="@(PortManager.connections.ContainsKey(PortManager.portName) ? true : false )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => {ConnectionConfiguration(); OnExpandCollapseClick();}">Connect</MudButton>
+                    </MudItem>
+                    <!-- Button to load filament -->
+                    <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
+                        <MudButton Disabled="@(PortManager.connections.ContainsKey(PortManager.portName) ? false : true )" FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="() => {Disconnect(); OnExpandCollapseClick();}"> Disconnect</MudButton>
+                    </MudItem>
+                    <!-- Button to unload filament -->
+                    <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
+                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="OnExpandCollapseClick">Hide</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
 
-    <MudContainer MaxWidth="MaxWidth.ExtraSmall">
-        <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="string" Label="Select Port" @bind-Value="PortManager.portName" Immediate="true" Variant="Variant.Outlined">
-                @foreach (var template in printer.serialConnection.connection.ConnectionServiceSerial.GetPorts())
-                {
-                    <MudSelectItem Value=@template />
-                }
-            </MudSelect>
-        </MudPaper>
-    </MudContainer>
-    <MudContainer MaxWidth="MaxWidth.ExtraSmall">
-        <MudPaper Style="display: flex; justify-content: center;" class="pt-2" Elevation="0">
-            <MudSelect T="int" Label="Select Baudrate" @bind-Value="PortManager.baudRate" Variant="Variant.Outlined">
-                <MudSelectItem Value="115200" />
-                <MudSelectItem Value="250000" />
-            </MudSelect>
-        </MudPaper>
-    </MudContainer>
-</MudPaper>
+        </MudCollapse>
+    </MudStack>
+</MudContainer>
+
+
 
 @code {
+
+    bool _expanded = false;
+
+    private void OnExpandCollapseClick()
+    {
+        _expanded = !_expanded;
+    }
 
     public async void ConnectionConfiguration()
     {
@@ -44,34 +77,25 @@
         {
             PortManager.CreateConnection(PortManager.portName, PortManager.baudRate);
 
-            // // Initialize the connection with the selected COM port and baud rate
-            // selectedPort.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
-            // selectedPort.ConnectionServiceSerial.IsConnected = true;
-            // selectedPort.ConnectionServiceSerial.Connect();
-            // background.UpdateConnectionStatus();
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.Initialize($"{PortManager.portName},{PortManager.baudRate}");
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.IsConnected = true;
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.Connect();
-            // // background.ConnectionServiceSerial.Initialize($"{background.ConnectionServiceSerial.portName},{background.ConnectionServiceSerial.baudRate}");
-            // // background.ConnectionServiceSerial.IsConnected = true;
-            // // background.ConnectionServiceSerial.Connect();
-            // // background.SavePortName();
-            // // xzy.CreateConnection(background.ConnectionServiceSerial.portName);
+
             PortManager.connection = PortManager.connections[PortManager.portName];
-            // PortManager.connection.ConnectionServiceSerial.Write("M27 S1");
-            // //set the host keep alive command to 1 second after connection
-            // selectedPort.ConnectionServiceSerial.Write("M113 S1");
-            // //ask for bed volume
-            // selectedPort.ConnectionServiceSerial.Write("M211");
-            // //Report SD status every 2 seconds
-            // selectedPort.ConnectionServiceSerial.Write("M27 S2");
-            // //report temperature every 1 seconds
-            // selectedPort.ConnectionServiceSerial.Write("M155 S1");
-            // selectedPort.ConnectionServiceSerial.Initialize($"{TestConnections.ConnectionServiceSerial.portName},{TestConnections.ConnectionServiceSerial.baudRate}");
-            // selectedPort.ConnectionServiceSerial.IsConnected = true;
-            // selectedPort.ConnectionServiceSerial.Connect();
-            printer.GetPrinterSettings();
+
+            // printer.GetPrinterSettings();
             // printer.GetFirmwareSettings();
+            printer.CreatePrinterProfile(PortManager.portName);
+
+            //set the host keep alive command to 1 second after connection
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M113 S1");
+            //ask for bed volume
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M211");
+            //Report SD status every 2 seconds
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M27 S2");
+            //report temperature every 1 seconds
+            PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M155 S1");
+
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception e)
@@ -83,6 +107,7 @@
     public void Disconnect()
     {
         PortManager.connections[PortManager.portName].ConnectionServiceSerial.Disconnect();
+        PortManager.connections.Remove(PortManager.portName);
         StateHasChanged();
         Console.WriteLine($"Disconecting port{PortManager.portName}");
     }

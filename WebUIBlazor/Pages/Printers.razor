@@ -2,8 +2,6 @@
 @inject Data.PrinterDataServiceTest printer
 @inject Data.BackgroundTimer background
 
-<ConnectionStatus />
-
 <MudCard>
     <MudExpansionPanels MultiExpansion="true">
         @foreach (var p in printer.Printers)
@@ -55,8 +53,7 @@
                     }
 
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => ChooseAndCollapse(p)">Select</MudButton>
-                    @* <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.RemovePrinter(p)">Delete Profile</MudButton> *@
-
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => printer.RemovePrinter(p)">Delete Profile</MudButton>
                 </MudList>
             </MudExpansionPanel>
         }
@@ -70,17 +67,17 @@
     {
         printer.Printers = printer.LoadPrinterDataList<MachineControlHub.Printer>(Data.PrinterDataServiceTest.PRINTER_DATA_PATH);
         printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
-        if (printer.Printers.Any())
-        {
-            string targetID = printer.SelectedPrinter.Id;
-            printer.SelectedPrinter = printer.Printers.Where(p => p.Id == targetID).FirstOrDefault();
-        }
+        // if (printer.Printers.Any())
+        // {
+        //     string targetID = printer.SelectedPrinter.Id;
+        //     printer.SelectedPrinter = printer.Printers.Where(p => p.Id == targetID).FirstOrDefault();
+        // }
     }
 
 
     private void ChooseAndCollapse(MachineControlHub.Printer p)
     {
-        // printer.ChoosePrinter(p);
+        printer.ChoosePrinter(p);
         PanelRefs[p].Collapse(false);
     }
 }
