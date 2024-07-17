@@ -82,7 +82,6 @@
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.Connect();
 
             PortManager.connection = PortManager.connections[PortManager.portName];
-
             // printer.GetPrinterSettings();
             // printer.GetFirmwareSettings();
             printer.CreatePrinterProfile(PortManager.portName);
@@ -95,6 +94,8 @@
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M27 S2");
             //report temperature every 1 seconds
             PortManager.connections[PortManager.portName].ConnectionServiceSerial.Write("M155 S1");
+            await Task.Delay(1000);
+            PortManager.SelectedPrinter = PortManager.portName;
 
             await InvokeAsync(StateHasChanged);
         }

@@ -180,19 +180,6 @@
             };
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            if (portManager.connections != null && portManager.connections.Count > 0)
-            {
-                await Task.Run(() =>
-                {
-                });
-            }
-        }
-    }
-
     public async void OnSelectedPrinter(object sender, EventArgs e)
     {
         try
@@ -209,15 +196,16 @@
         }
     }
 
-    public void OnUpdate(string message, SerialDataProcessorService source)
+    public async void OnUpdate(string message, SerialDataProcessorService source)
     {
         Series = new List<ChartSeries>
     {
         new ChartSeries() { Name = "Fan Speed", Data = new double[] { control.fanSpeedInPercentage, control.feedRatePercentage ,control.printFlowPercentage } },
     };
-        Task.Run(() =>
+        await Task.Run(() =>
         {
             control.UpdateParagraph(message);
+
             printer.SetBedVolume(message);
             InvokeAsync(StateHasChanged);
         });

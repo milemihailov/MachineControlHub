@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace WebUI.Data
 {
@@ -8,6 +9,8 @@ namespace WebUI.Data
         public SerialDataProcessorService connection;
 
         public Dictionary<string, SerialDataProcessorService> connections = new();
+
+        private CancellationTokenSource _cancellationTokenSource;
 
         private string _selectedPrinter = "";
         public string SelectedPrinter
@@ -27,6 +30,8 @@ namespace WebUI.Data
 
         public string portName = "";
         public int baudRate = 115200;
+        public bool IsBusy => connection.IsBusy;
+        public bool IsConnected => connection.IsConnected;
 
         public PortConnectionManagerService()
         {
@@ -47,12 +52,34 @@ namespace WebUI.Data
             }
         }
 
-        public void Output(string input, SerialDataProcessorService source)
+        public async void Output(string input, SerialDataProcessorService source)
         {
-            if(SelectedPrinter == source.ConnectionServiceSerial.portName)
+            if (SelectedPrinter == source.ConnectionServiceSerial.portName)
             {
-                //Console.WriteLine($"{source.ConnectionServiceSerial.portName}{input}");
-                //Console.WriteLine($"{source.ConnectionServiceSerial.portName}{source.Notification}");
+                if (input.Contains("echo:busy: processing"))
+                {
+                    connections[SelectedPrinter].IsBusy = true;
+                    // Cancel the previous token if it exists
+                    _cancellationTokenSource?.Cancel();
+
+                    // Create a new CancellationTokenSource
+                    _cancellationTokenSource = new CancellationTokenSource();
+
+                    // Start a new task to reset IsBusy after 5 seconds if no new messages are received
+                    var token = _cancellationTokenSource.Token;
+                    await Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(2000, token);
+                            connections[SelectedPrinter].IsBusy = false;
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // Task was canceled, do nothing
+                        }
+                    }, token);
+                }
             }
         }
 

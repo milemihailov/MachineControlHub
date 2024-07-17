@@ -41,6 +41,11 @@ namespace WebUI.Data
             return printerConnection.Read();
         }
 
+        public string ReadAll()
+        {
+            return printerConnection.ReadAll();
+        }
+
         public void Disconnect()
         {
             printerConnection.Disconnect();

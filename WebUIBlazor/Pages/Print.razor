@@ -44,7 +44,7 @@
             <!-- Button to resume printing -->
             <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.ResumePrint">Resume</MudButton>
             <!-- Button to stop printing -->
-            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="PrintManager.StopPrint">Stop</MudButton>
+            <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.StopPrint(PortManager.connections[PortManager.SelectedPrinter])">Stop</MudButton>
         </ContainerSpaceBetween>
 
         <MudDivider Class="pt-5" />
@@ -405,7 +405,6 @@
                       ChartOptions="PrintManager.Options" />
         </div>
     </MudItem>
-
 </MudGrid>
 
 @code {
@@ -423,46 +422,60 @@
     /// Method that is called when the component is initialized.
     /// Sets up event handlers, initializes configuration, layout, and loads printer data.
     /// </summary>
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
         // Subscribe to the background service events
         background.SecondElapsed += OnSecondElapsed;
         PortManager.SelectedPrinterChanged += OnSelectedPrinter;
-        // Check if the serial connection is established and request SD card list if connected
-        // if (PortManager.connection.ConnectionServiceSerial.IsConnected)
-        // {
-        //     PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
-        // }
 
-        // Initialize the configuration for Plotly chart
-        config = new Config
-            {
-                ShowLink = false,
-                Responsive = true,
-                DisplayLogo = true
-            };
+        await Task.Run(() =>
+        {
+            // Initialize the data list
+            data = new List<ITrace>();
 
-        // Initialize the layout for Plotly chart
-        layout = new Layout
+            // Check if the serial connection is established and request SD card list if connected
+            if (PortManager.connections != null && PortManager.connections.Count > 0)
             {
-                Title = new Title
+                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
+
+                // Subscribe to the InputReceived event of the selected printer
+                foreach (var port in PortManager.connections.Values)
                 {
-                    Text = "Bed Mesh"
-                },
-                PaperBgColor = "white",
-                PlotBgColor = "white",
-                Font = new Font
-                {
-                    Color = "black"
-                },
-                Margin = new Plotly.Blazor.LayoutLib.Margin
-                {
-                    L = 65,
-                    R = 50,
-                    B = 65,
-                    T = 90
+                    port.InputReceived += OnUpdate;
                 }
-            };
+            }
+
+
+            // Initialize the configuration for Plotly chart
+            config = new Config
+                {
+                    ShowLink = false,
+                    Responsive = true,
+                    DisplayLogo = true
+                };
+
+            // Initialize the layout for Plotly chart
+            layout = new Layout
+                {
+                    Title = new Title
+                    {
+                        Text = "Bed Mesh"
+                    },
+                    PaperBgColor = "white",
+                    PlotBgColor = "white",
+                    Font = new Font
+                    {
+                        Color = "black"
+                    },
+                    Margin = new Plotly.Blazor.LayoutLib.Margin
+                    {
+                        L = 65,
+                        R = 50,
+                        B = 65,
+                        T = 90
+                    }
+                };
+        });
         // Load preheating profiles from the specified path
         PrinterDataHandler.preheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataServiceTest.PREHEATING_PROFILES_PATH);
 
@@ -471,40 +484,18 @@
 
         // Load the bed mesh CSV data from the specified path
         PrinterDataHandler.BedLevelDataService.CSVData = PrinterDataHandler.LoadPrinterData<string>("meshData.json");
+
+        // Load Plotly data if available
+        LoadPlotlyData();
+
     }
 
     /// <summary>
-    /// Method that is invoked after the component has rendered.
-    /// It initializes and loads Plotly data on the first render.
+    /// Refreshes the component state when toggling between printers.
     /// </summary>
-    /// <param name="firstRender">Indicates whether this is the first time the component is rendered.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await Task.Run(() =>
-            {
-                // Initialize the data list
-                data = new List<ITrace>();
-
-                // Load Plotly data if available
-                LoadPlotlyData();
-                if (PortManager.connections != null && PortManager.connections.Count > 0)
-                {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildListSDCardCommand());
-
-                    foreach (var port in PortManager.connections.Values)
-                    {
-                        port.InputReceived += OnUpdate;
-                    }
-                }
-
-            });
-        }
-    }
-
-    public async void OnSelectedPrinter(object sender, EventArgs e)
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private async void OnSelectedPrinter(object sender, EventArgs e)
     {
         try
         {
@@ -523,12 +514,11 @@
     /// <summary>
     /// Handles updates from the printer.
     /// </summary>
-    /// <param name="message">The message received from the printer.</param>
+    /// <param name="message">The message received from the printer.</param> 
     public async void OnUpdate(string message, SerialDataProcessorService source)
     {
-        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
+        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName && PortManager.connections.Count > 0)
         {
-            Console.WriteLine(message);
             // get the list of files on the SD card
             fileMessage += message;
             if (message.Contains("End"))
@@ -566,27 +556,11 @@
                 }
             }
 
+            PrintManager.GetPrintingFileName(message);
+
             // parse the current hotend and bed temperatures
             await PrinterDataHandler.HotendTemperatureService.ParseCurrentHotendTemperature(message);
             await PrinterDataHandler.BedTemperatureService.ParseCurrentBedTemperature(message);
-            await PromptHandler(message);
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    /// <summary>
-    /// This method is called every second to update temperature data and print status.
-    /// </summary>
-    private void OnSecondElapsed()
-    {
-        // Check if the connection to the serial device is established
-        Task.Run(async () =>
-        {
-            // If automatic temperature reporting is not enabled, request temperature data
-            if (!PrinterDataHandler.Printer.HasAutoReportTemperature)
-            {
-                PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
-            }
 
             // Ensure the graph data does not exceed 30 entries by removing the oldest entries
             if (PrintingService.hotendGraph.Count >= 30)
@@ -602,18 +576,42 @@
             // Update the graph data with the latest values
             PrintManager.UpdateGraphData();
 
-            // Asynchronously get the status of the drives
-            await Task.Run(() => PrintManager.GetDrives());
-
-            // If printing is in progress, request print time elapsed
-            if (PrintManager.isPrinting)
-            {
-                await PrintManager.DisplayEstimatedTimeRemaining();
-            }
-            _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
-
+            await PromptHandler(message);
             await InvokeAsync(StateHasChanged);
-        });
+        }
+    }
+
+    /// <summary>
+    /// This method is called every second to update temperature data and print status.
+    /// </summary>
+    private void OnSecondElapsed()
+    {
+        if(!PortManager.IsBusy)
+        {
+            Task.Run(async () =>
+            {
+                // If automatic temperature reporting is not enabled, request temperature data
+                if (!PrinterDataHandler.Printer.HasAutoReportTemperature)
+                {
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
+                    Console.WriteLine("reporting");
+                }
+
+                // Asynchronously get the status of the drives
+                await Task.Run(() => PrintManager.GetDrives());
+
+                // If printing is in progress, request print time elapsed
+                if (PrintManager.isPrinting)
+                {
+                    await PrintManager.DisplayEstimatedTimeRemaining();
+                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M27 C");
+                }
+
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
+
     }
 
     /// <summary>
@@ -643,24 +641,31 @@
     /// </summary>
     private void LoadPlotlyData()
     {
-        // Check if there is CSV data to process
-        if (PrinterDataHandler.BedLevelDataService.CSVData != null)
+        try
         {
-            // Get the surface data from the CSV
-            PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
-
-            Task.Run(async () =>
+            // Check if there is CSV data to process
+            if (PrinterDataHandler.BedLevelDataService.CSVData != null)
             {
-                // Iterate over each trace in the mesh data
-                foreach (var trace in await PrinterDataHandler.BedLevelDataService.meshData)
-                {
-                    // Add the trace to the chart asynchronously and delay briefly between each addition
-                    await InvokeAsync(async () => await chart.AddTrace(trace));
-                    await Task.Delay(100);
-                }
+                // Get the surface data from the CSV
+                PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
 
-                PrinterDataHandler.BedLevelDataService._isInitialized = true;
-            });
+                Task.Run(async () =>
+                {
+                    // Iterate over each trace in the mesh data
+                    foreach (var trace in await PrinterDataHandler.BedLevelDataService.meshData)
+                    {
+                        // Add the trace to the chart asynchronously and delay briefly between each addition
+                        await InvokeAsync(async () => await chart.AddTrace(trace));
+                        await Task.Delay(100);
+                    }
+
+                    PrinterDataHandler.BedLevelDataService._isInitialized = true;
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
         }
     }
 

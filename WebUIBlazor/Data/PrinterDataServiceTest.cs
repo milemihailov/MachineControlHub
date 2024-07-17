@@ -82,52 +82,7 @@ namespace WebUI.Data
             Printer.Bed = new PrinterBed();
             Printers = new List<Printer>();
             SelectedPrinter = new Printer();
-
-            //if (serialConnection.connections != null)
-            //{
-            //    foreach (var connection in serialConnection.connections.Values)
-            //    {
-            //        connection.InputReceived += OnUpdateSettings;
-            //        Console.WriteLine(connection);
-            //    }
-            //}
-
         }
-
-        //public string portName = "";
-        //public int baudRate = 115200;
-
-        //public void ConnectionConfiguration()
-        //{
-        //    try
-        //    {
-        //        serialConnection.CreateConnection(portName, baudRate);
-
-        //        serialConnection.connections[portName].ConnectionServiceSerial
-        //            .Initialize($"{portName},{baudRate}");
-
-        //        serialConnection.connections[portName].IsConnected = true;
-        //        serialConnection.connections[portName].ConnectionServiceSerial.Connect();
-
-        //        serialConnection.connection = serialConnection.connections[portName];
-
-        //serialConnection.connection.InputReceived += (message) => _ = OnUpdateSettings(message);
-
-        //        //GetPrinterSettings();
-        ////        //GetFirmwareSettings();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Console.WriteLine(e);
-        //    }
-        //}
-
-        //public void Disconnect()
-        //{
-        //    serialConnection.connections[portName].ConnectionServiceSerial.Disconnect();
-        //    serialConnection.connections.Remove(portName);
-        //    Console.WriteLine($"Disconecting port{portName}");
-        //}
 
         public void ChoosePrinter(Printer printer)
         {
@@ -153,16 +108,28 @@ namespace WebUI.Data
         //    }
         //}
 
-        public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob)
+        public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob,SerialDataProcessorService source)
         {
             var newPrintJob = new CurrentPrintJob(PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection)
             {
+                PrinterName = source.ConnectionServiceSerial.portName,
                 FileName = currentPrintJob.FileName,
                 TotalPrintTime = currentPrintJob.TotalPrintTime,
                 StartTimeOfPrint = currentPrintJob.StartTimeOfPrint,
                 FileSize = currentPrintJob.FileSize
             };
+
+            // Deserialize the print history list
+            printHistory = LoadPrinterDataList<CurrentPrintJob>(PRINT_HISTORY_PATH);
+            // Add the new print job to the top of the list
             printHistory.Insert(0, newPrintJob);
+            // Serialize updated print history list
+            SavePrinterData(PRINT_HISTORY_PATH, printHistory);
+        }
+
+        public void RemovePrintJob(CurrentPrintJob printJob)
+        {
+            printHistory.Remove(printJob);
             SavePrinterData(PRINT_HISTORY_PATH, printHistory);
         }
 
@@ -212,7 +179,7 @@ namespace WebUI.Data
             Printers.Add(newPrinter);
             foreach (var printer in Printers)
             {
-                Console.WriteLine(printer);
+                Console.WriteLine(printer.Name);
             }
             SavePrinterData(PRINTER_DATA_PATH, Printers);
         }
@@ -628,22 +595,6 @@ namespace WebUI.Data
                 }
             }
         }
-
-        //public void GetPrintJobStats(string input)
-        //{
-        //    if (input.Contains("Stats"))
-        //    {
-        //        var newStats = input
-        //    .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries) // Split input into lines
-        //    .Select(line => line.StartsWith("Stats:") ? line.Substring("Stats:".Length) : line) // Remove "Stats:" from the start
-        //    .SelectMany(line => line.Split(new[] { ", " }, StringSplitOptions.None) // Split each line by ", "
-        //        .Select((part, index) => index == 0 ? part.Trim() : "\n" + part.Trim())) // Add newline except for the first part, trim spaces
-        //    .ToList();
-
-        //        // Append new stats to the existing list instead of overwriting it
-        //        printJobStats.AddRange(newStats);
-        //    }
-        //}
 
         public void GetPrintJobStats(string input)
         {

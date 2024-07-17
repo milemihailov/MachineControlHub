@@ -19,14 +19,14 @@
     <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
         <MudText Typo="Typo.h6" Color="Color.Primary">@PortManager.connection.Notification</MudText>
     </MudAlert>
-
-    @*         <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!background.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
-            @if (background.IsBusy)
-            {
-                <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
-            }
-            @(new MarkupString(!background.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
-        </MudAlert> *@
+@* 
+    <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!PortManager.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
+        @if (PortManager.IsBusy)
+        {
+            <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+        }
+        @(new MarkupString(!PortManager.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+    </MudAlert> *@
 
     @*     <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.progress" Class="pb-9">
         <MudText Typo="Typo.subtitle1" Color="Color.Surface">
@@ -47,8 +47,12 @@
 
     public void OnMessageReceived(string message, SerialDataProcessorService source)
     {
-        printingService.UpdatePrintProgress(message);
-        InvokeAsync(StateHasChanged);
+        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
+        {
+            printingService.UpdatePrintProgress(message, source);
+            // Console.WriteLine($"This is selected port: {source.ConnectionServiceSerial.portName}");
+            InvokeAsync(StateHasChanged);
+        }
     }
 
 

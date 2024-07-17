@@ -31,6 +31,8 @@ namespace MachineControlHub.Print
         {
 
         }
+        public string PrinterName { get; set; }
+
         /// <summary>
         /// Gets the name of the printed file.
         /// </summary>

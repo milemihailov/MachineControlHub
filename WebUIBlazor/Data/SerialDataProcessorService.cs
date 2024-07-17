@@ -14,6 +14,7 @@ namespace WebUI.Data
         public event Action ConnectionStatusChanged;
         public string SelectedPort { get; set; }
         public bool IsConnected { get; set; }
+        public bool IsBusy { get; set; }
         private string Input { get; set; }
         public string Notification { get; set; }
 
@@ -47,7 +48,7 @@ namespace WebUI.Data
                 ParseNotifications(Input);
 
                 InputReceived?.Invoke(Input, this);
-                Console.WriteLine($"{ConnectionServiceSerial.portName} : {readData}");
+                //Console.WriteLine($"{ConnectionServiceSerial.portName} : {readData}");
                 //Console.WriteLine($"This is selected port: {SelectedPort}");
             }
         }

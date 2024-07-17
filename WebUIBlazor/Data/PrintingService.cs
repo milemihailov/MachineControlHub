@@ -79,7 +79,7 @@ namespace WebUI.Data
             _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
-        public async Task StopPrint()
+        public async Task StopPrint(SerialDataProcessorService source)
         {
             if (portConnectionManager.connection.ConnectionServiceSerial.printerConnection.IsConnected)
             {
@@ -95,7 +95,7 @@ namespace WebUI.Data
                     progress = 0;
                     FormatTotalPrintTime();
                     isPrinting = false;
-                    _printerDataServiceTest.AddPrintJobToHistory(printJob);
+                    _printerDataServiceTest.AddPrintJobToHistory(printJob, source);
 
                     _snackbar.Add("Print Stopped", Severity.Error);
                 }
@@ -135,12 +135,6 @@ namespace WebUI.Data
             printJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
         }
 
-        //public void ExtractPrintingSettings(string file)
-        //{
-        //    printJob.ParseExtractedSettingsFromPrintedFile(file);
-        //    extractedSettings = printJob.ExtractedSettingsFromPrintedFile;
-        //}
-
         public void GetFileNameAndSize(string input)
         {
             var file = SDFiles.FirstOrDefault(f => f.FileName == input);
@@ -150,21 +144,6 @@ namespace WebUI.Data
                 printJob.FileSize = double.Parse(file.FileSize);
             }
         }
-
-
-        //public void ElapsedPrintTime(string message)
-        //{
-        //    if (message.Contains("echo:Print time:"))
-        //    {
-        //        Match match = Regex.Match(message, @"(?<=echo:Print time: )((\d+h\s*)?(\d+m\s*)?(\d+s)?)", RegexOptions.IgnoreCase);
-        //        string newTimeElapsed = match.Groups[0].Value;
-
-        //        if (newTimeElapsed != timeElapsed)
-        //        {
-        //            timeElapsed = newTimeElapsed;
-        //        }
-        //    }
-        //}
 
         public async Task ConfirmStartAsync()
         {
@@ -184,7 +163,6 @@ namespace WebUI.Data
                     else
                     {
                         StartPrint(fileToPrint);
-                        //StartPrintTimer();
                         StartTimeOfPrint();
                         background.ResetStopwatch();
                         background.StartStopwatch();
@@ -223,7 +201,7 @@ namespace WebUI.Data
         }
 
 
-        public async void UpdatePrintProgress(string message)
+        public async void UpdatePrintProgress(string message, SerialDataProcessorService source)
         {
             if (progress > 0)
             {
@@ -234,7 +212,7 @@ namespace WebUI.Data
                     background.StopStopwatch();
                     progress = 0;
                     FormatTotalPrintTime();
-                    _printerDataServiceTest.AddPrintJobToHistory(printJob);
+                    _printerDataServiceTest.AddPrintJobToHistory(printJob, source);
                 }
             }
             await Task.Run(() =>
@@ -246,6 +224,7 @@ namespace WebUI.Data
                 {
                     printJob.CurrentBytes = int.Parse(printing.Groups[1].Value);
                     printJob.TotalBytes = int.Parse(printing.Groups[2].Value);
+                    printJob.FileSize = printJob.TotalBytes;
                     printJob.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = printJob.CurrentBytes, Timestamp = DateTime.Now });
                     if (printJob.PrintProgressRecords.Count > 100) // Keep the last 100 records
                     {
@@ -262,6 +241,21 @@ namespace WebUI.Data
             });
         }
 
+        public void GetPrintingFileName(string fileName)
+        {
+            var printFile = Regex.Match(fileName, @"Current file: (.*)");
+            try
+            {
+                if (printFile.Success)
+                {
+                    printJob.FileName = printFile.Groups[1].Value;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
 
         public async Task DisplayEstimatedTimeRemaining()
         {

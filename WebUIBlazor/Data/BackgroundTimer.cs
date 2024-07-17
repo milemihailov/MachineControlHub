@@ -149,6 +149,7 @@ namespace WebUI.Data
 
         public void StartStopwatch()
         {
+            stopwatch = new Stopwatch();
             stopwatch.Start();
         }
 
