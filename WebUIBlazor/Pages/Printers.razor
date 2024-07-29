@@ -1,5 +1,5 @@
 ﻿@page "/printers"
-@inject Data.PrinterDataServiceTest printer
+@inject Data.PrinterDataService printer
 @inject Data.BackgroundTimer background
 
 <MudCard>
@@ -65,8 +65,8 @@
 
     protected override void OnInitialized()
     {
-        printer.Printers = printer.LoadPrinterDataList<MachineControlHub.Printer>(Data.PrinterDataServiceTest.PRINTER_DATA_PATH);
-        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
+        printer.Printers = printer.LoadPrinterDataList<MachineControlHub.Printer>(Data.PrinterDataService.PRINTER_DATA_PATH);
+        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataService.SELECTED_PRINTER_SETTINGS_PATH);
         // if (printer.Printers.Any())
         // {
         //     string targetID = printer.SelectedPrinter.Id;

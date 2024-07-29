@@ -1,6 +1,6 @@
 ﻿@using MachineControlHub.Motion
 @using System.Text.RegularExpressions
-@inject Data.PrinterDataServiceTest PrintHandler
+@inject Data.PrinterDataService PrintHandler
 @inject Data.BackgroundTimer background
 @inject Data.PrintingService printingService
 @inject PortConnectionManagerService PortManager
@@ -17,7 +17,7 @@
     }
 
     <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
-        <MudText Typo="Typo.h6" Color="Color.Primary">@PortManager.connection.Notification</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Primary">@PortManager.ActiveConnection.Notification</MudText>
     </MudAlert>
 @* 
     <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!PortManager.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
@@ -50,7 +50,6 @@
         if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
         {
             printingService.UpdatePrintProgress(message, source);
-            // Console.WriteLine($"This is selected port: {source.ConnectionServiceSerial.portName}");
             InvokeAsync(StateHasChanged);
         }
     }

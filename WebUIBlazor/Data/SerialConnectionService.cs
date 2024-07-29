@@ -18,7 +18,6 @@ namespace WebUI.Data
             {
                 portName = ports.First();
             }
-
         }
 
         public void Connect()

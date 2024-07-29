@@ -6,7 +6,6 @@ namespace WebUI.Data
     public class ChamberTemperatureService
     {
         public ITemperatures chamber;
-        private readonly ISnackbar _snackbar;
         private readonly PortConnectionManagerService _portConnectionManager;
 
         public int currentChamberTemperature;
@@ -15,17 +14,16 @@ namespace WebUI.Data
         public int PIDChamberCycles;
         public int PIDChamberTemp;
 
-        public ChamberTemperatureService(ISnackbar snackbar, PortConnectionManagerService portConnectionManager)
+        public ChamberTemperatureService(PortConnectionManagerService portConnectionManager)
         {
-            this._portConnectionManager = portConnectionManager;
-            chamber = new ChamberTemps((portConnectionManager.connection.ConnectionServiceSerial.printerConnection));
-            _snackbar = snackbar;
+            _portConnectionManager = portConnectionManager;
+            chamber = new ChamberTemps((portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection));
         }
 
         public void SetChamberTemperature(int setTemp)
         {
             chamber.SetTemperature(setTemp);
-            _snackbar.Add($"Chamber temperature set to {setTemp}°C", Severity.Info);
+            //_snackbar.Add($"Chamber temperature set to {setTemp}°C", Severity.Info);
         }
 
         public void ParseCurrentChamberTemperature(string input)

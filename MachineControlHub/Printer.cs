@@ -144,6 +144,10 @@ namespace MachineControlHub
         /// </summary>
         public PrintHistory PrintHistory { get; set; }
 
+        public PrintService PrintService { get; set; }
+
+        public PIDValues PIDValues { get; set; }
+
         /// <summary>
         /// Gets or sets the current print job of the printer.
         /// </summary>
@@ -157,6 +161,8 @@ namespace MachineControlHub
         public StepperDriversData StepperDrivers { get; set; }
 
         public IPrinterConnection PrinterConnection { get; set; }
+
+        public SerialConnection SerialConnection { get; set; }
     }
 
 }

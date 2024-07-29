@@ -11,8 +11,7 @@ namespace WebUI.Data
 
         public event Action<string, SerialDataProcessorService> InputReceived;
 
-        public event Action ConnectionStatusChanged;
-        public string SelectedPort { get; set; }
+
         public bool IsConnected { get; set; }
         public bool IsBusy { get; set; }
         private string Input { get; set; }

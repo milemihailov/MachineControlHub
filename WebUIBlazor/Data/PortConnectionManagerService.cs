@@ -6,7 +6,7 @@ namespace WebUI.Data
     public class PortConnectionManagerService
     {
 
-        public SerialDataProcessorService connection;
+        public SerialDataProcessorService ActiveConnection;
 
         public Dictionary<string, SerialDataProcessorService> connections = new();
 
@@ -30,12 +30,12 @@ namespace WebUI.Data
 
         public string portName = "";
         public int baudRate = 115200;
-        public bool IsBusy => connection.IsBusy;
-        public bool IsConnected => connection.IsConnected;
+        public bool IsBusy => ActiveConnection.IsBusy;
+        public bool IsConnected => ActiveConnection.IsConnected;
 
         public PortConnectionManagerService()
         {
-            connection = new SerialDataProcessorService();
+            ActiveConnection = new SerialDataProcessorService();
             //connection.InputReceived += Output;
         }
 
@@ -87,9 +87,8 @@ namespace WebUI.Data
         {
             if (connections.ContainsKey(comport))
             {
-                connection = connections[comport];
-                connection.SelectedPort = comport;
-                Console.WriteLine("Selected: " + connection.SelectedPort);
+                ActiveConnection = connections[comport];
+                Console.WriteLine("Selected: " + comport);
             }
             else
             {

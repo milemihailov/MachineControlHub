@@ -11,17 +11,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<SerialConnectionService>();
-builder.Services.AddScoped<HotendTemperatureService>();
-builder.Services.AddScoped<BedTemperatureService>();
+builder.Services.AddSingleton<SerialConnectionService>();
+builder.Services.AddSingleton<HotendTemperatureService>();
+builder.Services.AddSingleton<BedTemperatureService>();
 builder.Services.AddScoped<ChamberTemperatureService>();
-builder.Services.AddScoped<PrintingService>();
-builder.Services.AddScoped<ControlPanelService>();
+builder.Services.AddSingleton<PrintingService>();
+builder.Services.AddSingleton<ControlPanelService>();
 builder.Services.AddSingleton<BedLevelingService>();
-builder.Services.AddScoped<PrinterDataServiceTest>();
+builder.Services.AddSingleton<PrinterDataService>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
 builder.Services.AddSingleton<PortConnectionManagerService>();
 builder.Services.AddScoped<SerialDataProcessorService>();
+builder.Services.AddSingleton<PrinterManagerService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient();
 

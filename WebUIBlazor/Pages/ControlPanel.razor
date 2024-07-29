@@ -1,9 +1,10 @@
 ﻿@page "/controlpanel"
 @inject Data.ControlPanelService control
 @inject Data.BackgroundTimer background
-@inject Data.PrinterDataServiceTest printer
+@inject Data.PrinterDataService printer
 @inject Data.PortConnectionManagerService portManager
 @inject Data.PrintingService print
+@inject Data.PrinterManagerService printerManager;
 @inject NavigationManager MyNavigationManager
 
 @using Plotly.Blazor.Interop
@@ -130,20 +131,20 @@
 
     protected override void OnInitialized()
     {
-        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataServiceTest.SELECTED_PRINTER_SETTINGS_PATH);
+        printer.SelectedPrinter = printer.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataService.SELECTED_PRINTER_SETTINGS_PATH);
 
-        if (portManager.connections != null && portManager.connections.Count > 0)
+        if (printerManager.Printers != null && printerManager.Printers.Count > 0)
         {
-            foreach (var port in portManager.connections.Values)
+            foreach (var port in printerManager.Printers.Values)
             {
-                port.InputReceived += OnUpdate;
+                printerManager.InputReceived += OnUpdate;
             }
             portManager.SelectedPrinterChanged += OnSelectedPrinter;
-            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.Write("M211");
+            // portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.Write("M211");
         }
 
-        xSize = printer.Printer.Bed?.XSize ?? 0;
-        ySize = printer.Printer.Bed?.YSize ?? 0;
+        xSize = printerManager.ActivePrinter.Bed?.XSize ?? 0;
+        ySize = printerManager.ActivePrinter.Bed?.YSize ?? 0;
 
         Series = new List<ChartSeries>
     {
@@ -196,7 +197,7 @@
         }
     }
 
-    public async void OnUpdate(string message, SerialDataProcessorService source)
+    public async void OnUpdate(string message)
     {
         Series = new List<ChartSeries>
     {
@@ -205,7 +206,6 @@
         await Task.Run(() =>
         {
             control.UpdateParagraph(message);
-
             printer.SetBedVolume(message);
             InvokeAsync(StateHasChanged);
         });
@@ -232,17 +232,17 @@
             string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
             control.positionToMove.XMovePosition = double.Parse(x);
             control.positionToMove.YMovePosition = double.Parse(y);
-            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
-            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildLinearMoveCommand(control.positionToMove, control.feedRate));
-            portManager.connections[portManager.SelectedPrinter].ConnectionServiceSerial.printerConnection.Write(CommandMethods.BuildRelativePositionCommand());
+            control.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+            control.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(control.positionToMove, control.feedRate));
+            control.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildRelativePositionCommand());
         }
     }
 
     void IDisposable.Dispose()
     {
-        foreach (var port in portManager.connections.Values)
+        foreach (var port in printerManager.Printers.Values)
         {
-            port.InputReceived -= OnUpdate;
+            printerManager.InputReceived -= OnUpdate;
         }
         portManager.SelectedPrinterChanged -= OnSelectedPrinter;
     }

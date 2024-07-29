@@ -8,7 +8,6 @@ namespace WebUI.Data
     public class BedTemperatureService
     {
         public ITemperatures bed;
-        private readonly ISnackbar _snackbar;
         private readonly PortConnectionManagerService _portConnectionManager;
         public PIDValues PIDBedValues { get; set; }
         private DateTime _lastChangeTime;
@@ -19,11 +18,10 @@ namespace WebUI.Data
         public int PIDBedCycles;
         public int PIDBedTemp;
 
-        public BedTemperatureService(ISnackbar snackbar, PortConnectionManagerService portConnectionManager) 
+        public BedTemperatureService(PortConnectionManagerService portConnectionManager) 
         {
             _portConnectionManager = portConnectionManager;
-            bed = new BedTemps(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
-            _snackbar = snackbar;
+            bed = new BedTemps(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
         }
 
         public void SetBedTemperature(int setTemp) 
@@ -32,7 +30,7 @@ namespace WebUI.Data
             setBedTemperature = 0;
             targetBedTemperature = setTemp;
             _lastChangeTime = DateTime.Now; // Update the timestamp
-            _snackbar.Add($"Bed temperature set to {setTemp}°C", Severity.Info);
+            //_snackbar.Add($"Bed temperature set to {setTemp}°C", Severity.Info);
         }
 
         public async Task ParseCurrentBedTemperature(string input)
@@ -50,8 +48,8 @@ namespace WebUI.Data
 
         public void SetBedPIDValues()
         {
-            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
-            _snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
+            _portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
+            //_snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
         }
     }
 }

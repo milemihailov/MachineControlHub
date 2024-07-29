@@ -10,8 +10,8 @@ namespace WebUI.Data
     public class HotendTemperatureService
     {
         public ITemperatures hotend;
-        private readonly ISnackbar _snackbar;
-        private readonly PortConnectionManagerService _portConnectionManager;
+        public PrinterManagerService Printer { get; set; }
+
         public PIDValues PIDHotendValues { get; set; }
 
         public int currentHotendTemperature;
@@ -21,59 +21,58 @@ namespace WebUI.Data
         public int PIDHotendTemp;
         private DateTime _lastChangeTime;
 
-        public HotendTemperatureService(ISnackbar snackbar, PortConnectionManagerService portConnectionManager)
+        public HotendTemperatureService(PrinterManagerService Printer)
         {
-            this._portConnectionManager = portConnectionManager;
-            hotend = new HotendTemps(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
-            _snackbar = snackbar;
+            this.Printer = Printer;
+            hotend = new HotendTemps(Printer.ActivePrinter.SerialConnection);
             PIDHotendValues = hotend.PIDValues;
+            Printer.ActivePrinter.PIDValues = hotend.PIDValues;
         }
 
         public void SetHotendTemperature(int setTemp)
         {
-            hotend.SetTemperature(setTemp);
+            Printer.ActivePrinter.HotendTemperatures.SetTemperature(setTemp);
             setHotendTemperature = 0;
             targetHotendTemperature = setTemp;
             _lastChangeTime = DateTime.Now; // Update the timestamp
-            _snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
+            //_snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
         }
 
         public async Task ParseCurrentHotendTemperature(string input)
         {
             await Task.Run(() =>
             {
-                hotend.ParseCurrentTemperature(input);
-                currentHotendTemperature = hotend.CurrentTemp;
-
+                Printer.ActivePrinter.HotendTemperatures.ParseCurrentTemperature(input);
+                currentHotendTemperature = Printer.ActivePrinter.HotendTemperatures.CurrentTemp;
                 if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
                 {
-                    targetHotendTemperature = hotend.TargetTemp;
+                    targetHotendTemperature = Printer.ActivePrinter.HotendTemperatures.TargetTemp;
                 }
             } );
         }
 
         public void ChangeFilament()
         {
-            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildFilamentChangeCommand());
-            _snackbar.Add("Filament Change Command Sent", Severity.Info);
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
+            //_snackbar.Add("Filament Change Command Sent", Severity.Info);
         }
         
         public void LoadFilament()
         {
-            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildLoadFilamentCommand());
-            _snackbar.Add("Filament Load Command Sent", Severity.Info);
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());
+            //_snackbar.Add("Filament Load Command Sent", Severity.Info);
         }
 
         public void UnloadFilament()
         {
-            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildUnloadFilamentCommand());
-            _snackbar.Add("Filament Unload Command Sent", Severity.Info);
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
+            //_snackbar.Add("Filament Unload Command Sent", Severity.Info);
         }
 
         public void SetHotendPIDValues()
         {
-            _portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
-            _snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
+            //_snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }
 }

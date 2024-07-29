@@ -3,7 +3,7 @@
 @using MachineControlHub.Print
 
 @inject PrintingService printingService
-@inject PrinterDataServiceTest printerDataServiceTest
+@inject PrinterDataService printerDataServiceTest
 @inject PortConnectionManagerService PortManager
 @inject NavigationManager MyNavigationManager
 
@@ -57,27 +57,27 @@
             <div style="width:60%;">
                 <ContainerSpaceBetween>
                     <MudText>Number of prints:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalPrints</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalPrints</MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
                     <MudText>Finished prints:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalFinishedPrints</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalFinishedPrints</MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
                     <MudText>Failed prints:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalFailedPrints</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalFailedPrints</MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
                     <MudText>Total print time:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.TotalPrintTime</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalPrintTime</MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
                     <MudText>Longest print job:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.LongestPrintJob</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.LongestPrintJob</MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
                     <MudText>Filament used:</MudText>
-                    <MudText>@printerDataServiceTest.Printer.PrintHistory.FilamentUsed</MudText>
+                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.FilamentUsed</MudText>
                 </ContainerSpaceBetween>
             </div>
         </div>
@@ -88,7 +88,7 @@
 @code {
     protected override void OnInitialized()
     {
-        printerDataServiceTest.printHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataServiceTest.PRINT_HISTORY_PATH);
+        printerDataServiceTest.printHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataService.PRINT_HISTORY_PATH);
         PortManager.SelectedPrinterChanged += OnSelectedPrinter;
 
         // Check if the serial connection is established and request Print Job Stats if connected

@@ -22,7 +22,7 @@ namespace WebUI.Data
         public BackgroundTimer background;
         public readonly IDialogService _dialogService;
         public readonly ISnackbar _snackbar;
-        public PrinterDataServiceTest _printerDataServiceTest;
+        public PrinterDataService _printerDataServiceTest;
 
         public List<(string DriveName, string VolumeLabel)> PortsAvailable = new List<(string DriveName, string VolumeLabel)>();
         public List<(string FileName, string FileContent, long FileSize)> uploadedFiles = new List<(string FileName, string FileContent, long FileSize)>();
@@ -45,18 +45,16 @@ namespace WebUI.Data
         public ChartOptions Options = new ChartOptions();
         public string[] XAxisLabels = Array.Empty<string>();
         public int Index = -1;
+        public bool finalizationExecuted = false;
 
 
 
-        public PrintingService(IDialogService dialogService, ISnackbar snackbar, PortConnectionManagerService portConnectionManager, PrinterDataServiceTest printerDataServiceTest, BackgroundTimer background)
+        public PrintingService(PortConnectionManagerService portConnectionManager, PrinterDataService printerDataServiceTest, BackgroundTimer background)
         {
             this.portConnectionManager = portConnectionManager;
             _printerDataServiceTest = printerDataServiceTest;
-            printService = new PrintService(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
-            printJob = new CurrentPrintJob(portConnectionManager.connection.ConnectionServiceSerial.printerConnection);
-            _dialogService = dialogService;
-            _snackbar = snackbar;
-            _snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomLeft;
+            printService = new PrintService(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
+            printJob = new CurrentPrintJob(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
             _printerDataServiceTest = printerDataServiceTest;
             this.background = background;
         }
@@ -69,52 +67,20 @@ namespace WebUI.Data
 
         public void PausePrint()
         {
-            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
-            _snackbar.Add("Print Paused", Severity.Info);
+            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
+            //_snackbar.Add("Print Paused", Severity.Info);
         }
 
         public void ResumePrint()
         {
-            portConnectionManager.connection.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
-            _snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
+            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
+            //_snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
         }
 
-        public async Task StopPrint(SerialDataProcessorService source)
-        {
-            if (portConnectionManager.connection.ConnectionServiceSerial.printerConnection.IsConnected)
-            {
-                bool? result = await _dialogService.ShowMessageBox(
-                "Stop Print",
-                "Do you want to stop the print?",
-                yesText: "Stop!", cancelText: "Cancel");
-
-                if (result == true && isPrinting)
-                {
-                    printService.AbortCurrentPrint();
-                    background.StopStopwatch();
-                    progress = 0;
-                    FormatTotalPrintTime();
-                    isPrinting = false;
-                    _printerDataServiceTest.AddPrintJobToHistory(printJob, source);
-
-                    _snackbar.Add("Print Stopped", Severity.Error);
-                }
-                else
-                {
-                    _snackbar.Add("Not Printing", Severity.Error);
-                    return;
-                }
-            }
-            else
-            {
-                _snackbar.Add("Printer is not connected", Severity.Error);
-                return;
-            }
-        }
 
         public void ListSDFiles(string inputText)
         {
-            if (_printerDataServiceTest.Printer.HasLongFilenameSupport)
+            if (_printerDataServiceTest.ActivePrinter.HasLongFilenameSupport)
             {
                 SDFiles = printService.ListLongNameSDFiles(inputText);
             }
@@ -145,38 +111,6 @@ namespace WebUI.Data
             }
         }
 
-        public async Task ConfirmStartAsync()
-        {
-            if (portConnectionManager.connections[portConnectionManager.SelectedPrinter].ConnectionServiceSerial.IsConnected)
-            {
-                bool? result = await _dialogService.ShowMessageBox(
-                "Start Print",
-                "Do you want to start a print job?",
-                yesText: "Start!", cancelText: "Cancel");
-
-                if (result == true)
-                {
-                    if (fileToPrint == "")
-                    {
-                        _snackbar.Add("No file selected", Severity.Error);
-                    }
-                    else
-                    {
-                        StartPrint(fileToPrint);
-                        StartTimeOfPrint();
-                        background.ResetStopwatch();
-                        background.StartStopwatch();
-                        GetFileNameAndSize(fileToPrint);
-                        _snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {fileToPrint} </li></ul>", Severity.Success);
-                    }
-                }
-            }
-            else
-            {
-                _snackbar.Add("Printer is not connected", Severity.Error);
-                return;
-            }
-        }
 
         public List<ChartSeries> Series = new List<ChartSeries>()
     {
@@ -201,44 +135,47 @@ namespace WebUI.Data
         }
 
 
-        public async void UpdatePrintProgress(string message, SerialDataProcessorService source)
+        public void UpdatePrintProgress(string message, SerialDataProcessorService source)
         {
+            var printing = Regex.Match(message, @"printing byte (\d+)/(\d+)");
+            var finished = Regex.Match(message, @"Done printing file");
+
+            if (printing.Success)
+            {
+                printJob.CurrentBytes = int.Parse(printing.Groups[1].Value);
+                printJob.TotalBytes = int.Parse(printing.Groups[2].Value);
+                printJob.FileSize = printJob.TotalBytes;
+                printJob.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = printJob.CurrentBytes, Timestamp = DateTime.Now });
+                if (printJob.PrintProgressRecords.Count > 100) // Keep the last 100 records
+                {
+                    printJob.PrintProgressRecords.RemoveAt(0);
+                }
+                progress = Math.Round(CalculatePercentage(printJob.CurrentBytes, printJob.TotalBytes));
+            }
+
+            if (finished.Success)
+            {
+                progress = 100;
+                //_snackbar.Add("Print Finished", Severity.Success);
+            }
+
             if (progress > 0)
             {
-                isPrinting = true;
-                if (progress == 100)
+                if (!finalizationExecuted)
+                {
+                    isPrinting = true;
+                }
+
+                if (progress == 100 && !finalizationExecuted)
                 {
                     isPrinting = false;
                     background.StopStopwatch();
                     progress = 0;
                     FormatTotalPrintTime();
                     _printerDataServiceTest.AddPrintJobToHistory(printJob, source);
+                    finalizationExecuted = true;
                 }
             }
-            await Task.Run(() =>
-            {
-                var printing = Regex.Match(message, @"printing byte (\d+)/(\d+)");
-                var finished = Regex.Match(message, @"Done printing file");
-
-                if (printing.Success)
-                {
-                    printJob.CurrentBytes = int.Parse(printing.Groups[1].Value);
-                    printJob.TotalBytes = int.Parse(printing.Groups[2].Value);
-                    printJob.FileSize = printJob.TotalBytes;
-                    printJob.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = printJob.CurrentBytes, Timestamp = DateTime.Now });
-                    if (printJob.PrintProgressRecords.Count > 100) // Keep the last 100 records
-                    {
-                        printJob.PrintProgressRecords.RemoveAt(0);
-                    }
-                    progress = Math.Round(CalculatePercentage(printJob.CurrentBytes, printJob.TotalBytes));
-                }
-
-                if (finished.Success)
-                {
-                    progress = 100;
-                    _snackbar.Add("Print Finished", Severity.Success);
-                }
-            });
         }
 
         public void GetPrintingFileName(string fileName)
@@ -278,7 +215,7 @@ namespace WebUI.Data
             await Task.Run(() => File.WriteAllText(filePath, file));
 
             isTransferring = false;
-            _snackbar.Add("File transferred to media", Severity.Success);
+            //_snackbar.Add("File transferred to media", Severity.Success);
         }
 
 
@@ -302,16 +239,14 @@ namespace WebUI.Data
 
         public void ReleaseMedia()
         {
-            portConnectionManager.connection.ConnectionServiceSerial.Write("M22");
+            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write("M22");
             mediaAttached = false;
         }
 
         public void AttachMedia()
         {
-            portConnectionManager.connection.ConnectionServiceSerial.Write("M21");
+            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write("M21");
             mediaAttached = true;
         }
-
-
     }
 }
