@@ -7,9 +7,8 @@ namespace WebUI.Data
 {
     public class BedTemperatureService
     {
-        public ITemperatures bed;
-        private readonly PortConnectionManagerService _portConnectionManager;
-        public PIDValues PIDBedValues { get; set; }
+        public PrinterManagerService Printer { get; set; }
+
         private DateTime _lastChangeTime;
 
         public int currentBedTemperature;
@@ -18,15 +17,14 @@ namespace WebUI.Data
         public int PIDBedCycles;
         public int PIDBedTemp;
 
-        public BedTemperatureService(PortConnectionManagerService portConnectionManager) 
+        public BedTemperatureService(PrinterManagerService Printer) 
         {
-            _portConnectionManager = portConnectionManager;
-            bed = new BedTemps(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
+            this.Printer = Printer;
         }
 
         public void SetBedTemperature(int setTemp) 
         {
-            bed.SetTemperature(setTemp);
+            Printer.ActivePrinter.BedTemperatures.SetTemperature(setTemp);
             setBedTemperature = 0;
             targetBedTemperature = setTemp;
             _lastChangeTime = DateTime.Now; // Update the timestamp
@@ -36,11 +34,11 @@ namespace WebUI.Data
         public async Task ParseCurrentBedTemperature(string input)
         {
             await Task.Run(() => {
-                bed.ParseCurrentTemperature(input);
-                currentBedTemperature = bed.CurrentTemp;
+                Printer.ActivePrinter.BedTemperatures.ParseCurrentTemperature(input);
+                currentBedTemperature = Printer.ActivePrinter.BedTemperatures.CurrentTemp;
                 if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
                 {
-                    targetBedTemperature = bed.TargetTemp;
+                    targetBedTemperature = Printer.ActivePrinter.BedTemperatures.TargetTemp;
                 }
             } );
             
@@ -48,7 +46,7 @@ namespace WebUI.Data
 
         public void SetBedPIDValues()
         {
-            _portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
             //_snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
         }
     }

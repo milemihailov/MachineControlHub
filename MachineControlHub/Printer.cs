@@ -22,6 +22,8 @@ namespace MachineControlHub
 
         public string TemperatureUnit { get; set; }
 
+        public bool IsBusy { get; set; }
+
         /// <summary>
         /// Gets or sets the model of the 3D printer.
         /// </summary>
@@ -152,6 +154,8 @@ namespace MachineControlHub
         /// Gets or sets the current print job of the printer.
         /// </summary>
         public CurrentPrintJob CurrentPrintJob { get; set; }
+
+        public BedLevelData BedLevelData { get; set; }
 
         /// <summary>
         /// Gets or sets the motion settings and data for the printer.

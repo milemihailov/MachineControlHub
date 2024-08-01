@@ -4,113 +4,107 @@
 
 @inject PrintingService printingService
 @inject PrinterDataService printerDataServiceTest
-@inject PortConnectionManagerService PortManager
+@inject PrinterManagerService PrinterManager
 @inject NavigationManager MyNavigationManager
+@if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
+{
+    <MudGrid Class="mt-9" Style="width: 100vw;">
+        <MudItem xl="6">
+            <div style="text-align:center;">
+                <!-- Add this div with text-align style -->
+                <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
+            </div>
 
-<MudGrid Class="mt-9" Style="width: 100vw;">
-    <MudItem xl="6">
-        <div style="text-align:center;">
-            <!-- Add this div with text-align style -->
-            <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
-        </div>
+            @foreach (var printJob in printerDataServiceTest.printHistory.Where(printJob => printJob.PortName == PrinterManager.ActivePrinter.SerialConnection.PortName))
+            {
+                <div style="display:flex; justify-content:center; align-items: center;">
+                    <div style="width:60%;">
+                        <ContainerSpaceBetween>
+                            <MudText>Printer name:</MudText>
+                            <MudText>@printJob.PrinterName</MudText>
+                        </ContainerSpaceBetween>
+                        <ContainerSpaceBetween>
+                            <MudText>File name:</MudText>
+                            <MudText>@printJob.FileName</MudText>
+                        </ContainerSpaceBetween>
+                        <ContainerSpaceBetween>
+                            <MudText>Total print time:</MudText>
+                            <MudText>@printJob.TotalPrintTime</MudText>
+                        </ContainerSpaceBetween>
+                        <ContainerSpaceBetween>
+                            <MudText>Start time of print:</MudText>
+                            <MudText>@printJob.StartTimeOfPrint</MudText>
+                        </ContainerSpaceBetween>
+                        <ContainerSpaceBetween>
+                            <MudText>File size:</MudText>
+                            <MudText>@Math.Round(printJob.ConvertToMB(printJob.FileSize), 2)MB</MudText>
+                        </ContainerSpaceBetween>
 
-        @foreach (var printJob in printerDataServiceTest.printHistory.Where(printJob => printJob.PrinterName == PortManager.SelectedPrinter))
-        {
-            <div style="display:flex; justify-content:center; align-items: center;">
-                <div style="width:60%;">
-                    <ContainerSpaceBetween>
-                        <MudText>Printer name:</MudText>
-                        <MudText>@printJob.PrinterName</MudText>
-                    </ContainerSpaceBetween>
-                    <ContainerSpaceBetween>
-                        <MudText>File name:</MudText>
-                        <MudText>@printJob.FileName</MudText>
-                    </ContainerSpaceBetween>
-                    <ContainerSpaceBetween>
-                        <MudText>Total print time:</MudText>
-                        <MudText>@printJob.TotalPrintTime</MudText>
-                    </ContainerSpaceBetween>
-                    <ContainerSpaceBetween>
-                        <MudText>Start time of print:</MudText>
-                        <MudText>@printJob.StartTimeOfPrint</MudText>
-                    </ContainerSpaceBetween>
-                    <ContainerSpaceBetween>
-                        <MudText>File size:</MudText>
-                        <MudText>@Math.Round(printJob.ConvertToMB(printJob.FileSize), 2)MB</MudText>
-                    </ContainerSpaceBetween>
-
-                    <MudButton FullWidth="true" Color="Color.Error" OnClick="() => printerDataServiceTest.RemovePrintJob(printJob)">Delete Record</MudButton>
-                    <MudDivider />@*
+                        <MudButton FullWidth="true" Color="Color.Error" OnClick="() => printerDataServiceTest.RemovePrintJob(printJob)">Delete Record</MudButton>
+                        <MudDivider />@*
                 <ContainerSpaceBetween>
                 <MudText>End time of print: @printJob.EndTimeOfPrint</MudText>
                 </ContainerSpaceBetween>  *@
+                    </div>
+                </div>
+            }
+        </MudItem>
+        <MudItem xl="6">
+            <div style="text-align:center;">
+                <!-- Add this div with text-align style -->
+                <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print Alltime Stats</MudText>
+            </div>
+            <div style="display:flex; justify-content:center; align-items: center;">
+                <div style="width:60%;">
+                    <ContainerSpaceBetween>
+                        <MudText>Number of prints:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.TotalPrints</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Finished prints:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.TotalFinishedPrints</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Failed prints:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.TotalFailedPrints</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Total print time:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.TotalPrintTime</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Longest print job:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.LongestPrintJob</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Filament used:</MudText>
+                        <MudText>@PrinterManager.ActivePrinter.PrintHistory.FilamentUsed</MudText>
+                    </ContainerSpaceBetween>
                 </div>
             </div>
-        }
-    </MudItem>
-    <MudItem xl="6">
-        <div style="text-align:center;">
-            <!-- Add this div with text-align style -->
-            <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print Alltime Stats</MudText>
-        </div>
-        <div style="display:flex; justify-content:center; align-items: center;">
-            <div style="width:60%;">
-                <ContainerSpaceBetween>
-                    <MudText>Number of prints:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalPrints</MudText>
-                </ContainerSpaceBetween>
-                <ContainerSpaceBetween>
-                    <MudText>Finished prints:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalFinishedPrints</MudText>
-                </ContainerSpaceBetween>
-                <ContainerSpaceBetween>
-                    <MudText>Failed prints:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalFailedPrints</MudText>
-                </ContainerSpaceBetween>
-                <ContainerSpaceBetween>
-                    <MudText>Total print time:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.TotalPrintTime</MudText>
-                </ContainerSpaceBetween>
-                <ContainerSpaceBetween>
-                    <MudText>Longest print job:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.LongestPrintJob</MudText>
-                </ContainerSpaceBetween>
-                <ContainerSpaceBetween>
-                    <MudText>Filament used:</MudText>
-                    <MudText>@printerDataServiceTest.ActivePrinter.PrintHistory.FilamentUsed</MudText>
-                </ContainerSpaceBetween>
-            </div>
-        </div>
-    </MudItem>
-</MudGrid>
-
+        </MudItem>
+    </MudGrid>
+}
 
 @code {
     protected override void OnInitialized()
     {
         printerDataServiceTest.printHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataService.PRINT_HISTORY_PATH);
-        PortManager.SelectedPrinterChanged += OnSelectedPrinter;
 
         // Check if the serial connection is established and request Print Job Stats if connected
-        if (PortManager.connections != null && PortManager.connections.Count > 0)
+        if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
         {
-            PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M78");
+            PrinterManager.ActivePrinter.SerialConnection.Write("M78");
 
             // Subscribe to the InputReceived event of the selected printer
-            foreach (var port in PortManager.connections.Values)
-            {
-                port.InputReceived += OnUpdate;
-            }
+            PrinterManager.InputReceived += OnUpdate;
         }
     }
 
-    private void OnUpdate(string message,SerialDataProcessorService source)
+    private void OnUpdate(string message)
     {
-        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
-        {
-            printerDataServiceTest.GetPrintJobStats(message);
-            InvokeAsync(StateHasChanged);
-        }
+        printerDataServiceTest.GetPrintJobStats(message);
+        InvokeAsync(StateHasChanged);
     }
 
     /// <summary>

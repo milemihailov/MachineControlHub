@@ -10,25 +10,25 @@ namespace WebUI.Data
     {
         public const string FAN_PATTERN = @"M106 P0 S(\d+)";
 
-        public string consoleOutput;
-        public int defaultFanSpeed;
-        public double fanSpeedInPercentage;
-        public string sendCommand = "";
-        public double valueToMove = 10;
-        public bool SwitchValue = false;
-        public int fanSpeed;
-        public int? freeMoveFeedRate;
-        public int feedRatePercentage = 100;
-        public int printFlowPercentage = 100;
+        public string ConsoleOutput { get; set; }
+        public int DefaultFanSpeed { get; set; }
+        public double FanSpeedInPercentage { get; set; }
+        public string SendCommand { get; set; } = "";
+        public double ValueToMove { get; set; } = 10;
+        public bool SwitchValue { get; set; } = false;
+        public int FanSpeed { get; set; }
+        public int? FreeMoveFeedRate { get; set; }
+        public int FeedRatePercentage { get; set; } = 100;
+        public int PrintFlowPercentage { get; set; } = 100;
 
-        public MotionSettingsData feedRate;
-        public Position positionToMove;
+        public MotionSettingsData FeedRate { get; set; }
+        public Position PositionToMove { get; set;}
         public PrinterManagerService Printer { get; set; }
         public ControlPanelService(PrinterManagerService Printer)
         {
             this.Printer = Printer;
-            feedRate = new MotionSettingsData();
-            positionToMove = new Position();
+            FeedRate = new MotionSettingsData();
+            PositionToMove = new Position();
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace WebUI.Data
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildRelativePositionCommand());
 
             // Determine the movement value based on whether it's an increment or decrement
-            double moveValue = increment ? valueToMove : -valueToMove;
+            double moveValue = increment ? ValueToMove : -ValueToMove;
 
             // Set the appropriate property in the Position object based on the specified axis
             switch (position)
@@ -68,7 +68,7 @@ namespace WebUI.Data
             }
 
             // Send a command to perform a linear move with the specified values and feed rate
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(pos, feedRate));
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(pos, FeedRate));
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
         }
 
@@ -86,7 +86,7 @@ namespace WebUI.Data
 
         public void AdjustFreeMoveFeedRate()
         {
-            freeMoveFeedRate = feedRate.FeedRateFreeMove;
+            FreeMoveFeedRate = FeedRate.FeedRateFreeMove;
         }
 
         /// <summary>
@@ -123,17 +123,7 @@ namespace WebUI.Data
         public void SendGcodeViaTerminal(string command)
         {
             Printer.ActivePrinter.SerialConnection.Write(command);
-            sendCommand = null;
-        }
-
-
-        /// <summary>
-        /// Turns off the fan by sending the corresponding command to the printer.
-        /// </summary>
-        public void SetFanOff()
-        {
-            // Send the fan speed command to the printer
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildFanOffCommand());
+            SendCommand = null;
         }
 
 
@@ -167,7 +157,7 @@ namespace WebUI.Data
         /// <param name="value">The fan speed value (0 to 255).</param>
         public void CalculateFanSpeedIntoPercentage(double value)
         {
-            fanSpeedInPercentage = Math.Round(value / 255 * 100);
+            FanSpeedInPercentage = Math.Round(value / 255 * 100);
         }
 
         public void UpdateParagraph(string message)
@@ -178,7 +168,7 @@ namespace WebUI.Data
             {
                 value = double.Parse(match.Groups[1].Value);
                 CalculateFanSpeedIntoPercentage(value);
-                message = $"Fan Speed: {fanSpeedInPercentage}%\n";
+                message = $"Fan Speed: {FanSpeedInPercentage}%\n";
             }
             if (message.Contains("Not SD printing") || message.Contains("printing byte") || Regex.IsMatch(message, @"T:\d+\.\d+ /0\.00"))
             {
@@ -191,7 +181,7 @@ namespace WebUI.Data
                 var lines = message.Split('\n');
                 var filteredLines = lines.Where(line => !line.Contains("ok"));
                 var filteredData = string.Join('\n', filteredLines);
-                consoleOutput += filteredData;
+                ConsoleOutput += filteredData;
 
             }
 
@@ -214,14 +204,14 @@ namespace WebUI.Data
             SwitchValue = !SwitchValue;
             if (SwitchValue)
             {
-                fanSpeed = 255;
-                defaultFanSpeed = 255;
+                FanSpeed = 255;
+                DefaultFanSpeed = 255;
 
             }
             else
             {
-                fanSpeed = 0;
-                defaultFanSpeed = 0;
+                FanSpeed = 0;
+                DefaultFanSpeed = 0;
             }
 
         }

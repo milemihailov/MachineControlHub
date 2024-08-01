@@ -1,25 +1,23 @@
 ﻿@using MachineControlHub.Motion
 @using System.Text.RegularExpressions
-@inject Data.PrinterDataService PrintHandler
-@inject Data.BackgroundTimer background
 @inject Data.PrintingService printingService
-@inject PortConnectionManagerService PortManager
+@inject PrinterManagerService printerManager
 
-@if (PortManager.SelectedPrinter != String.Empty)
+
+@if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
 {
-    if (printingService.isPrinting)
-    {
-        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.progress" Class="pb-9">
-            <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-                <b>Printing: @printingService.progress %</b>
-            </MudText>
-        </MudProgressLinear>
-    }
+    
+    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.Progress" Class="pb-9">
+        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+            <b>Printing: @printingService.Progress %</b>
+        </MudText>
+    </MudProgressLinear>
+}
 
-    <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
-        <MudText Typo="Typo.h6" Color="Color.Primary">@PortManager.ActiveConnection.Notification</MudText>
-    </MudAlert>
-@* 
+<MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
+    <MudText Typo="Typo.h6" Color="Color.Primary">@printerManager.Notification</MudText>
+</MudAlert>
+@*
     <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!PortManager.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
         @if (PortManager.IsBusy)
         {
@@ -28,38 +26,28 @@
         @(new MarkupString(!PortManager.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
     </MudAlert> *@
 
-    @*     <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.progress" Class="pb-9">
+@*     <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printingService.progress" Class="pb-9">
         <MudText Typo="Typo.subtitle1" Color="Color.Surface">
             <b>Printing: @printingService.progress %</b>
         </MudText>
     </MudProgressLinear> *@
-}
 
 @code {
 
     protected override void OnInitialized()
     {
-        foreach (var bs in PortManager.connections.Values)
-        {
-            bs.InputReceived += OnMessageReceived;
-        }
+        printerManager.InputReceived += OnMessageReceived;
     }
 
-    public void OnMessageReceived(string message, SerialDataProcessorService source)
+    public void OnMessageReceived(string message)
     {
-        if (PortManager.SelectedPrinter == source.ConnectionServiceSerial.portName)
-        {
-            printingService.UpdatePrintProgress(message, source);
-            InvokeAsync(StateHasChanged);
-        }
+        printingService.UpdatePrintProgress(message);
+        InvokeAsync(StateHasChanged);
     }
 
 
     public void Dispose()
     {
-        foreach (var bs in PortManager.connections.Values)
-        {
-            bs.InputReceived -= OnMessageReceived;
-        }
+        printerManager.InputReceived -= OnMessageReceived;
     }
 }

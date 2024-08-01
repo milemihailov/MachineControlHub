@@ -1,4 +1,6 @@
-﻿using MachineControlHub;
+﻿using System.Text.RegularExpressions;
+using System.Threading;
+using MachineControlHub;
 using MachineControlHub.Print;
 using MachineControlHub.PrinterConnection;
 
@@ -7,20 +9,24 @@ namespace WebUI.Data
     public class PrinterManagerService
     {
         public Printer ActivePrinter { get; set; } = new();
-        public SerialConnection PrinterSerialConnection { get; set; }
+        public SerialConnection PrinterSerialConnection { get; set; } = new();
         public BackgroundTimer BackgroundTimer { get; set; } = new();
+        private CancellationTokenSource CancellationTokenSource { get; set; }
 
 
         public Dictionary<string, Printer> Printers { get; set; } = new();
 
         public event Action<string> InputReceived;
 
+        public event EventHandler ActivePrinterChanged;
+
         private string Input { get; set; }
+
+        public string Notification { get; set; }
 
         public PrinterManagerService()
         {
             BackgroundTimer.TenMilisecondsElapsed += ReadFromPort;
-            ActivePrinter = new();
         }
 
         public void AddPrinter(string comport, int baudrate, string name = null)
@@ -41,20 +47,20 @@ namespace WebUI.Data
                 {
                     Name = name,
                     SerialConnection = PrinterSerialConnection,
-                    CurrentPrintJob = new CurrentPrintJob(),
+                    CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection),
                     PrintHistory = new(),
                     PrintService = new PrintService(PrinterSerialConnection),
                     HotendTemperatures = new(PrinterSerialConnection),
                     BedTemperatures = new(PrinterSerialConnection),
                     ChamberTemperatures = new(PrinterSerialConnection),
+                    PreheatingProfiles = new(),
                     MotionSettings = new(),
                     StepperDrivers = new(),
+                    BedLevelData = new(),
                     Bed = new(),
                     Head = new(),
                 });
             }
-
-            SelectPrinter(comport);
         }
 
         public void SelectPrinter(string comPort)
@@ -62,6 +68,8 @@ namespace WebUI.Data
             if (Printers.ContainsKey(comPort))
             {
                 ActivePrinter = Printers[comPort];
+                Notification = null;
+                ActivePrinterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -73,6 +81,31 @@ namespace WebUI.Data
                 string readData = await ActivePrinter.SerialConnection.ReadAsync();
                 string echoMessage = "";
 
+                if (readData.Contains("echo:busy: processing"))
+                {
+                    ActivePrinter.IsBusy = true;
+                    // Cancel the previous token if it exists
+                    CancellationTokenSource?.Cancel();
+
+                    // Create a new CancellationTokenSource
+                    CancellationTokenSource = new CancellationTokenSource();
+
+                    // Start a new task to reset IsBusy after 5 seconds if no new messages are received
+                    var token = CancellationTokenSource.Token;
+                    await Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(2000, token);
+                            ActivePrinter.IsBusy = false;
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // Task was canceled, do nothing
+                        }
+                    }, token);
+                }
+
                 Input = $"{readData} \n";
 
                 if (echoMessage != "")
@@ -80,10 +113,13 @@ namespace WebUI.Data
                     Input = FilterData(echoMessage);
                 }
 
-                //ParseNotifications(Input);
+
+                ParseNotifications(Input);
 
                 InputReceived?.Invoke(Input);
-                Console.WriteLine($"{ActivePrinter.SerialConnection.PortName} : {readData}");
+                //Console.WriteLine($"{ActivePrinter.SerialConnection.PortName} : {readData}");
+
+                ActivePrinter.BedLevelData.OnBedLevelUpdate(Input);
             }
         }
 
@@ -95,11 +131,33 @@ namespace WebUI.Data
             return filteredData;
         }
 
-        public void TestButton()
+        public void ParseNotifications(string data)
         {
-            Console.WriteLine(ActivePrinter.MotionSettings.XStepsPerUnit);
-            Console.WriteLine(ActivePrinter.Bed.XSize);
-            Console.WriteLine(ActivePrinter.Bed.YSize);
+            string patternNotification = @"//action:notification\s*(.*)";
+            string patternPrompt = @"//action:prompt\s*(.*)";
+
+            if (data.Contains("//action:notification"))
+            {
+                Match match = Regex.Match(data, patternNotification);
+                if (match.Success)
+                {
+                    string result = match.Groups[1].Value;
+                    Notification = result;
+                    Console.WriteLine(result);
+                }
+            }
+
+
+            if (data.Contains("//action:prompt"))
+            {
+                Match match = Regex.Match(data, patternPrompt);
+                if (match.Success)
+                {
+                    string result = match.Groups[1].Value;
+                    //Notification = result;
+                    Console.WriteLine(result);
+                }
+            }
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿@using MachineControlHub.PrinterConnection
 @inject Data.PrinterDataService printer
-@inject Data.PortConnectionManagerService PortManager
-@inject Data.SerialDataProcessorService TestConnections
 @inject Data.PrinterManagerService PrinterManager
 
 
@@ -12,7 +10,7 @@
             <MudPaper >
                 <div style="display: flex; gap: 16px; padding: 0px 56px;">
                     <MudSelect T="string" Label="Select Port" @bind-Value="portName" Immediate="true" Variant="Variant.Text" Style="max-width:160px;">
-                        @foreach (var template in printer.PortManager.ActiveConnection.ConnectionServiceSerial.GetPorts())
+                        @foreach (var template in PrinterManager.PrinterSerialConnection.AvailableConnections())
                         {
                             <MudSelectItem Value=@template />
                         }
@@ -41,17 +39,14 @@
             </MudPaper>
         </MudCollapse>
     </MudStack>
-    <MudButton OnClick="PrinterManager.TestButton">
-        Test
-    </MudButton>
 </MudContainer>
 
 
 @code {
+
     string portName { get; set; } = "";
     string printerName { get; set; }
-    int baudRate { get; set; }
-
+    int baudRate { get; set; } = 115200;
 
     bool _expanded = false;
 
@@ -60,29 +55,20 @@
         _expanded = !_expanded;
     }
 
+    protected override void OnInitialized()
+    {
+        GetPorts();
+    }
+
     public async void ConnectionConfiguration()
     {
         try
         {
-            // PortManager.CreateConnection(PortManager.portName, PortManager.baudRate);
-            // PortManager.SelectedPrinter = PortManager.portName;
-
-            // PortManager.connections[PortManager.portName].ConnectionServiceSerial.Initialize($"{PortManager.portName},{PortManager.baudRate}");
-            // PortManager.connections[PortManager.portName].ConnectionServiceSerial.IsConnected = true;
-            // PortManager.connections[PortManager.portName].ConnectionServiceSerial.Connect();
-
-            // PortManager.ActiveConnection = PortManager.connections[PortManager.portName];
-
-            // printer.GetPrinterSettings();
-            // // printer.GetFirmwareSettings();
-            // await Task.Delay(1000);
-
-            // printer.CreatePrinterProfile(PortManager.portName);
-
             PrinterManager.AddPrinter(portName, baudRate, printerName);
 
             Thread.Sleep(1000);
 
+            PrinterManager.SelectPrinter(portName);
             //set the host keep alive command to 1 second after connection
             PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
             //ask for bed volume
@@ -91,7 +77,6 @@
             PrinterManager.ActivePrinter.SerialConnection.Write("M27 S2");
             //report temperature every 1 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M155 S1");
-
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception e)
@@ -106,5 +91,17 @@
         PrinterManager.Printers.Remove(portName);
         StateHasChanged();
         Console.WriteLine($"Disconecting port{portName}");
+    }
+
+    public void GetPorts()
+    {
+        if (PrinterManager.PrinterSerialConnection != null)
+        {
+            var ports = PrinterManager.PrinterSerialConnection.AvailableConnections();
+            if (ports.Any())
+            {
+                portName = ports.First();
+            }
+        }
     }
 }

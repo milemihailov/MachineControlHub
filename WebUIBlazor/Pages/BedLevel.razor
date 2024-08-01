@@ -1,0 +1,190 @@
+﻿@inject PrinterManagerService printerManager
+@inject BackgroundTimer background
+@inject PrintingService PrintManager
+@inject PrinterDataService PrinterDataHandler
+@inject BedLevelingService BedLevelService
+@inject NavigationManager MyNavigationManager
+
+@using MachineControlHub.Motion
+@using System.Globalization
+@using Plotly.Blazor.Interop
+@using Plotly.Blazor.LayoutLib
+@using MachineControlHub;
+@using MachineControlHub.Bed;
+@using MachineControlHub.PrinterConnection;
+@using Plotly.Blazor;
+@using Plotly.Blazor.Traces;
+@using System.Text.Json;
+<!-- Bed Leveling ---------------------------------------------------------------->
+<MudItem xs="12" md="6" Class="pa-0">
+    <!-- Main grid container for the plotly chart and button -->
+    <MudGrid Class="pl-6">
+        <!-- Grid item containing the Plotly chart -->
+        <MudItem xs="12" sm="12" md="12" lg="12" Class="pb-0 mb-0">
+            <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
+        </MudItem>
+        <!-- Grid item containing the Calibrate Bed button -->
+        <MudItem xs="12" sm="12" md="12" lg="12" Class="pt-0 mt-0">
+            <!-- Check if printing is not in progress -->
+            @if (printerManager.ActivePrinter.SerialConnection != null && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+            {
+                <!-- Button to initiate bed calibration -->
+                <MudButton FullWidth="true" Disabled="@printerManager.ActivePrinter.BedLevelData.Processing" OnClick="() => BedLevelService.CalibrateBed(printerManager.ActivePrinter.SerialConnection)" Variant="Variant.Filled" Color="Color.Tertiary">
+                    <!-- Show a progress indicator and text when processing -->
+                    @if (printerManager.ActivePrinter.BedLevelData.Processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Measuring Bed</MudText>
+                    }
+                    else
+                    {
+                        <MudText>CALIBRATE BED</MudText>
+                    }
+                </MudButton>
+            }
+        </MudItem>
+    </MudGrid>
+</MudItem>
+
+@code {
+    private PlotlyChart chart;
+    private Config config;
+    private Layout layout;
+    private IList<ITrace> data;
+    public Task<IList<ITrace>> meshData;
+
+    /// <summary>
+    /// Method that is called when the component is initialized.
+    /// Sets up event handlers, initializes configuration, layout, and loads printer data.
+    /// </summary>
+    protected async override Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+        {
+            // Initialize the data list
+            data = new List<ITrace>();
+
+
+
+            // Initialize the configuration for Plotly chart
+            config = new Config
+                {
+                    ShowLink = false,
+                    Responsive = true,
+                    DisplayLogo = true
+                };
+
+            // Initialize the layout for Plotly chart
+            layout = new Layout
+                {
+                    Title = new Title
+                    {
+                        Text = "Bed Mesh"
+                    },
+                    PaperBgColor = "white",
+                    PlotBgColor = "white",
+                    Font = new Font
+                    {
+                        Color = "black"
+                    },
+                    Margin = new Plotly.Blazor.LayoutLib.Margin
+                    {
+                        L = 65,
+                        R = 50,
+                        B = 65,
+                        T = 90
+                    }
+                };
+        });
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            printerManager.ActivePrinter.BedLevelData.BedLevelingStateChanged += OnUpdate;
+            // Load Plotly data if available
+            LoadPlotlyData();
+        }
+    }
+
+    private async void OnUpdate(object sender, EventArgs e)
+    {
+        try
+        {
+            await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
+        }
+        catch (NavigationException navEx)
+        {
+            Console.WriteLine($"Navigation error: {navEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+
+    public async Task<IList<ITrace>> GetSurfaceData()
+    {
+        IList<ITrace> mapData = new List<ITrace>();
+
+        var csv = await Task.Run(() => printerManager.ActivePrinter.BedLevelData.BedLevelGridData
+            .Split("\n")
+            .Skip(1)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Split(",").ToList()).ToList());
+
+        var z = new List<decimal[]>();
+
+        foreach (var row in csv)
+        {
+            var currentValues = new List<decimal>();
+
+            for (var i = 1; i < row.Count; i++)
+            {
+                currentValues.Add(decimal.Parse(row[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+            }
+
+            z.Add(currentValues.ToArray());
+        }
+
+        mapData.Add(new Surface
+            {
+                Z = z.Cast<object>().ToList()
+            });
+
+        return mapData;
+    }
+
+    /// <summary>
+    /// Loads Plotly data for the bed leveling mesh if CSV data is available.
+    /// </summary>
+    private void LoadPlotlyData()
+    {
+        try
+        {
+            // Check if there is CSV data to process
+            if (printerManager.ActivePrinter.BedLevelData.BedLevelGridData != null)
+            {
+                // Get the surface data from the CSV
+                meshData = GetSurfaceData();
+
+                Task.Run(async () =>
+                {
+                    // Iterate over each trace in the mesh data
+                    foreach (var trace in await meshData)
+                    {
+                        // Add the trace to the chart asynchronously and delay briefly between each addition
+                        await InvokeAsync(async () => await chart.AddTrace(trace));
+                        await Task.Delay(100);
+                    }
+
+                });
+            }
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("Error loading Plotly data.");
+        }
+    }
+}

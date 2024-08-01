@@ -18,6 +18,7 @@ namespace MachineControlHub.Temps
         public BedTemps(IPrinterConnection connection)
         {
             _connection = connection;
+            PIDValues = new PIDValues(connection);
         }
 
         /// <summary>

@@ -16,89 +16,77 @@ namespace WebUI.Data
         public const int MAX_FILE_SIZE = (1024 * 1024 * 90);
         const string _pATTERN = @"echo: M73 Time left: ((\d+h\s*)?(\d+m\s*)?(\d+s)?);";
 
-        public PrintService printService;
-        public CurrentPrintJob printJob;
-        public PortConnectionManagerService portConnectionManager;
-        public BackgroundTimer background;
-        public readonly IDialogService _dialogService;
-        public readonly ISnackbar _snackbar;
-        public PrinterDataService _printerDataServiceTest;
+        public BackgroundTimer Background { get; set; }
+        public PrinterDataService PrinterDataServiceTest { get; set; }
+        public PrinterManagerService PrinterManager { get; set; }
 
-        public List<(string DriveName, string VolumeLabel)> PortsAvailable = new List<(string DriveName, string VolumeLabel)>();
-        public List<(string FileName, string FileContent, long FileSize)> uploadedFiles = new List<(string FileName, string FileContent, long FileSize)>();
-        public List<(string FileName, string FileSize)> SDFiles;
-        public static List<double> hotendGraph = new List<double> { };
-        public static List<double> bedGraph = new List<double> { };
-        public string chosenPort = "";
-        public bool isTransferring = false;
-        public bool mediaAttached = true;
-        public string uploadFileName;
-        public TimeSpan estimatedTime;
-        public string extractedSettings;
-        public string timeElapsed;
-        public string file;
-        public string fileToPrint = "";
-        public bool processing = false;
-        public double progress = 0;
-        public bool isPrinting = false;
-
-        public ChartOptions Options = new ChartOptions();
-        public string[] XAxisLabels = Array.Empty<string>();
-        public int Index = -1;
-        public bool finalizationExecuted = false;
+        public List<(string DriveName, string VolumeLabel)> PortsAvailable { get; set; } = new List<(string DriveName, string VolumeLabel)>();
+        public List<(string FileName, string FileContent, long FileSize)> UploadedFiles { get; set; } = new List<(string FileName, string FileContent, long FileSize)>();
+        public List<(string FileName, string FileSize)> SDFiles { get; set; }
+        public static List<double> HotendGraph { get; set; } = new() { };
+        public static List<double> BedGraph { get; set; } = new() { };
+        public string ChosenPort { get; set; } = "";
+        public bool IsTransferring { get; set; } = false;
+        public bool MediaAttached { get; set; } = true;
+        public TimeSpan EstimatedTime { get; set; }
+        public string File { get; set; }
+        public string FileToPrint { get; set; } = "";
+        public double Progress { get; set; } = 0;
+        public ChartOptions Options { get; set; } = new ChartOptions();
+        public string[] XAxisLabels { get; set; } = Array.Empty<string>();
+        public int Index { get; set; } = -1;
+        public bool FinalizationExecuted { get; set; } = false;
 
 
 
-        public PrintingService(PortConnectionManagerService portConnectionManager, PrinterDataService printerDataServiceTest, BackgroundTimer background)
+        public PrintingService(PrinterDataService printerDataServiceTest, BackgroundTimer background, PrinterManagerService printerManager)
         {
-            this.portConnectionManager = portConnectionManager;
-            _printerDataServiceTest = printerDataServiceTest;
-            printService = new PrintService(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
-            printJob = new CurrentPrintJob(portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection);
-            _printerDataServiceTest = printerDataServiceTest;
-            this.background = background;
+            PrinterManager = printerManager;
+            PrinterManager.ActivePrinter = new();
+            PrinterDataServiceTest = printerDataServiceTest;
+            PrinterDataServiceTest = printerDataServiceTest;
+            Background = background;
+            PrinterManager = printerManager;
         }
 
         public void StartPrint(string fileName)
         {
-            printService.StartPrint(fileName);
-            printJob.PrintProgressRecords.Clear();
+            PrinterManager.ActivePrinter.PrintService.StartPrint(fileName);
+            PrinterManager.ActivePrinter.CurrentPrintJob.PrintProgressRecords.Clear();
         }
 
         public void PausePrint()
         {
-            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildPauseSDPrintCommand());
-            //_snackbar.Add("Print Paused", Severity.Info);
+            PrinterManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
         }
 
         public void ResumePrint()
         {
-            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write(CommandMethods.BuildStartSDPrintCommand());
-            //_snackbar.Add($"<ul><li>Waiting for temperature</li><li>Print Resuming</li></ul>", Severity.Info);
+            PrinterManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildStartSDPrintCommand());
         }
 
 
         public void ListSDFiles(string inputText)
         {
-            if (_printerDataServiceTest.ActivePrinter.HasLongFilenameSupport)
+            if (PrinterManager.ActivePrinter.HasLongFilenameSupport)
             {
-                SDFiles = printService.ListLongNameSDFiles(inputText);
+                SDFiles = PrinterManager.ActivePrinter.PrintService.ListLongNameSDFiles(inputText);
             }
             else
             {
-                SDFiles = printService.ListSDFiles(inputText);
+                SDFiles = PrinterManager.ActivePrinter.PrintService.ListSDFiles(inputText);
             }
         }
 
         public void StartTimeOfPrint()
         {
-            printJob.ParseStartTimeOfPrint();
+            PrinterManager.ActivePrinter.CurrentPrintJob.ParseStartTimeOfPrint();
         }
 
         public void FormatTotalPrintTime()
         {
-            TimeSpan elapsed = TimeSpan.FromMilliseconds(_printerDataServiceTest.Background.stopwatch.ElapsedMilliseconds);
-            printJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(Background.stopwatch.ElapsedMilliseconds);
+            PrinterManager.ActivePrinter.CurrentPrintJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
         }
 
         public void GetFileNameAndSize(string input)
@@ -106,24 +94,24 @@ namespace WebUI.Data
             var file = SDFiles.FirstOrDefault(f => f.FileName == input);
             if (file != default)
             {
-                printJob.FileName = file.FileName;
-                printJob.FileSize = double.Parse(file.FileSize);
+                PrinterManager.ActivePrinter.CurrentPrintJob.FileName = file.FileName;
+                PrinterManager.ActivePrinter.CurrentPrintJob.FileSize = double.Parse(file.FileSize);
             }
         }
 
 
         public List<ChartSeries> Series = new List<ChartSeries>()
     {
-        new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
-        new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+        new ChartSeries() { Name = "Hotend", Data = HotendGraph.ToArray() },
+        new ChartSeries() { Name = "Bed", Data = BedGraph.ToArray() },
     };
 
         public void UpdateGraphData()
         {
             var new_series = new List<ChartSeries>()
         {
-            new ChartSeries() { Name = "Hotend", Data = hotendGraph.ToArray() },
-            new ChartSeries() { Name = "Bed", Data = bedGraph.ToArray() },
+            new ChartSeries() { Name = "Hotend", Data = HotendGraph.ToArray() },
+            new ChartSeries() { Name = "Bed", Data = BedGraph.ToArray() },
         };
             Series = new_series;
         }
@@ -135,47 +123,56 @@ namespace WebUI.Data
         }
 
 
-        public void UpdatePrintProgress(string message, SerialDataProcessorService source)
+        public void UpdatePrintProgress(string message)
         {
             var printing = Regex.Match(message, @"printing byte (\d+)/(\d+)");
             var finished = Regex.Match(message, @"Done printing file");
+            var notPrinting = Regex.Match(message.Trim(), @"\s*Not\s+SD\s*", RegexOptions.IgnoreCase);
+
 
             if (printing.Success)
             {
-                printJob.CurrentBytes = int.Parse(printing.Groups[1].Value);
-                printJob.TotalBytes = int.Parse(printing.Groups[2].Value);
-                printJob.FileSize = printJob.TotalBytes;
-                printJob.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = printJob.CurrentBytes, Timestamp = DateTime.Now });
-                if (printJob.PrintProgressRecords.Count > 100) // Keep the last 100 records
+                PrinterManager.ActivePrinter.CurrentPrintJob.CurrentBytes = int.Parse(printing.Groups[1].Value);
+                PrinterManager.ActivePrinter.CurrentPrintJob.TotalBytes = int.Parse(printing.Groups[2].Value);
+                PrinterManager.ActivePrinter.CurrentPrintJob.FileSize = PrinterManager.ActivePrinter.CurrentPrintJob.TotalBytes;
+                PrinterManager.ActivePrinter.CurrentPrintJob.PrintProgressRecords.Add(new PrintProgressRecord { BytesPrinted = PrinterManager.ActivePrinter.CurrentPrintJob.CurrentBytes, Timestamp = DateTime.Now });
+                if (PrinterManager.ActivePrinter.CurrentPrintJob.PrintProgressRecords.Count > 100) // Keep the last 100 records
                 {
-                    printJob.PrintProgressRecords.RemoveAt(0);
+                    PrinterManager.ActivePrinter.CurrentPrintJob.PrintProgressRecords.RemoveAt(0);
                 }
-                progress = Math.Round(CalculatePercentage(printJob.CurrentBytes, printJob.TotalBytes));
+                Progress = Math.Round(CalculatePercentage(PrinterManager.ActivePrinter.CurrentPrintJob.CurrentBytes, PrinterManager.ActivePrinter.CurrentPrintJob.TotalBytes));
+                PrinterManager.ActivePrinter.CurrentPrintJob.IsPrinting = true;
+            }
+
+            if (notPrinting.Success)
+            {
+                PrinterManager.ActivePrinter.CurrentPrintJob.IsPrinting = false;
+                Progress = 0;
             }
 
             if (finished.Success)
             {
-                progress = 100;
-                //_snackbar.Add("Print Finished", Severity.Success);
+                Progress = 100;
             }
 
-            if (progress > 0)
+            if (Progress > 0)
             {
-                if (!finalizationExecuted)
+                if (!FinalizationExecuted)
                 {
-                    isPrinting = true;
+                    PrinterManager.ActivePrinter.CurrentPrintJob.IsPrinting = true;
                 }
 
-                if (progress == 100 && !finalizationExecuted)
+                if (Progress == 100 && !FinalizationExecuted)
                 {
-                    isPrinting = false;
-                    background.StopStopwatch();
-                    progress = 0;
+                    PrinterManager.ActivePrinter.CurrentPrintJob.IsPrinting = false;
+                    Background.StopStopwatch();
+                    Progress = 0;
                     FormatTotalPrintTime();
-                    _printerDataServiceTest.AddPrintJobToHistory(printJob, source);
-                    finalizationExecuted = true;
+                    PrinterDataServiceTest.AddPrintJobToHistory(PrinterManager.ActivePrinter.CurrentPrintJob, PrinterManager);
+                    FinalizationExecuted = true;
                 }
             }
+
         }
 
         public void GetPrintingFileName(string fileName)
@@ -185,7 +182,7 @@ namespace WebUI.Data
             {
                 if (printFile.Success)
                 {
-                    printJob.FileName = printFile.Groups[1].Value;
+                    PrinterManager.ActivePrinter.CurrentPrintJob.FileName = printFile.Groups[1].Value;
                 }
             }
             catch (Exception e)
@@ -196,32 +193,24 @@ namespace WebUI.Data
 
         public async Task DisplayEstimatedTimeRemaining()
         {
-            estimatedTime = await printJob.EstimateTimeRemainingAsync();
-        }
-
-        public void CalibrateBed()
-        {
-            processing = true;
-            portConnectionManager.connections[portConnectionManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildBedLevelingCommand());
-            Console.WriteLine("starting");
+            EstimatedTime = await PrinterManager.ActivePrinter.CurrentPrintJob.EstimateTimeRemainingAsync();
         }
 
         public async Task WriteFileToPort(string driveName, string fileName)
         {
-            isTransferring = true;
+            IsTransferring = true;
 
             string filePath = Path.Combine(driveName, fileName);
 
-            await Task.Run(() => File.WriteAllText(filePath, file));
+            await Task.Run(() => System.IO.File.WriteAllText(filePath, File));
 
-            isTransferring = false;
-            //_snackbar.Add("File transferred to media", Severity.Success);
+            IsTransferring = false;
         }
 
 
         public void ChoosePort(string portname)
         {
-            chosenPort = portname;
+            ChosenPort = portname;
         }
 
         public void GetDrives()
@@ -239,14 +228,14 @@ namespace WebUI.Data
 
         public void ReleaseMedia()
         {
-            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write("M22");
-            mediaAttached = false;
+            PrinterManager.ActivePrinter.SerialConnection.Write("M22");
+            MediaAttached = false;
         }
 
         public void AttachMedia()
         {
-            portConnectionManager.ActiveConnection.ConnectionServiceSerial.Write("M21");
-            mediaAttached = true;
+            PrinterManager.ActivePrinter.SerialConnection.Write("M21");
+            MediaAttached = true;
         }
     }
 }

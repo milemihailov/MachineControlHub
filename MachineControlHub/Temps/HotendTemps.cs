@@ -17,6 +17,7 @@ namespace MachineControlHub.Temps
         public HotendTemps(IPrinterConnection connection)
         {
             _connection = connection;
+            PIDValues = new PIDValues(connection);
         }
 
 

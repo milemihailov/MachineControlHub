@@ -4,10 +4,11 @@
 @inject PrinterDataService PrinterDataHandler
 @inject NavigationManager MyNavigationManager
 @inject HotendTemperatureService HotendTemperatureService
+@inject BedTemperatureService BedTemperatureService
+@inject ChamberTemperatureService ChamberTemperatureService
 @inject BackgroundTimer background
-@inject PortConnectionManagerService PortManager
 @inject PrinterManagerService printerManager
-@inject Data.BedLevelingService levelBed
+@inject BedLevelingService levelBed
 
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -33,7 +34,7 @@
         <!-- Container for controlling print operations -->
         <ContainerSpaceBetween>
             <!-- Button to start printing -->
-            @if (PrintManager.isPrinting)
+            @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
                 <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="ConfirmStartAsync">Start</MudButton>
             }
@@ -72,18 +73,18 @@
             <!-- MudExpansionPanel for displaying uploaded files -->
             <MudItem xs="12" md="8" lg="8">
                 <MudExpansionPanel Text="Uploaded Files">
-                    @foreach (var file in PrintManager.uploadedFiles)
+                    @foreach (var file in PrintManager.UploadedFiles)
                     {
                         <MudListItem>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <!-- Displaying file name -->
                                 <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
                                 <!-- Displaying file size -->
-                                <MudText Typo="Typo.overline">@Math.Round(PrintManager.printJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                                <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
                                 <!-- Progress indicator -->
-                                <MudProgressCircular Color="Color.Default" Indeterminate=@PrintManager.isTransferring />
+                                <MudProgressCircular Color="Color.Default" Indeterminate=@PrintManager.IsTransferring />
                                 <!-- Button to start adding file to media -->
-                                <MudButton OnClick="() => PrintManager.WriteFileToPort(PrintManager.chosenPort,file.FileName)">Add to media</MudButton>
+                                <MudButton OnClick="() => PrintManager.WriteFileToPort(PrintManager.ChosenPort,file.FileName)">Add to media</MudButton>
                             </div>
                         </MudListItem>
                     }
@@ -106,13 +107,13 @@
         <!-- Select dropdown for choosing media -->
         @if (PrintManager.PortsAvailable != null)
         {
-            <MudSelect Label="Select Media" T="string" @bind-Value="PrintManager.chosenPort" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <MudSelect Label="Select Media" T="string" @bind-Value="PrintManager.ChosenPort" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var port in PrintManager.PortsAvailable)
                 {
                     <MudSelectItem Value="@port.DriveName">
                         <div style="display: flex; justify-content: space-between;">
                             <MudText> @port.DriveName @port.VolumeLabel </MudText>
-                            @if (PrintManager.chosenPort == port.DriveName)
+                            @if (PrintManager.ChosenPort == port.DriveName)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                             }
@@ -122,9 +123,9 @@
             </MudSelect>
         }
 
-        @if (PortManager.ActiveConnection.ConnectionServiceSerial.IsConnected)
+        @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
-            <MudSelect @bind-Value="@PrintManager.fileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <MudSelect @bind-Value="@PrintManager.FileToPrint" T="string" Label="SD Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
 
                 @if (PrintManager.SDFiles != null)
                 {
@@ -133,7 +134,7 @@
                         <MudSelectItem Value="@file.FileName">
                             <div style="display: flex; justify-content: space-around;">
                                 <span>@file.FileName</span>
-                                <span>@($"{Math.Round(PrintManager.printJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+                                <span>@($"{Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
                             </div>
                         </MudSelectItem>
                     }
@@ -142,43 +143,45 @@
         }
 
 
-
-        <!-- Displaying print details -->
-        <div>
-            <ContainerSpaceBetween Class="pt-8">
-                <MudText>File printing:</MudText>
-                <MudText><strong>@PrintManager.printJob.FileName</strong></MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Estimated print time left:</MudText>
-                <MudText>@PrintManager.estimatedTime</MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Elapsed print time:</MudText>
-                <MudText>
-                    @background.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
-                </MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Start time:</MudText>
-                <MudText><strong>@PrintManager.printJob.FormattedStartTime</strong></MudText>
-            </ContainerSpaceBetween>
-
-            <ContainerSpaceBetween>
-                <MudText>File Size:</MudText>
-                <MudText><strong>@Math.Round(PrintManager.printJob.ConvertToMB(PrintManager.printJob.FileSize), 2)MB</strong></MudText>
-            </ContainerSpaceBetween>
-            @if (PrintManager.isPrinting)
-            {
-                <ContainerSpaceBetween>
-                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrintManager.progress" Class="pb-9">
-                        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-                            <b> @Math.Round((PrintManager.printJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((PrintManager.printJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
-                        </MudText>
-                    </MudProgressLinear>
+        @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        {
+            <!-- Displaying print details -->
+            <div>
+                <ContainerSpaceBetween Class="pt-8">
+                    <MudText>File printing:</MudText>
+                    <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
                 </ContainerSpaceBetween>
-            }
-        </div>
+                <ContainerSpaceBetween>
+                    <MudText>Estimated print time left:</MudText>
+                    <MudText>@PrintManager.EstimatedTime</MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Elapsed print time:</MudText>
+                    <MudText>
+                        @background.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+                    </MudText>
+                </ContainerSpaceBetween>
+                <ContainerSpaceBetween>
+                    <MudText>Start time:</MudText>
+                    <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
+                </ContainerSpaceBetween>
+
+                <ContainerSpaceBetween>
+                    <MudText>File Size:</MudText>
+                    <MudText><strong>@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(printerManager.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
+                </ContainerSpaceBetween>
+                @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+                {
+                    <ContainerSpaceBetween>
+                        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrintManager.Progress" Class="pb-9">
+                            <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+                                <b> @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+                            </MudText>
+                        </MudProgressLinear>
+                    </ContainerSpaceBetween>
+                }
+            </div>
+        }
     </MudItem>
 
     <!-- Temperatures ---------------------------------------------------------------->
@@ -197,16 +200,10 @@
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
                                              Size="Size.Large"
-                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
                                              Class="pr-2 mr-2" />
                                 }
                                 @HotendTemperatureService.currentHotendTemperature
-                            </MudText>
-                            <MudText>
-                                @if (printerManager.Printers != null && printerManager.Printers.Count > 0)
-                                {
-                                    @printerManager.ActivePrinter.HotendTemperatures.CurrentTemp
-                                }
                             </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target hotend temperature -->
@@ -240,34 +237,34 @@
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Bed Temperature:</MudText>
                             <MudText Style="display:flex; align-items:center;">
-                                @if (PrinterDataHandler.BedTemperatureService.currentBedTemperature < PrinterDataHandler.BedTemperatureService.targetBedTemperature)
+                                @if (BedTemperatureService.currentBedTemperature < BedTemperatureService.targetBedTemperature)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
                                              Size="Size.Large"
-                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
                                              Class="pr-2 mr-2" />
                                 }
-                                @PrinterDataHandler.BedTemperatureService.currentBedTemperature
+                                @BedTemperatureService.currentBedTemperature
                             </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target bed temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Bed Temperature:</MudText>
-                            <MudText>@PrinterDataHandler.BedTemperatureService.targetBedTemperature</MudText>
+                            <MudText>@BedTemperatureService.targetBedTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting bed temperature -->
-                                <MudNumericField @bind-Value="PrinterDataHandler.BedTemperatureService.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="BedTemperatureService.setBedTemperature" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.BedTemperatureService.SetBedTemperature(PrinterDataHandler.BedTemperatureService.setBedTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => BedTemperatureService.SetBedTemperature(BedTemperatureService.setBedTemperature)">Set Temperature</MudButton>
                                     <!-- Button to turn off bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => PrinterDataHandler.BedTemperatureService.SetBedTemperature(0)">Turn Off</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => BedTemperatureService.SetBedTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
                             </MudItem>
                         </MudGrid>
@@ -281,34 +278,34 @@
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Chamber Temperature:</MudText>
                             <MudText Style="display:flex; align-items:center;">
-                                @if (PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature < PrinterDataHandler.ChamberTemperatureService.targetChamberTemperature)
+                                @if (ChamberTemperatureService.currentChamberTemperature < ChamberTemperatureService.targetChamberTemperature)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
                                              Size="Size.Large"
-                                             Color="@(_isPrimaryColor ? Color.Warning : Color.Default)"
+                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
                                              Class="pr-2 mr-2" />
                                 }
-                                @PrinterDataHandler.ChamberTemperatureService.currentChamberTemperature
+                                @ChamberTemperatureService.currentChamberTemperature
                             </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target chamber temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Chamber Temperature:</MudText>
-                            <MudText>@PrinterDataHandler.ChamberTemperatureService.targetChamberTemperature</MudText>
+                            <MudText>@ChamberTemperatureService.targetChamberTemperature</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting chamber temperature -->
-                                <MudNumericField @bind-Value="PrinterDataHandler.ChamberTemperatureService.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="ChamberTemperatureService.setChamberTemperature" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrinterDataHandler.ChamberTemperatureService.SetChamberTemperature(PrinterDataHandler.ChamberTemperatureService.setChamberTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => ChamberTemperatureService.SetChamberTemperature(ChamberTemperatureService.setChamberTemperature)">Set Temperature</MudButton>
                                     <!-- Button to turn off chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => PrinterDataHandler.ChamberTemperatureService.SetChamberTemperature(0)">Turn Off</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => ChamberTemperatureService.SetChamberTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
                             </MudItem>
                         </MudGrid>
@@ -370,35 +367,10 @@
     </MudItem>
 
     <!-- Bed Leveling ---------------------------------------------------------------->
-    <MudItem xs="12" md="6" Class="pa-0">
-        <!-- Main grid container for the plotly chart and button -->
-        <MudGrid Class="pl-6">
-            <!-- Grid item containing the Plotly chart -->
-            <MudItem xs="12" sm="12" md="12" lg="12" Class="pb-0 mb-0">
-                <PlotlyChart style="height: 60vh; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
-            </MudItem>
-            <!-- Grid item containing the Calibrate Bed button -->
-            <MudItem xs="12" sm="12" md="12" lg="12" Class="pt-0 mt-0">
-                <!-- Check if printing is not in progress -->
-                @if (!PrintManager.isPrinting)
-                {
-                    <!-- Button to initiate bed calibration -->
-                    <MudButton FullWidth="true" Disabled="@PrintManager.processing" OnClick="PrintManager.CalibrateBed" Variant="Variant.Filled" Color="Color.Tertiary">
-                        <!-- Show a progress indicator and text when processing -->
-                        @if (PrintManager.processing)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Measuring Bed</MudText>
-                        }
-                        else
-                        {
-                            <MudText>CALIBRATE BED</MudText>
-                        }
-                    </MudButton>
-                }
-            </MudItem>
-        </MudGrid>
-    </MudItem>
+    @if (printerManager.ActivePrinter.HasAutoBedLevel)
+    {
+        <BedLevel/>
+    }
 
     <!-- Temperature Graph ----------------------------------------------------------->
     <MudItem xs="12" md="6" Class="pa-0 mr-0">
@@ -417,15 +389,9 @@
 </MudGrid>
 
 @code {
-
-    private PlotlyChart chart;
-    private Config config;
-    private Layout layout;
-    private IList<ITrace> data;
-    string fileMessage = "";
-    string sdFiles = "";
-    string calibrateMessage = "";
-    bool _isPrimaryColor = true;
+    string FileMessage { get; set; } = "";
+    string SDFiles { get; set; } = "";
+    bool IsPrimaryColor { get; set; } = true;
 
     /// <summary>
     /// Method that is called when the component is initialized.
@@ -435,74 +401,21 @@
     {
         // Subscribe to the background service events
         background.SecondElapsed += OnSecondElapsed;
-        PortManager.SelectedPrinterChanged += OnSelectedPrinter;
+        printerManager.ActivePrinterChanged += OnSelectedPrinter;
 
         await Task.Run(() =>
         {
-            // Initialize the data list
-            data = new List<ITrace>();
 
-            // // Check if the serial connection is established and request SD card list if connected
-            // if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
-            // {
-            //     printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
-
-            //     // Subscribe to the InputReceived event of the selected printer
-            //     foreach (var port in printerManager.Printers.Values)
-            //     {
-            //         printerManager.InputReceived += OnUpdate;
-            //     }
-            // }
-
-            if (printerManager.Printers != null && printerManager.Printers.Count > 0)
+            if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
             {
                 printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
 
                 printerManager.InputReceived += OnUpdate;
             }
 
-            // Initialize the configuration for Plotly chart
-            config = new Config
-                {
-                    ShowLink = false,
-                    Responsive = true,
-                    DisplayLogo = true
-                };
-
-            // Initialize the layout for Plotly chart
-            layout = new Layout
-                {
-                    Title = new Title
-                    {
-                        Text = "Bed Mesh"
-                    },
-                    PaperBgColor = "white",
-                    PlotBgColor = "white",
-                    Font = new Font
-                    {
-                        Color = "black"
-                    },
-                    Margin = new Plotly.Blazor.LayoutLib.Margin
-                    {
-                        L = 65,
-                        R = 50,
-                        B = 65,
-                        T = 90
-                    }
-                };
+            // Load preheating profiles from the specified path
+            PrinterDataHandler.preheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_PATH);
         });
-        // Load preheating profiles from the specified path
-        PrinterDataHandler.preheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_PATH);
-
-        // Load the selected printer settings from the specified path
-        PrinterDataHandler.SelectedPrinter = PrinterDataHandler.LoadPrinterData<MachineControlHub.Printer>(Data.PrinterDataService.SELECTED_PRINTER_SETTINGS_PATH);
-
-        // Load the bed mesh CSV data from the specified path
-        PrinterDataHandler.BedLevelDataService.CSVData = PrinterDataHandler.LoadPrinterData<string>("meshData.json");
-
-        // Load Plotly data if available
-        LoadPlotlyData();
-
     }
 
     /// <summary>
@@ -514,6 +427,10 @@
     {
         try
         {
+            if(PrintManager.SDFiles != null)
+            {
+                PrintManager.SDFiles.Clear();
+            }
             await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
         }
         catch (NavigationException navEx)
@@ -535,58 +452,30 @@
         if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
         {
             // get the list of files on the SD card
-            fileMessage += message;
+            FileMessage += message;
             if (message.Contains("End"))
             {
-                sdFiles = string.Join("\n", fileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
-                PrintManager.ListSDFiles(sdFiles);
-                fileMessage = "";
-            }
-
-            // update elapsed print time
-            // print.ElapsedPrintTime(message);
-
-            // get the bed leveling data
-            if (fileMessage.Contains("Bilinear"))
-            {
-                calibrateMessage += message;
-                if (message.Contains("X:"))
-                {
-                    PrinterDataHandler.BedLevelDataService.CSVData = "";
-                    PrinterDataHandler.BedLevelDataService.CSVData = PrinterDataHandler.BedLevelDataService.bedData.GetGrid(calibrateMessage);
-                    PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
-                    PrintManager.processing = false;
-                    fileMessage = "";
-                    calibrateMessage = "";
-
-                    // delete previous bed leveling data if it exists
-                    if (File.Exists("meshData.json"))
-                    {
-                        File.Delete("meshData.json");
-                    }
-                    // save the new bed leveling data
-                    PrinterDataHandler.SavePrinterData("meshData.json", PrinterDataHandler.BedLevelDataService.CSVData);
-                    LoadPlotlyData();
-                    await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
-                }
+                SDFiles = string.Join("\n", FileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                PrintManager.ListSDFiles(SDFiles);
+                FileMessage = "";
             }
 
             PrintManager.GetPrintingFileName(message);
 
             // parse the current hotend and bed temperatures
             await HotendTemperatureService.ParseCurrentHotendTemperature(message);
-            await PrinterDataHandler.BedTemperatureService.ParseCurrentBedTemperature(message);
+            await BedTemperatureService.ParseCurrentBedTemperature(message);
 
             // Ensure the graph data does not exceed 30 entries by removing the oldest entries
-            if (PrintingService.hotendGraph.Count >= 30)
+            if (PrintingService.HotendGraph.Count >= 30)
             {
-                PrintingService.hotendGraph.RemoveAt(0);
-                PrintingService.bedGraph.RemoveAt(0);
+                PrintingService.HotendGraph.RemoveAt(0);
+                PrintingService.BedGraph.RemoveAt(0);
             }
 
             // Add the current temperature data to the graph
-            PrintingService.hotendGraph.Add(PrinterDataHandler.HotendTemperatureService.currentHotendTemperature);
-            PrintingService.bedGraph.Add(PrinterDataHandler.BedTemperatureService.currentBedTemperature);
+            PrintingService.HotendGraph.Add(HotendTemperatureService.currentHotendTemperature);
+            PrintingService.BedGraph.Add(BedTemperatureService.currentBedTemperature);
 
             // Update the graph data with the latest values
             PrintManager.UpdateGraphData();
@@ -601,31 +490,33 @@
     /// </summary>
     private void OnSecondElapsed()
     {
-        if (!PortManager.IsBusy)
+        if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
-            Task.Run(async () =>
+            if (!printerManager.ActivePrinter.IsBusy)
             {
-                // If automatic temperature reporting is not enabled, request temperature data
-                if (!PrinterDataHandler.ActivePrinter.HasAutoReportTemperature)
+                Task.Run(async () =>
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write(CommandMethods.BuildReportTemperaturesCommand());
-                    Console.WriteLine("reporting");
-                }
+                    // If automatic temperature reporting is not enabled, request temperature data
+                    if (!printerManager.ActivePrinter.HasAutoReportTemperature)
+                    {
+                        printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                    }
 
-                // Asynchronously get the status of the drives
-                await Task.Run(() => PrintManager.GetDrives());
+                    // Asynchronously get the status of the drives
+                    await Task.Run(() => PrintManager.GetDrives());
 
-                // If printing is in progress, request print time elapsed
-                if (PrintManager.isPrinting)
-                {
-                    await PrintManager.DisplayEstimatedTimeRemaining();
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M27 C");
-                }
+                    // If printing is in progress, request print time elapsed
+                    if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+                    {
+                        await PrintManager.DisplayEstimatedTimeRemaining();
+                        printerManager.ActivePrinter.SerialConnection.Write("M27 C");
+                    }
 
-                await InvokeAsync(StateHasChanged);
-            });
+                    await InvokeAsync(StateHasChanged);
+                });
+            }
         }
-        _isPrimaryColor = !_isPrimaryColor; // Toggle the color state
+        IsPrimaryColor = !IsPrimaryColor; // Toggle the color state
 
     }
 
@@ -637,56 +528,21 @@
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         // Read the file's content into the print.file variable
-        PrintManager.file = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        PrintManager.File = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
 
         // Get the file name and size from the event arguments
         var fileName = e.File.Name;
         var fileSize = e.File.Size;
 
         // Add the file's information to the list of uploaded files
-        PrintManager.uploadedFiles.Add((fileName, PrintManager.file, fileSize));
+        PrintManager.UploadedFiles.Add((fileName, PrintManager.File, fileSize));
 
-        // Extract the printing settings from the file
-        // print.ExtractPrintingSettings(print.file);
         StateHasChanged();
-    }
-
-    /// <summary>
-    /// Loads Plotly data for the bed leveling mesh if CSV data is available.
-    /// </summary>
-    private void LoadPlotlyData()
-    {
-        try
-        {
-            // Check if there is CSV data to process
-            if (PrinterDataHandler.BedLevelDataService.CSVData != null)
-            {
-                // Get the surface data from the CSV
-                PrinterDataHandler.BedLevelDataService.meshData = PrinterDataHandler.BedLevelDataService.GetSurfaceData();
-
-                Task.Run(async () =>
-                {
-                    // Iterate over each trace in the mesh data
-                    foreach (var trace in await PrinterDataHandler.BedLevelDataService.meshData)
-                    {
-                        // Add the trace to the chart asynchronously and delay briefly between each addition
-                        await InvokeAsync(async () => await chart.AddTrace(trace));
-                        await Task.Delay(100);
-                    }
-
-                    PrinterDataHandler.BedLevelDataService._isInitialized = true;
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
     }
 
     public async Task ConfirmStartAsync()
     {
-        if (PortManager.ActiveConnection.ConnectionServiceSerial.IsConnected)
+        if (printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
             bool? result = await DialogService.ShowMessageBox(
             "Start Print",
@@ -695,19 +551,19 @@
 
             if (result == true)
             {
-                if (PrintManager.fileToPrint == "")
+                if (PrintManager.FileToPrint == "")
                 {
                     Snackbar.Add("No file selected", Severity.Error);
                 }
                 else
                 {
-                    PrintManager.StartPrint(PrintManager.fileToPrint);
+                    PrintManager.StartPrint(PrintManager.FileToPrint);
                     PrintManager.StartTimeOfPrint();
-                    PrintManager.background.ResetStopwatch();
-                    PrintManager.background.StartStopwatch();
-                    PrintManager.GetFileNameAndSize(PrintManager.fileToPrint);
-                    PrintManager.finalizationExecuted = false; // Reset the flag
-                    Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {PrintManager.fileToPrint} </li></ul>", Severity.Success);
+                    PrintManager.Background.ResetStopwatch();
+                    PrintManager.Background.StartStopwatch();
+                    PrintManager.GetFileNameAndSize(PrintManager.FileToPrint);
+                    PrintManager.FinalizationExecuted = false; // Reset the flag
+                    Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {PrintManager.FileToPrint} </li></ul>", Severity.Success);
                 }
             }
         }
@@ -720,23 +576,23 @@
 
     public async Task StopPrint()
     {
-        if (PortManager.ActiveConnection.ConnectionServiceSerial.IsConnected)
+        if (printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
             bool? result = await DialogService.ShowMessageBox(
             "Stop Print",
             "Do you want to stop the print?",
             yesText: "Stop!", cancelText: "Cancel");
 
-            if (result == true && PrintManager.isPrinting)
+            if (result == true && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
-                PrintManager.printService.AbortCurrentPrint();
-                PrintManager.background.StopStopwatch();
-                PrintManager.progress = 0;
+                printerManager.ActivePrinter.PrintService.AbortCurrentPrint();
+                PrintManager.Background.StopStopwatch();
+                PrintManager.Progress = 0;
                 PrintManager.FormatTotalPrintTime();
-                PrintManager.isPrinting = false;
-                PrintManager._printerDataServiceTest.AddPrintJobToHistory(PrintManager.printJob, PortManager.ActiveConnection);
+                printerManager.ActivePrinter.CurrentPrintJob.IsPrinting = false;
+                PrintManager.PrinterDataServiceTest.AddPrintJobToHistory(printerManager.ActivePrinter.CurrentPrintJob,printerManager);
 
-                PrintManager._snackbar.Add("Print Stopped", Severity.Error);
+                Snackbar.Add("Print Stopped", Severity.Error);
             }
             else
             {
@@ -757,58 +613,59 @@
         {
             if (message.Contains("Insert filament"))
             {
-                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
                 "Insert filament and click continue!",
                 yesText: "Continue");
 
                 if (result == true)
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
+                    Console.WriteLine("sending");
                 }
             }
 
             if (message.Contains("action:prompt_begin Heater Timeout"))
             {
-                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
                 "Heater timeout reheat to continue!",
                 yesText: "Reheat");
 
                 if (result == true)
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
                 }
             }
 
             if (message.Contains("action:prompt_begin Reheat Done"))
             {
-                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
                 "Reheat done add new filament and click continue!",
                 yesText: "Change");
 
                 if (result == true)
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
                 }
             }
 
             if (message.Contains("action:prompt_button PurgeMore"))
             {
-                bool? result = await PrintManager._dialogService.ShowMessageBox(
+                bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
                 "Purge more or continue!",
                 yesText: "Continue", noText: "Purge More");
 
                 if (result == true)
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S1");
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
                 }
                 else
                 {
-                    PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.Write("M876 S0");
-                    PrintManager._snackbar.Add("Purging", Severity.Info);
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S0");
+                    Snackbar.Add("Purging", Severity.Info);
                 }
             }
         });
@@ -818,7 +675,6 @@
     {
         printerManager.InputReceived -= OnUpdate;
         background.SecondElapsed -= OnSecondElapsed;
-
-        PortManager.SelectedPrinterChanged -= OnSelectedPrinter;
+        printerManager.ActivePrinterChanged -= OnSelectedPrinter;
     }
 }

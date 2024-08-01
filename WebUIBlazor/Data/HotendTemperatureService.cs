@@ -9,10 +9,7 @@ namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
-        public ITemperatures hotend;
         public PrinterManagerService Printer { get; set; }
-
-        public PIDValues PIDHotendValues { get; set; }
 
         public int currentHotendTemperature;
         public int setHotendTemperature;
@@ -24,9 +21,6 @@ namespace WebUI.Data
         public HotendTemperatureService(PrinterManagerService Printer)
         {
             this.Printer = Printer;
-            hotend = new HotendTemps(Printer.ActivePrinter.SerialConnection);
-            PIDHotendValues = hotend.PIDValues;
-            Printer.ActivePrinter.PIDValues = hotend.PIDValues;
         }
 
         public void SetHotendTemperature(int setTemp)

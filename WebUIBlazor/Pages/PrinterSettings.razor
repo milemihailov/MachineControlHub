@@ -2,874 +2,790 @@
 @using MachineControlHub
 @using MachineControlHub.Material
 @using MachineControlHub.Motion
-@inject PrinterDataService printer
-@inject PortConnectionManagerService PortManager
+@inject PrinterDataService PrinterDataService
 @inject NavigationManager MyNavigationManager
 @inject PrinterManagerService PrinterManager
-@* <MudCard>
-    <MudCardHeader>
-        <MudText Typo="Typo.h6">Bed Shape</MudText>
-    </MudCardHeader>
-    <MudSelect T="string" Label="Select bed shape" @bind-Value="printer.selectedShape" Variant="Variant.Outlined">
-        <MudSelectItem Value="@("Rectangular")" />
-        <MudSelectItem Value="@("Circular")" />
-        <MudSelectItem Value="@("Custom")" />
-    </MudSelect>
-    <MudCardContent>
-        @if (printer.selectedShape == "Rectangular")
-        {
-            <MudNumericField Label="Y Axis in mm" @bind-Value="printer.Printer.Bed.YSize" Immediate="true" Variant="Variant.Outlined" />
-            <MudNumericField Label="X Axis in mm" @bind-Value="printer.Printer.Bed.XSize" Immediate="true" Variant="Variant.Outlined" />
-        }
-        else if (printer.selectedShape == "Circular")
-        {
-            <MudNumericField Label="Diameter in mm" @bind-Value="printer.Printer.Bed.Diameter" Immediate="true" Variant="Variant.Outlined" />
-        }
-        else if (printer.selectedShape == "Custom")
-        {
-            <MudNumericField Label="Y Axis in mm" @bind-Value="printer.Printer.Bed.YSize" Immediate="true" Variant="Variant.Outlined" />
-            <MudNumericField Label="X Axis in mm" @bind-Value="printer.Printer.Bed.XSize" Immediate="true" Variant="Variant.Outlined" />
-        }
-    </MudCardContent>
-
-    <MudCardContent>
-        <MudTextField @bind-Value="printer.Printer.Name" Label="Printer Name" Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="printer.Printer.Model" Label="Printer Model" Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="printer.Printer.PrinterFirmwareVersion" Label="Firmware Version" Variant="Variant.Outlined" />
-    </MudCardContent>
-
-    <MudCardContent>
-        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasAutoBedLevel" Label="Has Auto Bed Level" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasHeatedBed" Label="Has Heated Bed" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasChamber" Label="Has Chamber" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.Printer.HasFilamentRunoutSensor" Label="Has Filament Sensor" />
-        <MudSwitch Color="Color.Success" @bind-Value="printer.HasCamera" Label="Has Camera" />
-        @if (printer.HasCamera)
-        {
-            <MudTextField @bind-Value="printer.Printer.Camera.Model" Label="Camera Model" Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="printer.Printer.Camera.ResolutionHeight" Label="Resolution Height" Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="printer.Printer.Camera.ResolutionWidth" Label="Resolution Width" Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="printer.Printer.Camera.LensFocalLength" Label="Lens Focal Length" Variant="Variant.Outlined" />
-        }
-
-            //TODO: Implement these
-        <MudSwitch @bind-Checked="printer.HasPowerLossRecovery" Label="Has Power Loss Recovery" />
-        <MudSwitch @bind-Checked="printer.HasDisplay" Label="Has Display" />
-        <MudSwitch @bind-Checked="printer.HasDualZ" Label="Has Dual Z" />
-        <MudSwitch @bind-Checked="printer.HasEnclosure" Label="Has Enclosure" />
-        <MudSwitch @bind-Checked="printer.HasDryBox" Label="Has Dry Box" />
-        <MudSwitch @bind-Checked="printer.HasCamera" Label="Has Camera" />
-        <MudSwitch @bind-Checked="printer.HasNetwork" Label="Has Network" />
-        <MudSwitch @bind-Checked="printer.HasOctoPrint" Label="Has OctoPrint" />
-        <MudSwitch @bind-Checked="printer.HasWebcam" Label="Has Webcam" />
-        <MudSwitch @bind-Checked="printer.HasWebcamStream" Label="Has Webcam Stream" />
-        <MudSwitch @bind-Checked="printer.HasWebcamSnapshot" Label="Has Webcam Snapshot" />
-        <MudSwitch @bind-Checked="printer.HasWebcamTimelapse" Label="Has Webcam Timelapse" />
-    </MudCardContent>
-</MudCard> *@
-
-@* <MudCard>
-    <MudCardHeader>
-        <MudText Typo="Typo.h6">Set if your machine has multiple extruders</MudText>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudNumericField @bind-Value="printer.Printer.NumberOfExtruders" Label="Number of Extruders" Variant="Variant.Text" Min="1" Max="10" />
-        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => printer.UpdateExtruders(printer.Printer.NumberOfExtruders)">Set Extruder Properties</MudButton>
-        @foreach (var extruder in printer.ExtruderSettings)
-        {
-            <MudExpansionPanel Text=@($"Set Your Settings For Extruder #{printer.ExtruderSettings.IndexOf(extruder) + 1}")>
-                <MudCardContent>
-                    <MudTextField @bind-Value="extruder.NozzleMaterial" Label="Nozzle Material" Variant="Variant.Outlined" />
-                    <MudNumericField @bind-Value="extruder.NozzleDiameter" Label="Nozzle Diameter" Variant="Variant.Text" />
-                    <MudSwitch Color="Color.Success" @bind-Value="extruder.HasCoolingFan" Label="Has Part Cooling Fan" />
-                    <MudSwitch Color="Color.Success" @bind-Value="extruder.ProbePresent" Label="Has Probe" />
-                </MudCardContent>
-            </MudExpansionPanel>
-        }
-    </MudCardContent>
-</MudCard>
-<MudButton Type="submit" OnClick="() => printer.CreatePrinterProfile()" Color="Color.Success" Variant="Variant.Filled" FullWidth="true">Create Printer Profile</MudButton>
- *@
+@inject HotendTemperatureService HotendTemperature
+@inject BedTemperatureService BedTemperature
 
 
+@if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
+{
 
-@*
-<MudDivider DividerType="DividerType.FullWidth" />
-<MudButton FullWidth="true" Color="Color.Success" Variant="Variant.Filled" OnClick="printer.GetPrinterSettings">Get Printer Settings</MudButton> *@
-<MudPaper Class="my-0 pt-5" Elevation="0" Height="95vh" Width="100vw">
-    <div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
+    <MudPaper Class="my-0 pt-5" Elevation="0" Height="95vh" Width="100vw">
+        <div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
 
-        <MudTooltip Text="Refresh if some settings are missing">
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {printer.GetPrinterSettings(); printer.GetFirmwareSettings();}" />
-        </MudTooltip>
-        <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
-    </div>
-    <MudTabs>
+            <MudTooltip Text="Refresh if some settings are missing">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {PrinterDataService.GetPrinterSettings(); PrinterDataService.GetFirmwareSettings();}" />
+            </MudTooltip>
+            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
+        </div>
+        <MudTabs>
 
-        <!-- Printer Information -------------------------------------------------------------------------------------------->
+            <!-- Printer Information -------------------------------------------------------------------------------------------->
 
-        <MudTabPanel Text="Printer Information">
-            <MudGrid Style="width: 100vw;">
-                <MudItem xs="12" md="4" lg="3">
-                    <MudPaper Class="pa-4" Elevation="0">
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Firmware Version: </MudText>
-                            <MudText> @PrinterManager.ActivePrinter.PrinterFirmwareVersion</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+            <MudTabPanel Text="Printer Information">
+                <MudGrid Style="width: 100vw;">
+                    <MudItem xs="12" md="4" lg="3">
+                        <MudPaper Class="pa-4" Elevation="0">
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Firmware Version: </MudText>
+                                <MudText> @PrinterManager.ActivePrinter.PrinterFirmwareVersion</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Machine Model: </MudText>
-                            <MudText> @PrinterManager.ActivePrinter.Model</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Machine Model: </MudText>
+                                <MudText> @PrinterManager.ActivePrinter.Model</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Linear Units: </MudText>
-                            <MudText> @PrinterManager.ActivePrinter.LinearUnit</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Linear Units: </MudText>
+                                <MudText> @PrinterManager.ActivePrinter.LinearUnit</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Temperature Units: </MudText>
-                            <MudText> @PrinterManager.ActivePrinter.TemperatureUnit</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Temperature Units: </MudText>
+                                <MudText> @PrinterManager.ActivePrinter.TemperatureUnit</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Binary File Transfer: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasBinaryFileTransfer)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Binary File Transfer: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasBinaryFileTransfer)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Extruder Count: </MudText>
-                            <MudText> @PrinterManager.ActivePrinter.NumberOfExtruders</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Extruder Count: </MudText>
+                                <MudText> @PrinterManager.ActivePrinter.NumberOfExtruders</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Power Loss Recovery: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasPowerLossRecovery)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Power Loss Recovery: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasPowerLossRecovery)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> EEPROM: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasEEPROM) </MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> EEPROM: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasEEPROM) </MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Auto Report Position: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasAutoReportPosition)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Auto Report Position: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoReportPosition)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Auto Report Temperatures: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasAutoReportTemperature) </MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Auto Report Temperatures: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoReportTemperature) </MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Auto Level: </MudText>
-                            <MudText> @printer.StringOutput(PrinterManager.ActivePrinter.HasAutoBedLevel)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Auto Level: </MudText>
+                                <MudText> @PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoBedLevel)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Runout Sensor: </MudText>
-                            <MudText> @printer.StringOutput(PrinterManager.ActivePrinter.HasFilamentRunoutSensor)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Runout Sensor: </MudText>
+                                <MudText> @PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasFilamentRunoutSensor)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Z-Probe: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.Head.ProbePresent)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Z-Probe: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.Head.ProbePresent)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Software Power Control: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasSoftwarePowerControl)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Software Power Control: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasSoftwarePowerControl)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Toggle Lights: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasToggleLights)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Toggle Lights: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasToggleLights)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Emergency Parser: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasEmergencyParser)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Emergency Parser: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasEmergencyParser)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Host Action Commands: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasHostActionCommands)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Host Action Commands: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasHostActionCommands)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Prompt Support: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasPromptSupport)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Prompt Support: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasPromptSupport)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> SD Card: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasSDCardSupport)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> SD Card: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasSDCardSupport)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Auto Report SD status: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasAutoReportSDStatus)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Auto Report SD status: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoReportSDStatus)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Long Filename: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasLongFilenameSupport)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Long Filename: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasLongFilenameSupport)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Custom Firmware Upload: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasCustomFirmwareUpload)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Custom Firmware Upload: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasCustomFirmwareUpload)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Extended M20: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasExtendedM20)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Extended M20: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasExtendedM20)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Thermal Protection: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasThermalProtection)</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Thermal Protection: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasThermalProtection)</MudText>
+                            </ContainerSpaceBetween>
+                            <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
 
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2"> Babystepping: </MudText>
-                            <MudText>@printer.StringOutput(PrinterManager.ActivePrinter.HasBabystep)</MudText>
-                        </ContainerSpaceBetween>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
+                            <ContainerSpaceBetween>
+                                <MudText Typo="Typo.subtitle2"> Babystepping: </MudText>
+                                <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasBabystep)</MudText>
+                            </ContainerSpaceBetween>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-        <!-- Bed Settings -------------------------------------------------------------------------------------------->
+            <!-- Bed Settings -------------------------------------------------------------------------------------------->
 
-        <MudTabPanel Text="Bed Settings">
-            <MudGrid Style="width:100vw;">
-                <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4">
-                    <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button">Bed Pid Values</MudText>
-                        </MudCardHeader>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Proportional:</MudText>
-                            <MudText>@printer.BedTemperatureService.PIDBedValues.Proportional</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Integral:</MudText>
-                            <MudText>@printer.BedTemperatureService.PIDBedValues.Integral</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Derivative:</MudText>
-                            <MudText>@printer.BedTemperatureService.PIDBedValues.Derivative</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="P Value" @bind-Value="printer.BedTemperatureService.PIDBedValues.Proportional" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="I Value" @bind-Value="printer.BedTemperatureService.PIDBedValues.Integral" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="D Value" @bind-Value="printer.BedTemperatureService.PIDBedValues.Derivative" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="8">
-                    <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button">Bed PID Autotune</MudText>
-                        </MudCardHeader>
-                        <MudGrid>
-                            <MudItem lg="6" md="12" sm="12" xs="12">
-                                <MudNumericField @bind-Value="printer.BedTemperatureService.PIDBedTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem lg="6" md="12" sm="12" xs="12">
-                                <MudNumericField @bind-Value="printer.BedTemperatureService.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => printer.BedTemperatureService.SetBedPIDValues()">Set bed PID Values</MudButton>
-                            </MudItem>
-                        </MudGrid>
-                        <MudText Class="mt-4">
-                            Note: This will autotune the PID values for the bed and store them automatically to the printer after the procedure is finished.
-                            Check this link for <MudLink Target="_blank" Href="https://marlinfw.org/docs/gcode/M303.html">more info.</MudLink>
-                        </MudText>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- Extruder Settings -------------------------------------------------------------------------------------------->
-
-        <MudTabPanel Text="Extruder Settings">
-            <MudGrid Class="mb-0 pb-0" Style="width:100vw;">
-                <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4" lg="3">
-                    <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button"> Z-Probe Offsets</MudText>
-                        </MudCardHeader>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">X Offset:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.Head.XProbeOffset</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Y Offset:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.Head.YProbeOffset</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Z Offset:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.Head.ZProbeOffset</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-
-                        <MudExpansionPanel Style="@($"color:{Theme.Palette.Tertiary}; font-weight: bold; text-align: center;")" HideIcon="true" Text="CHANGE VALUES">
-                            <MudNumericField Label="X Offset" @bind-Value="PrinterManager.ActivePrinter.Head.XProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Offset" @bind-Value="PrinterManager.ActivePrinter.Head.YProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Offset" @bind-Value="PrinterManager.ActivePrinter.Head.ZProbeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
-                        </MudExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4" lg="3">
-                    <MudPaper Class="pa-4 px-6" MinHeight="500px" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button"> Extruder PID values</MudText>
-                        </MudCardHeader>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Proportional:</MudText>
-                            <MudText>@printer.HotendTemperatureService.PIDHotendValues.Proportional</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Integral:</MudText>
-                            <MudText>@printer.HotendTemperatureService.PIDHotendValues.Integral</MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Derivative:</MudText>
-                            <MudText>@printer.HotendTemperatureService.PIDHotendValues.Derivative</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <MudExpansionPanel Style="@($"color:{Theme.Palette.Tertiary}; font-weight: bold; text-align: center;")" HideIcon="true" Text="CHANGE VALUES">
-                            <MudNumericField Label="P Value" @bind-Value="printer.HotendTemperatureService.PIDHotendValues.Proportional" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="I Value" @bind-Value="printer.HotendTemperatureService.PIDHotendValues.Integral" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="D Value" @bind-Value="printer.HotendTemperatureService.PIDHotendValues.Derivative" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
-                        </MudExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" md="4" lg="6" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper Class="pa-4 px-8" MinHeight="500px" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button">Hotend PID Autotune</MudText>
-                        </MudCardHeader>
-                        <MudGrid>
-                            <MudItem lg="6" md="12" sm="12" xs="12">
-                                <MudNumericField @bind-Value="printer.HotendTemperatureService.PIDHotendTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem lg="6" md="12" sm="12" xs="12">
-                                <MudNumericField @bind-Value="printer.HotendTemperatureService.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => printer.HotendTemperatureService.SetHotendPIDValues()">Set PID Values</MudButton>
-                            </MudItem>
-                        </MudGrid>
-                        <MudText Class="mt-4">
-                            Note: This will autotune the PID values for the hotend and store them automatically to the printer after the procedure is finished.
-                            Check this link for <MudLink Target="_blank" Href="https://marlinfw.org/docs/gcode/M303.html">more info.</MudLink>
-                        </MudText>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- Motion Settings -------------------------------------------------------------------------------------------->
-
-        <MudTabPanel Text="Motion Settings">
-            <MudGrid Style="width:100vw;">
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
+            <MudTabPanel Text="Bed Settings">
+                <MudGrid Style="width:100vw;">
+                    <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4">
+                        <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button"> Steps Per Unit</MudText>
+                                <MudText Color="Color.Primary" Typo="Typo.button">Bed Pid Values</MudText>
                             </MudCardHeader>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Steps:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.XStepsPerUnit</MudText>
+                                <MudText Typo="Typo.subtitle2">Proportional:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Proportional</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Steps:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.YStepsPerUnit</MudText>
+                                <MudText Typo="Typo.subtitle2">Integral:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Integral</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Steps:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZStepsPerUnit</MudText>
+                                <MudText Typo="Typo.subtitle2">Derivative:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Derivative</MudText>
                             </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E Steps:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.EStepsPerUnit</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="@printer.SetStepsPerUnit"> Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M092.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="P Value" @bind-Value="PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Proportional" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="I Value" @bind-Value="PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Integral" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="D Value" @bind-Value="PrinterManager.ActivePrinter.BedTemperatures.PIDValues.Derivative" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="8">
+                        <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button"> Maximum Feedrates</MudText>
+                                <MudText Color="Color.Primary" Typo="Typo.button">Bed PID Autotune</MudText>
                             </MudCardHeader>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Max Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.XMaxFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Max Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.YMaxFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Max Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZMaxFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E Max Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.EMaxFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetMaximumFeedrates">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M203.html">Check Marlin website for more info</MudLink>
+                            <MudGrid>
+                                <MudItem lg="6" md="12" sm="12" xs="12">
+                                    <MudNumericField @bind-Value="BedTemperature.PIDBedTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                                </MudItem>
+                                <MudItem lg="6" md="12" sm="12" xs="12">
+                                    <MudNumericField @bind-Value="BedTemperature.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => BedTemperature.SetBedPIDValues()">Set bed PID Values</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            <MudText Class="mt-4">
+                                Note: This will autotune the PID values for the bed and store them automatically to the printer after the procedure is finished.
+                                Check this link for <MudLink Target="_blank" Href="https://marlinfw.org/docs/gcode/M303.html">more info.</MudLink>
                             </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Extruder Settings -------------------------------------------------------------------------------------------->
+
+            <MudTabPanel Text="Extruder Settings">
+                <MudGrid Class="mb-0 pb-0" Style="width:100vw;">
+                    <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4" lg="3">
+                        <MudPaper MinHeight="500px" Class="pa-4 px-8" Outlined="true">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Accelerations</MudText>
-                            </MudCardHeader>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Print Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.PrintAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Travel Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.TravelAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Retract Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.RetractAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="Print Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PrintAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Retract Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.RetractAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Travel Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.TravelAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetStartingAccelerations">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M204.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
-                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Maximum Accelerations</MudText>
-                            </MudCardHeader>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Max Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.XMaxAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Max Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.YMaxAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Max Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZMaxAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E Max Acceleration:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.EMaxAcceleration</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Planner Frequency Limit(Hz)" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PlannerFrequencyLimit" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="XY Frequency Min Percentage" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PlannerXYFrequencyMinimumSpeedPercentage" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Target Extruder" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.TargetExtruder" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetMaximumAccelerations">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M201.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
-                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Advanced Accelerations</MudText>
-                            </MudCardHeader>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Junction Deviation:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.JunctionDeviation</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Min Segment Time:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinSegmentTime</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Min Print Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinPrintFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Min Travel Feedrate:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinTravelFeedrate</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="Min Segment Time" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinSegmentTime" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Min Print Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinPrintFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Min Travel Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinTravelFeedrate" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Junction Deviation" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.JunctionDeviation" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="X Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxJerk" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxJerk" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxJerk" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxJerk" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetAdvancedSettings">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M205.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:140px">
-                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Offset Settings</MudText>
+                                <MudText Color="Color.Primary" Typo="Typo.button"> Z-Probe Offsets</MudText>
                             </MudCardHeader>
                             <ContainerSpaceBetween>
                                 <MudText Typo="Typo.subtitle2">X Offset:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.XHomeOffset</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.Head.XProbeOffset</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
                                 <MudText Typo="Typo.subtitle2">Y Offset:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.YHomeOffset</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.Head.YProbeOffset</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
                                 <MudText Typo="Typo.subtitle2">Z Offset:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZHomeOffset</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.Head.ZProbeOffset</MudText>
                             </ContainerSpaceBetween>
-                        </div>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
 
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XHomeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YHomeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZHomeOffset" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetOffsetSettings">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M206.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- Bed Leveling -------------------------------------------------------------------------------------------->
-
-        <MudTabPanel Text="Bed Leveling">
-            <MudGrid Style="width: 100vw;">
-                <MudItem lg="12">
-                    <MudPaper MinHeight="550px" Class="pa-4 px-8" Outlined="true" Style="width: 100vw;">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button">Bed Leveling State</MudText>
-                        </MudCardHeader>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Auto Bed Level</MudText>
-                            <MudText> @(PrinterManager.ActivePrinter.HasAutoBedLevel ? "Enabled" : "Not Enabled") </MudText>
-                        </ContainerSpaceBetween>
-                        <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Fade Height</MudText>
-                            <MudText> @PrinterManager.ActivePrinter.MotionSettings.FadeHeight mm</MudText>
-                        </ContainerSpaceBetween>
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudSwitch Color="Color.Tertiary" @bind-Value="PrinterManager.ActivePrinter.HasAutoBedLevel" Label="Enable Auto Bed Level" @onclick="printer.SetBedLevelingOn" />
-                            <MudNumericField Label="Fade Height" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.FadeHeight" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" OnClick="printer.SetFadeHeight" FullWidth="true">Update Values</MudButton>
-                        </ExpansionPanel>
-
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- Preheating Profiles ------------------------------------------------------------------------------------->
-
-        <MudTabPanel Text="Preheating Profiles">
-            <MudGrid Style="width: 100vw;">
-                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0" Style="width: 100vw;">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
-                        <MudTextField Class="px-4" Label="Material" Immediate="true"
-                                      @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName" />
-                        <MudNumericField Label="Hotend Temperature" Class="px-4 mt-4" Immediate="true"
-                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.HotendTemp" />
-                        <MudNumericField Label="Bed Temperature" Class="px-4 mt-4" Immediate="true"
-                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp" />
-                        <MudNumericField Label="Fan Speed" Class="px-4 mt-4" Immediate="true"
-                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed" />
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
-                        <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                            <MudText Color="Color.Primary" Typo="Typo.button">Summary</MudText>
-                        </MudCardHeader>
-                        <MudDivider Class="mt-1 pb-3" DividerType="DividerType.FullWidth" />
-                        <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
-                            <MudText Typo="Typo.subtitle2">Material:</MudText>
-                            @if (PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName == null || PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName == String.Empty)
-                            {
-                                <MudText>N/A</MudText>
-                            }
-                            else
-                            {
-                                <MudText>@printer.ActivePrinter.PreheatingProfiles.MaterialName</MudText>
-                            }
-                        </MudContainer>
-                        <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
-                            <MudText Typo="Typo.subtitle2">Hotend Temperature:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.HotendTemp °C</MudText>
-                        </MudContainer>
-                        <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
-                            <MudText Typo="Typo.subtitle2">Bed Temperature:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp °C</MudText>
-                        </MudContainer>
-                        <MudContainer Class="mb-5 pb-5" Style="display: flex; justify-content:space-between;">
-                            <MudText Typo="Typo.subtitle2">Fan Speed:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed %</MudText>
-                        </MudContainer>
-                        <MudContainer Class="pb-3" Style="display: flex; justify-content:center;">
-                            <MudButton Type="submit" OnClick="printer.CreatePreheatProfile" Color="Color.Tertiary">Save Presets</MudButton>
-                            <MudButton OnClick="printer.SetPreheatingProfiles" Color="Color.Tertiary">Send Presets To Printer</MudButton>
-                        </MudContainer>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- Steppers Settings ------------------------------------------------------------------------------------->
-
-        <MudTabPanel Text="Stepper Motor Settings">
-            <MudGrid Style="width:100vw;">
-                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:250px">
+                            <MudExpansionPanel Style="@($"color:{Theme.Palette.Tertiary}; font-weight: bold; text-align: center;")" HideIcon="true" Text="CHANGE VALUES">
+                                <MudNumericField Label="X Offset" @bind-Value="PrinterManager.ActivePrinter.Head.XProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Offset" @bind-Value="PrinterManager.ActivePrinter.Head.YProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Offset" @bind-Value="PrinterManager.ActivePrinter.Head.ZProbeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
+                            </MudExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem Class="mx-0 px-0 mb-0 pb-0" xs="12" md="4" lg="3">
+                        <MudPaper Class="pa-4 px-6" MinHeight="500px" Outlined="true">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Stepper Driver Current</MudText>
+                                <MudText Color="Color.Primary" Typo="Typo.button"> Extruder PID values</MudText>
                             </MudCardHeader>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Stepper Current:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XDriverCurrent</MudText>
+                                <MudText Typo="Typo.subtitle2">Proportional:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Proportional</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Stepper Current:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YDriverCurrent</MudText>
+                                <MudText Typo="Typo.subtitle2">Integral:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Integral</MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Stepper Current:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZDriverCurrent</MudText>
+                                <MudText Typo="Typo.subtitle2">Derivative:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Derivative</MudText>
                             </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z1 Stepper Current:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverCurrent</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E Stepper Current:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.EDriverCurrent</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
-
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.XDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.YDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.ZDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z1 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.Z2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z2 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.Z3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.EDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E2 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.E2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="E3 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.E3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetDriverCurrents">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M906.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:250px">
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <MudExpansionPanel Style="@($"color:{Theme.Palette.Tertiary}; font-weight: bold; text-align: center;")" HideIcon="true" Text="CHANGE VALUES">
+                                <MudNumericField Label="P Value" @bind-Value="PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Proportional" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="I Value" @bind-Value="PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Integral" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="D Value" @bind-Value="PrinterManager.ActivePrinter.HotendTemperatures.PIDValues.Derivative" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true">Update Values</MudButton>
+                            </MudExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="4" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper Class="pa-4 px-8" MinHeight="500px" Outlined="true">
                             <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Driver Stepping Mode</MudText>
+                                <MudText Color="Color.Primary" Typo="Typo.button">Hotend PID Autotune</MudText>
+                            </MudCardHeader>
+                            <MudGrid>
+                                <MudItem lg="6" md="12" sm="12" xs="12">
+                                    <MudNumericField @bind-Value="HotendTemperature.PIDHotendTemp" Label="Set Temperature" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                                </MudItem>
+                                <MudItem lg="6" md="12" sm="12" xs="12">
+                                    <MudNumericField @bind-Value="HotendTemperature.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => HotendTemperature.SetHotendPIDValues()">Set PID Values</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            <MudText Class="mt-4">
+                                Note: This will autotune the PID values for the hotend and store them automatically to the printer after the procedure is finished.
+                                Check this link for <MudLink Target="_blank" Href="https://marlinfw.org/docs/gcode/M303.html">more info.</MudLink>
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Motion Settings -------------------------------------------------------------------------------------------->
+
+            <MudTabPanel Text="Motion Settings">
+                <MudGrid Style="width:100vw;">
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button"> Steps Per Unit</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Steps:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.XStepsPerUnit</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Steps:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.YStepsPerUnit</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Steps:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZStepsPerUnit</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E Steps:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.EStepsPerUnit</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E Steps" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EStepsPerUnit" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="@PrinterDataService.SetStepsPerUnit"> Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M092.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button"> Maximum Feedrates</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Max Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.XMaxFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Max Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.YMaxFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Max Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZMaxFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E Max Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.EMaxFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetMaximumFeedrates">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M203.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Accelerations</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Print Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.PrintAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Travel Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.TravelAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Retract Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.RetractAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="Print Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PrintAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Retract Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.RetractAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Travel Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.TravelAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetStartingAccelerations">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M204.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Maximum Accelerations</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Max Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.XMaxAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Max Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.YMaxAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Max Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZMaxAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E Max Acceleration:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.EMaxAcceleration</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E Max Acceleration" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxAcceleration" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Planner Frequency Limit(Hz)" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PlannerFrequencyLimit" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="XY Frequency Min Percentage" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.PlannerXYFrequencyMinimumSpeedPercentage" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Target Extruder" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.TargetExtruder" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetMaximumAccelerations">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M201.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Advanced Accelerations</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Junction Deviation:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.JunctionDeviation</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Min Segment Time:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinSegmentTime</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Min Print Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinPrintFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Min Travel Feedrate:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.MinTravelFeedrate</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="Min Segment Time" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinSegmentTime" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Min Print Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinPrintFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Min Travel Feedrate" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.MinTravelFeedrate" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Junction Deviation" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.JunctionDeviation" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="X Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XMaxJerk" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YMaxJerk" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZMaxJerk" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E Max Jerk" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.EMaxJerk" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetAdvancedSettings">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M205.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4" lg="4" xl="2" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:140px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Offset Settings</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Offset:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.XHomeOffset</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Offset:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.YHomeOffset</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Offset:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.MotionSettings.ZHomeOffset</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.XHomeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.YHomeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Offset" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.ZHomeOffset" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetOffsetSettings">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M206.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Bed Leveling -------------------------------------------------------------------------------------------->
+
+            <MudTabPanel Text="Bed Leveling">
+                <MudGrid Style="width: 100vw;">
+                    <MudItem lg="12">
+                        <MudPaper MinHeight="550px" Class="pa-4 px-8" Outlined="true" Style="width: 100vw;">
+                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                <MudText Color="Color.Primary" Typo="Typo.button">Bed Leveling State</MudText>
                             </MudCardHeader>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XDriverSteppingMode</MudText>
+                                <MudText Typo="Typo.subtitle2">Auto Bed Level</MudText>
+                                <MudText> @(PrinterManager.ActivePrinter.HasAutoBedLevel ? "Enabled" : "Not Enabled") </MudText>
                             </ContainerSpaceBetween>
                             <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YDriverSteppingMode</MudText>
+                                <MudText Typo="Typo.subtitle2">Fade Height</MudText>
+                                <MudText> @PrinterManager.ActivePrinter.MotionSettings.FadeHeight mm</MudText>
                             </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZDriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z2 Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z3 Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z3DriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.EDriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E2 Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.E2DriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">E3 Stepper Mode:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.E3DriverSteppingMode</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudSwitch Color="Color.Tertiary" @bind-Value="PrinterManager.ActivePrinter.HasAutoBedLevel" Label="Enable Auto Bed Level" @onclick="PrinterDataService.SetBedLevelingOn" />
+                                <MudNumericField Label="Fade Height" @bind-Value="PrinterManager.ActivePrinter.MotionSettings.FadeHeight" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" OnClick="PrinterDataService.SetFadeHeight" FullWidth="true">Update Values</MudButton>
+                            </ExpansionPanel>
 
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <ContainerSpaceBetween>
-                                <MudText>X Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.XDriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>Y Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.YDriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>Z Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.ZDriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>Z2 Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>Z3 Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.Z3DriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>E Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.EDriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>E2 Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.E2DriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText>E3 Stepper Mode:</MudText>
-                                <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.E3DriverSteppingMode">
-                                    <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
-                                    <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
-                                </MudRadioGroup>
-                            </ContainerSpaceBetween>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
 
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetDriverSteppingMode">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M569.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-                @*                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+            <!-- Preheating Profiles ------------------------------------------------------------------------------------->
+
+            <MudTabPanel Text="Preheating Profiles">
+                <MudGrid Style="width: 100vw;">
+                    <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0" Style="width: 100vw;">
+                        <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
+                            <MudTextField Class="px-4" Label="Material" Immediate="true"
+                                          @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName" />
+                            <MudNumericField Label="Hotend Temperature" Class="px-4 mt-4" Immediate="true"
+                                             @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.HotendTemp" />
+                            <MudNumericField Label="Bed Temperature" Class="px-4 mt-4" Immediate="true"
+                                             @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp" />
+                            <MudNumericField Label="Fan Speed" Class="px-4 mt-4" Immediate="true"
+                                             @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed" />
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
+                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                <MudText Color="Color.Primary" Typo="Typo.button">Summary</MudText>
+                            </MudCardHeader>
+                            <MudDivider Class="mt-1 pb-3" DividerType="DividerType.FullWidth" />
+                            <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
+                                <MudText Typo="Typo.subtitle2">Material:</MudText>
+                                @if (PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName == null || PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName == String.Empty)
+                                {
+                                    <MudText>N/A</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName</MudText>
+                                }
+                            </MudContainer>
+                            <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
+                                <MudText Typo="Typo.subtitle2">Hotend Temperature:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.HotendTemp °C</MudText>
+                            </MudContainer>
+                            <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
+                                <MudText Typo="Typo.subtitle2">Bed Temperature:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp °C</MudText>
+                            </MudContainer>
+                            <MudContainer Class="mb-5 pb-5" Style="display: flex; justify-content:space-between;">
+                                <MudText Typo="Typo.subtitle2">Fan Speed:</MudText>
+                                <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed %</MudText>
+                            </MudContainer>
+                            <MudContainer Class="pb-3" Style="display: flex; justify-content:center;">
+                                <MudButton Type="submit" OnClick="PrinterDataService.CreatePreheatProfile" Color="Color.Tertiary">Save Presets</MudButton>
+                                <MudButton OnClick="PrinterDataService.SetPreheatingProfiles" Color="Color.Tertiary">Send Presets To Printer</MudButton>
+                            </MudContainer>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Steppers Settings ------------------------------------------------------------------------------------->
+
+            <MudTabPanel Text="Stepper Motor Settings">
+                <MudGrid Style="width:100vw;">
+                    <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:250px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Stepper Driver Current</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Stepper Current:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XDriverCurrent</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Stepper Current:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YDriverCurrent</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Stepper Current:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZDriverCurrent</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z1 Stepper Current:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverCurrent</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E Stepper Current:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.EDriverCurrent</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.XDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.YDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.ZDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z1 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.Z2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z2 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.Z3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.EDriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E2 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.E2DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="E3 Driver Current" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.E3DriverCurrent" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetDriverCurrents">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M906.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:250px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Driver Stepping Mode</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XDriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YDriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZDriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z2 Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z3 Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.Z3DriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.EDriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E2 Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.E2DriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">E3 Stepper Mode:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.E3DriverSteppingMode</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
+
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <ContainerSpaceBetween>
+                                    <MudText>X Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.XDriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>Y Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.YDriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>Z Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.ZDriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>Z2 Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.Z2DriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>Z3 Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.Z3DriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>E Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.EDriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>E2 Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.E2DriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText>E3 Stepper Mode:</MudText>
+                                    <MudRadioGroup @bind-Value="@PrinterManager.ActivePrinter.StepperDrivers.E3DriverSteppingMode">
+                                        <MudRadio Value="@("StealthChop")" Color="Color.Primary">StealthChop</MudRadio>
+                                        <MudRadio Value="@("SpreadCycle")" Color="Color.Primary">SpreadCycle</MudRadio>
+                                    </MudRadioGroup>
+                                </ContainerSpaceBetween>
+
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetDriverSteppingMode">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M569.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                    @*                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
                 <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
                 <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
                 <MudText Color="Color.Primary" Typo="Typo.button">Stepper Driver Microstepping</MudText>
@@ -892,60 +808,46 @@
                 </MudContainer>
                 </MudPaper>
                 </MudItem> *@
-                <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
-                        <div style="min-height:250px">
-                            <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
-                                <MudText Color="Color.Primary" Typo="Typo.button">Bump Sensitivty</MudText>
-                            </MudCardHeader>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">X Bump Sensitivity:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XStallGuardTreshold</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Y Bump Sensitivity:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YStallGuardTreshold</MudText>
-                            </ContainerSpaceBetween>
-                            <ContainerSpaceBetween>
-                                <MudText Typo="Typo.subtitle2">Z Bump Sensitivity:</MudText>
-                                <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZStallGuardTreshold</MudText>
-                            </ContainerSpaceBetween>
-                        </div>
+                    <MudItem xs="12" md="6" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                        <MudPaper MinHeight="@minHeight" Class="pa-4 px-8" Outlined="true">
+                            <div style="min-height:250px">
+                                <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
+                                    <MudText Color="Color.Primary" Typo="Typo.button">Bump Sensitivty</MudText>
+                                </MudCardHeader>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">X Bump Sensitivity:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.XStallGuardTreshold</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Y Bump Sensitivity:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.YStallGuardTreshold</MudText>
+                                </ContainerSpaceBetween>
+                                <ContainerSpaceBetween>
+                                    <MudText Typo="Typo.subtitle2">Z Bump Sensitivity:</MudText>
+                                    <MudText>@PrinterManager.ActivePrinter.StepperDrivers.ZStallGuardTreshold</MudText>
+                                </ContainerSpaceBetween>
+                            </div>
 
-                        <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
-                        <ExpansionPanel>
-                            <MudNumericField Label="X Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.XStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Y Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.YStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
-                            <MudNumericField Label="Z Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.ZStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
-                            <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="printer.SetBumpSensitivty">Update Values</MudButton>
-                            <MudText Class="pt-4">
-                                <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
-                                <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M914.html">Check Marlin website for more info</MudLink>
-                            </MudText>
-                        </ExpansionPanel>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-    </MudTabs>
-</MudPaper>
+                            <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
+                            <ExpansionPanel>
+                                <MudNumericField Label="X Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.XStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Y Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.YStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                                <MudNumericField Label="Z Bump Sensitivity" @bind-Value="PrinterManager.ActivePrinter.StepperDrivers.ZStallGuardTreshold" Immediate="true" Variant="Variant.Outlined" />
+                                <MudButton Color="Color.Tertiary" FullWidth="true" OnClick="PrinterDataService.SetBumpSensitivty">Update Values</MudButton>
+                                <MudText Class="pt-4">
+                                    <MudText Style="display:inline;" Color="Color.Secondary">Note:</MudText>
+                                    <MudLink Color="Color.Tertiary" Target="_blank" Href="https://marlinfw.org/docs/gcode/M914.html">Check Marlin website for more info</MudLink>
+                                </MudText>
+                            </ExpansionPanel>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        </MudTabs>
+    </MudPaper>
+}
 
 @code {
-    // [Parameter]
-    // public Printer SelectedPrinter { get; set; } = new();
-
-    // protected override async void OnAfterRender(bool firstRender)
-    // {
-    //     bool _isFirstRender = true;
-    //     if (_isFirstRender)
-    //     {
-    //         background.ConnectionServiceSerial.Write("M211");
-    //         printer.GetPrinterSettings();
-    //         _isFirstRender = false;
-    //         await Task.Delay(200);
-    //         await InvokeAsync(StateHasChanged);
-    //     }
-    // }
 
     bool _expanded = true;
     string minHeight = "200px";
@@ -959,10 +861,8 @@
 
     protected override void OnInitialized()
     {
-        if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
-        {
-            PrinterManager.InputReceived += OnUpdate;
-        }
+        PrinterManager.ActivePrinterChanged += OnSelectedPrinter;
+        PrinterManager.InputReceived += OnUpdate;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -971,8 +871,9 @@
         {
             if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
             {
-                printer.GetPrinterSettings();
-                printer.GetFirmwareSettings();
+                PrinterDataService.GetPrinterSettings();
+                PrinterDataService.GetFirmwareSettings();
+                //get the bed volume dimensions
                 PrinterManager.ActivePrinter.SerialConnection.Write("M211");
             }
         }
@@ -980,7 +881,7 @@
 
     public async void OnUpdate(string message)
     {
-        printer.OnUpdateSettings(message);
+        PrinterDataService.OnUpdateSettings(message);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -1004,5 +905,4 @@
     {
         PrinterManager.InputReceived -= OnUpdate;
     }
-
 }

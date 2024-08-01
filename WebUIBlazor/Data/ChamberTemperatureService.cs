@@ -5,8 +5,8 @@ namespace WebUI.Data
 {
     public class ChamberTemperatureService
     {
-        public ITemperatures chamber;
-        private readonly PortConnectionManagerService _portConnectionManager;
+        public PrinterManagerService Printer { get; set; }
+
 
         public int currentChamberTemperature;
         public int setChamberTemperature;
@@ -14,24 +14,22 @@ namespace WebUI.Data
         public int PIDChamberCycles;
         public int PIDChamberTemp;
 
-        public ChamberTemperatureService(PortConnectionManagerService portConnectionManager)
+        public ChamberTemperatureService(PrinterManagerService printer)
         {
-            _portConnectionManager = portConnectionManager;
-            chamber = new ChamberTemps((portConnectionManager.ActiveConnection.ConnectionServiceSerial.printerConnection));
+            Printer = printer;
         }
 
         public void SetChamberTemperature(int setTemp)
         {
-            chamber.SetTemperature(setTemp);
-            //_snackbar.Add($"Chamber temperature set to {setTemp}°C", Severity.Info);
+            Printer.ActivePrinter.ChamberTemperatures.SetTemperature(setTemp);
         }
 
         public void ParseCurrentChamberTemperature(string input)
         {
-            chamber.ParseCurrentTemperature(input);
-            currentChamberTemperature = chamber.CurrentTemp;
-            setChamberTemperature = chamber.SetTemp;
-            targetChamberTemperature = chamber.TargetTemp;
+            Printer.ActivePrinter.ChamberTemperatures.ParseCurrentTemperature(input);
+            currentChamberTemperature = Printer.ActivePrinter.ChamberTemperatures.CurrentTemp;
+            setChamberTemperature = Printer.ActivePrinter.ChamberTemperatures.SetTemp;
+            targetChamberTemperature = Printer.ActivePrinter.ChamberTemperatures.TargetTemp;
         }
 
     }

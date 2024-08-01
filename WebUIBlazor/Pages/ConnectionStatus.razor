@@ -1,6 +1,4 @@
-﻿@inject Data.PortConnectionManagerService PortManager
-@inject Data.SerialDataProcessorService serialDataProcessor
-@inject Data.PrinterDataService printerData
+﻿@inject Data.PrinterDataService printerData
 @inject Data.BackgroundTimer background
 @inject Data.PrinterManagerService printerManager
 
@@ -30,11 +28,6 @@
         background.SecondElapsed += OnSecondElapsed;
     }
 
-    private void UpdateConnectionStatus(string message, SerialDataProcessorService source)
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
     private void OnSecondElapsed()
     {
         InvokeAsync(() =>
@@ -45,8 +38,6 @@
 
     private void OnPrinterSelected(string portName)
     {
-        // PortManager.SelectedPrinter = portName;
-        // PortManager.SelectPrinter(PortManager.SelectedPrinter);
         printerManager.SelectPrinter(portName);
     }
 

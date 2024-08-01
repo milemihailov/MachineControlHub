@@ -31,6 +31,8 @@ namespace MachineControlHub.Print
         {
 
         }
+        public string PortName { get; set; }
+
         public string PrinterName { get; set; }
 
         /// <summary>
@@ -65,6 +67,8 @@ namespace MachineControlHub.Print
         /// Gets or sets the real-time printing speed in millimeters per second (mm/s).
         /// </summary>
         public double RealTimePrintingSpeed { get; set; }
+
+        public bool IsPrinting { get; set; }
 
         /// <summary>
         /// Gets or sets the file size in megabytes.

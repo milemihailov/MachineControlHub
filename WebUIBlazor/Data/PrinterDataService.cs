@@ -30,101 +30,24 @@ namespace WebUI.Data
         const string _bED_VOLUME_PATTERN = @"Max\s*:\s*X(\d+\.?\d*)\s*Y(\d+\.?\d*)\s*Z(\d+\.?\d*)";
 
 
-
-        public Printer ActivePrinter { get; set; } = new();
-        public PortConnectionManagerService PortManager { get; set; }
-        public  BackgroundTimer Background { get; }
-        public readonly HotendTemperatureService HotendTemperatureService;
-        public readonly BedTemperatureService BedTemperatureService;
-        public readonly ChamberTemperatureService ChamberTemperatureService;
-        public readonly BedLevelingService BedLevelDataService;
-        private readonly ISnackbar _snackbar;
-
-
-
-        public List<PreheatingProfiles> preheatingProfiles = new List<PreheatingProfiles>();
-
-        public List<CurrentPrintJob> printHistory = new List<CurrentPrintJob>();
-        public List<Printer> Printers { get; set; }
-        public List<PrinterHead> Extruders { get; set; }
-
-        public List<PrinterHead> ExtruderSettings = new List<PrinterHead>();
-        public PrinterBed Bed { get; set; }
-
-        public Printer SelectedPrinter;
-
-        public List<string> printJobStats = new List<string>();
-
-        //test
-        public List<PrintingService> PrintingServices { get; set; }
-        public List<HotendTemperatureService> HotendTemperatureServices { get; set; }
-        public List<BedTemperatureService> BedTemperatureServices { get; set; }
-        public List<ChamberTemperatureService> ChamberTemperatureServices { get; set; }
-        public List<BedLevelingService> BedLevelingServices { get; set; }
-        public List<BackgroundTimer> BackgroundList { get; set; }
-
-
+        public List<PreheatingProfiles> preheatingProfiles { get; set; } = new List<PreheatingProfiles>();
+        public List<CurrentPrintJob> printHistory { get; set; } = new List<CurrentPrintJob>();
         public PrinterManagerService PrinterManagerService { get; set; }
 
-        public PrinterDataService(BackgroundTimer background, PortConnectionManagerService serialConnection, PrinterManagerService Printer)
+        public PrinterDataService(PrinterManagerService Printer)
         {
             PrinterManagerService = Printer;
-            this.Background = background;
-            this.PortManager = serialConnection;
-            ActivePrinter = new Printer();
-            if (serialConnection.ActiveConnection.ConnectionServiceSerial != null)
+            Printer.ActivePrinter.PreheatingProfiles = new PreheatingProfiles();
+            Printer.ActivePrinter.PrintHistory = new PrintHistory();
+        }
+
+
+        public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob, PrinterManagerService printerManager)
+        {
+            var newPrintJob = new CurrentPrintJob(PrinterManagerService.ActivePrinter.SerialConnection)
             {
-                //HotendTemperatureService = new HotendTemperatureService(serialConnection);
-                BedTemperatureService = new BedTemperatureService(serialConnection);
-                ChamberTemperatureService = new ChamberTemperatureService(serialConnection);
-                //HotendTemperatureService.PIDHotendValues = new PIDValues(serialConnection.ActiveConnection.ConnectionServiceSerial.printerConnection);
-                BedTemperatureService.PIDBedValues = new PIDValues(serialConnection.ActiveConnection.ConnectionServiceSerial.printerConnection);
-                BedLevelDataService = new BedLevelingService();
-            }
-
-            ActivePrinter.Camera = new Camera();
-            ActivePrinter.Head = new PrinterHead();
-            ActivePrinter.PreheatingProfiles = new PreheatingProfiles();
-            ActivePrinter.MotionSettings = new MotionSettingsData();
-            ActivePrinter.StepperDrivers = new StepperDriversData();
-            ActivePrinter.PrintHistory = new PrintHistory();
-            ActivePrinter.TouchScreen = new TouchScreen();
-            Extruders = new List<PrinterHead>();
-            ActivePrinter.Bed = new PrinterBed();
-            Printers = new List<Printer>();
-            ActivePrinter.PrintService = new PrintService(serialConnection.ActiveConnection.ConnectionServiceSerial.printerConnection);
-            SelectedPrinter = new Printer();
-        }
-
-        public void ChoosePrinter(Printer printer)
-        {
-            SelectedPrinter = printer;
-            SavePrinterData(SELECTED_PRINTER_SETTINGS_PATH, SelectedPrinter);
-        }
-
-        public void RemovePrinter(Printer printer)
-        {
-            Printers.Remove(printer);
-            SavePrinterData(PRINTER_DATA_PATH, Printers);
-        }
-
-        //public void UpdateExtruders(int newValue)
-        //{
-        //    while (ExtruderSettings.Count < newValue)
-        //    {
-        //        ExtruderSettings.Add(new PrinterHead());
-        //    }
-        //    while (ExtruderSettings.Count > newValue)
-        //    {
-        //        ExtruderSettings.RemoveAt(ExtruderSettings.Count - 1);
-        //    }
-        //}
-
-        public void AddPrintJobToHistory(CurrentPrintJob currentPrintJob,SerialDataProcessorService source)
-        {
-            var newPrintJob = new CurrentPrintJob(PortManager.connections[PortManager.SelectedPrinter].ConnectionServiceSerial.printerConnection)
-            {
-                PrinterName = source.ConnectionServiceSerial.portName,
+                PortName = printerManager.ActivePrinter.SerialConnection.PortName,
+                PrinterName = printerManager.ActivePrinter.Name,
                 FileName = currentPrintJob.FileName,
                 TotalPrintTime = currentPrintJob.TotalPrintTime,
                 StartTimeOfPrint = currentPrintJob.StartTimeOfPrint,
@@ -145,49 +68,24 @@ namespace WebUI.Data
             SavePrinterData(PRINT_HISTORY_PATH, printHistory);
         }
 
-        public string GenerateUniquePrinterId()
-        {
-            Random random = new Random();
-            string newId;
-            do
-            {
-                newId = $"#{random.Next(1, 10000)}";
-            }
-            while (Printers.Any(p => p.Id == newId));
+        //public string GenerateUniquePrinterId()
+        //{
+        //    Random random = new Random();
+        //    string newId;
+        //    do
+        //    {
+        //        newId = $"#{random.Next(1, 10000)}";
+        //    }
+        //    while (Printers.Any(p => p.Id == newId));
 
-            return newId;
-        }
-
-        public void CreatePrinterProfile(string name)
-        {
-            var newPrinter = new Printer() { Name = name };
-            newPrinter.Extruders = new List<PrinterHead>();
-            newPrinter.Bed = new PrinterBed();
-            newPrinter.Name = name;
-            newPrinter.Id = GenerateUniquePrinterId();
-            newPrinter.Model = ActivePrinter.Model;
-            newPrinter.NumberOfExtruders = ActivePrinter.NumberOfExtruders;
-            newPrinter.PrinterFirmwareVersion = ActivePrinter.PrinterFirmwareVersion;
-            newPrinter.HasAutoBedLevel = ActivePrinter.HasAutoBedLevel;
-            newPrinter.HasChamber = ActivePrinter.HasChamber;
-            newPrinter.HasHeatedBed = ActivePrinter.HasHeatedBed;
-            newPrinter.HasFilamentRunoutSensor = ActivePrinter.HasFilamentRunoutSensor;
-            newPrinter.ZMaxBuildVolume = ActivePrinter.ZMaxBuildVolume;
-            newPrinter.Bed.XSize = ActivePrinter.Bed.XSize;
-            newPrinter.Bed.YSize = ActivePrinter.Bed.YSize;
-            newPrinter.Bed.Diameter = ActivePrinter.Bed.Diameter;
-
-            Printers.Add(newPrinter);
-
-            SavePrinterData(PRINTER_DATA_PATH, Printers);
-        }
+        //    return newId;
+        //}
 
         public void CreatePreheatProfile()
         {
-            preheatingProfiles.Add(ActivePrinter.PreheatingProfiles);
-            ActivePrinter.PreheatingProfiles = new PreheatingProfiles();
+            preheatingProfiles.Add(PrinterManagerService.ActivePrinter.PreheatingProfiles);
+            PrinterManagerService.ActivePrinter.PreheatingProfiles = new PreheatingProfiles();
             SavePrinterData(PREHEATING_PROFILES_PATH, preheatingProfiles);
-            _snackbar.Add("Preset Added To Print Section", Severity.Success);
         }
 
         public void StartPreheating(PreheatingProfiles profile)
@@ -195,14 +93,12 @@ namespace WebUI.Data
             PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
             PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
             PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
-            _snackbar.Add("Preheating Started", Severity.Success);
         }
 
         public void DeletePreheatingProfile(PreheatingProfiles profile)
         {
             preheatingProfiles.Remove(profile);
             SavePrinterData(PREHEATING_PROFILES_PATH, preheatingProfiles);
-            _snackbar.Add("Preset Removed", Severity.Error);
         }
 
         public void SaveToEEPROM()
@@ -255,9 +151,9 @@ namespace WebUI.Data
             PrinterManagerService.ActivePrinter.SerialConnection.Write("M78");
         }
 
-        public void GetBedVolume()
+        public void SetSoftwareEndstopsState(string input)
         {
-            PrinterManagerService.ActivePrinter.SerialConnection.Write("M211");
+            PrinterManagerService.ActivePrinter.SerialConnection.Write($"M211 S{input}");
         }
 
         public async void OnUpdateSettings(string message)
@@ -437,9 +333,9 @@ namespace WebUI.Data
             var match = Regex.Match(input, PIDValues.PARSE_HOTEND_PID_PATTERN);
             if (match.Success)
             {
-                HotendTemperatureService.PIDHotendValues.Proportional = double.Parse(match.Groups[1].Value);
-                HotendTemperatureService.PIDHotendValues.Integral = double.Parse(match.Groups[2].Value);
-                HotendTemperatureService.PIDHotendValues.Derivative = double.Parse(match.Groups[3].Value);
+                PrinterManagerService.ActivePrinter.HotendTemperatures.PIDValues.Proportional = double.Parse(match.Groups[1].Value);
+                PrinterManagerService.ActivePrinter.HotendTemperatures.PIDValues.Integral = double.Parse(match.Groups[2].Value);
+                PrinterManagerService.ActivePrinter.HotendTemperatures.PIDValues.Derivative = double.Parse(match.Groups[3].Value);
             }
         }
 
@@ -448,9 +344,9 @@ namespace WebUI.Data
             var match = Regex.Match(input, PIDValues.PARSE_BED_PID_PATTERN);
             if (match.Success)
             {
-                BedTemperatureService.PIDBedValues.Proportional = double.Parse(match.Groups[1].Value);
-                BedTemperatureService.PIDBedValues.Integral = double.Parse(match.Groups[2].Value);
-                BedTemperatureService.PIDBedValues.Derivative = double.Parse(match.Groups[3].Value);
+                PrinterManagerService.ActivePrinter.BedTemperatures.PIDValues.Proportional = double.Parse(match.Groups[1].Value);
+                PrinterManagerService.ActivePrinter.BedTemperatures.PIDValues.Integral = double.Parse(match.Groups[2].Value);
+                PrinterManagerService.ActivePrinter.BedTemperatures.PIDValues.Derivative = double.Parse(match.Groups[3].Value);
             }
         }
 
@@ -823,7 +719,6 @@ namespace WebUI.Data
             if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
             {
                 PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildSetStepsPerUnitCommand(PrinterManagerService.ActivePrinter.MotionSettings));
-
             }
         }
 
@@ -867,21 +762,19 @@ namespace WebUI.Data
                 if (PrinterManagerService.ActivePrinter.HasAutoBedLevel)
                 {
                     PrinterManagerService.ActivePrinter.SerialConnection.Write("M420 S0");
-                    _snackbar.Add("Bed leveling turned off", Severity.Warning);
                 }
                 else
                 {
                     PrinterManagerService.ActivePrinter.SerialConnection.Write("M420 S1");
-                    _snackbar.Add("Bed leveling turned on", Severity.Success);
                 }
             }
         }
+
         public void SetFadeHeight()
         {
             if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
             {
                 PrinterManagerService.ActivePrinter.SerialConnection.Write($"M420 Z{PrinterManagerService.ActivePrinter.MotionSettings.FadeHeight}");
-                _snackbar.Add($"Fade height set to {PrinterManagerService.ActivePrinter.MotionSettings.FadeHeight}mm", Severity.Success);
             }
         }
 
@@ -890,7 +783,6 @@ namespace WebUI.Data
             preheatingProfiles.ForEach(profile =>
             {
                 PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildMaterialPresetCommand(profile));
-                _snackbar.Add("Preset added to printer", Severity.Success);
             });
         }
 
