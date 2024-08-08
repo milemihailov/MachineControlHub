@@ -37,12 +37,18 @@
     protected override void OnInitialized()
     {
         printerManager.InputReceived += OnMessageReceived;
+        printerManager.ActivePrinterChanged += OnPrinterChanged;
     }
 
     public void OnMessageReceived(string message)
     {
-        printingService.UpdatePrintProgress(message);
+        printingService.UpdatePrintProgress(message, printerManager.ActivePrinter);
         InvokeAsync(StateHasChanged);
+    }
+
+    public void OnPrinterChanged(object sender, EventArgs e)
+    {
+        printingService.Progress = 0;
     }
 
 

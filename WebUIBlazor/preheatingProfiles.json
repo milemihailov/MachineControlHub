@@ -1,1 +1,1 @@
-[{"MaterialName":"adsfasdf","HotendTemp":1245,"BedTemp":124512,"FanSpeed":123,"MaterialIndex":0},{"MaterialName":"asdf","HotendTemp":12412,"BedTemp":1234,"FanSpeed":124,"MaterialIndex":0},{"MaterialName":"asdgasd","HotendTemp":2134,"BedTemp":324,"FanSpeed":234,"MaterialIndex":0}]
+[{"MaterialName":"PLA","HotendTemp":210,"BedTemp":40,"FanSpeed":0,"MaterialIndex":0},{"MaterialName":"ABS","HotendTemp":270,"BedTemp":110,"FanSpeed":0,"MaterialIndex":0},{"MaterialName":"PETG","HotendTemp":250,"BedTemp":60,"FanSpeed":0,"MaterialIndex":0}]

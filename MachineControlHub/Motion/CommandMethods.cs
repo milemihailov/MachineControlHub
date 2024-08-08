@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Gcode;
 using MachineControlHub.Material;
+using MachineControlHub.Temps;
 
 namespace MachineControlHub.Motion
 {
@@ -514,13 +515,13 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(preset);
         }
 
-        public static string BuildPIDAutoTuneCommand(int index, int temp, int cycles, bool useCycle)
+        public static string BuildPIDAutoTuneCommand(int index, int temp, int cycles)
         {
             var pidAutoTune = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.PIDAutoTune,
-                Parameters = new List<string>() { $"E{index} C{cycles} S{temp} U={useCycle}" }
+                Parameters = new List<string>() { $"E{index} C{cycles} S{temp}" }
             };
 
             return GCodeMethods.GCodeString(pidAutoTune);
@@ -872,6 +873,30 @@ namespace MachineControlHub.Motion
             };
 
             return GCodeMethods.GCodeString(setBumpSensitivity);
+        }
+
+        public static string BuildSetBedPidValues(PIDValues bed)
+        {
+            var setBedPidValues = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetBedPID,
+                Parameters = new List<string>() { $"P{bed.Proportional} I{bed.Integral} D{bed.Derivative}" }
+            };
+
+            return GCodeMethods.GCodeString(setBedPidValues);
+        }
+
+        public static string BuildSetHotendPidValues(PIDValues hotend)
+        {
+            var setHotendPidValues = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetHotendPID,
+                Parameters = new List<string>() { $"P{hotend.Proportional} I{hotend.Integral} D{hotend.Derivative}" }
+            };
+
+            return GCodeMethods.GCodeString(setHotendPidValues);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace MachineControlHub.Bed
             {
                 isProcessingBilinear = true;
                 _calibrateMessage += message;
-                if (message.Contains("X:"))
+                if (message.Contains("X:" ) || message.Contains("echo"))
                 {
                     Processing = false;
                     isProcessingBilinear = false;

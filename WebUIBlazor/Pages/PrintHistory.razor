@@ -15,7 +15,7 @@
                 <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
             </div>
 
-            @foreach (var printJob in printerDataServiceTest.printHistory.Where(printJob => printJob.PortName == PrinterManager.ActivePrinter.SerialConnection.PortName))
+            @foreach (var printJob in printerDataServiceTest.PrintHistory.Where(printJob => printJob.PortName == PrinterManager.ActivePrinter.SerialConnection.PortName))
             {
                 <div style="display:flex; justify-content:center; align-items: center;">
                     <div style="width:60%;">
@@ -89,12 +89,12 @@
 @code {
     protected override void OnInitialized()
     {
-        printerDataServiceTest.printHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataService.PRINT_HISTORY_PATH);
+        printerDataServiceTest.PrintHistory = printerDataServiceTest.LoadPrinterDataList<MachineControlHub.Print.CurrentPrintJob>(PrinterDataService.PRINT_HISTORY_PATH);
 
         // Check if the serial connection is established and request Print Job Stats if connected
         if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
         {
-            PrinterManager.ActivePrinter.SerialConnection.Write("M78");
+            printerDataServiceTest.RequestPrintJobStats(PrinterManager.ActivePrinter);
 
             // Subscribe to the InputReceived event of the selected printer
             PrinterManager.InputReceived += OnUpdate;
@@ -103,7 +103,7 @@
 
     private void OnUpdate(string message)
     {
-        printerDataServiceTest.GetPrintJobStats(message);
+        printerDataServiceTest.GetPrintJobStats(message, PrinterManager.ActivePrinter);
         InvokeAsync(StateHasChanged);
     }
 

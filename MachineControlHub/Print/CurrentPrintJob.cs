@@ -1,5 +1,6 @@
 ﻿using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -13,24 +14,29 @@ namespace MachineControlHub.Print
     {
         public List<PrintProgressRecord> PrintProgressRecords;
 
-        const string PATTERN = @"(\S+\.gco) (\d+)";
-        const int KILOBYTE = 1024;
+        const int _kILOBYTE = 1024;
+        const string _dATA_SEPARATOR = "; ";
+        const char _nEW_LINE = '\n';
+        const char _cARRIAGE_RETURN = '\r';
 
-        public const string DATA_SEPARATOR = "; ";
-        public const char NEW_LINE = '\n';
-        public const char CARRIAGE_RETURN = '\r';
-
-        private IPrinterConnection _connection;
+        public Stopwatch stopwatch = new();
+        private IPrinterConnection Connection {get; set;}
 
         public CurrentPrintJob(IPrinterConnection connection)
         {
-            _connection = connection;
+            Connection = connection;
             PrintProgressRecords = new List<PrintProgressRecord>();
         }
+
+        /// <summary>
+        /// Parameterless constructor to facilitate deserialization
+        /// </summary>
         public CurrentPrintJob()
         {
-
+            PrintProgressRecords = new List<PrintProgressRecord>();
         }
+
+
         public string PortName { get; set; }
 
         public string PrinterName { get; set; }
@@ -48,7 +54,6 @@ namespace MachineControlHub.Print
         /// <summary>
         /// Gets the start time of the print job.
         /// </summary>
-
         public DateTime? StartTimeOfPrint { get; set; }
 
 
@@ -56,6 +61,8 @@ namespace MachineControlHub.Print
         /// Gets or sets the name of the currently printing file.
         /// </summary>
         public string PrintingFileName { get; set; }
+
+        public TimeSpan EstimatePrintTime { get; set; }
 
         /// <summary>
         /// Gets or sets the total print time for the job in seconds.
@@ -88,9 +95,9 @@ namespace MachineControlHub.Print
         {
             try
             {
-                string[] extractedSettings = text.Split(new[] { NEW_LINE, CARRIAGE_RETURN }, StringSplitOptions.RemoveEmptyEntries);
+                string[] extractedSettings = text.Split(new[] { _nEW_LINE, _cARRIAGE_RETURN }, StringSplitOptions.RemoveEmptyEntries);
 
-                var extractedLinesWithSemicolon = extractedSettings.Where(line => line.Contains(DATA_SEPARATOR));
+                var extractedLinesWithSemicolon = extractedSettings.Where(line => line.Contains(_dATA_SEPARATOR));
 
                 ExtractedSettingsFromPrintedFile = string.Join(Environment.NewLine, extractedLinesWithSemicolon);
             }
@@ -104,12 +111,13 @@ namespace MachineControlHub.Print
 
         /// <summary>
         /// Selects and parses the specified G-code file from the SD card.
+        /// May be used in future...
         /// </summary>
         /// <param name="filePath">The path to the G-code file on the SD card.</param>
         public void SelectAndParseSelectedFile(string filePath)
         {
             // Send a command to select the G-code file on the SD card
-            _connection.Write(CommandMethods.BuildSelectSDFileCommand(filePath));
+            Connection.Write(CommandMethods.BuildSelectSDFileCommand(filePath));
             FileName = filePath;
         }
 
@@ -122,6 +130,9 @@ namespace MachineControlHub.Print
             StartTimeOfPrint = DateTime.Now;
         }
 
+        /// <summary>
+        /// Gets the formatted start time of the print job.
+        /// </summary>
         public string FormattedStartTime
         {
             get
@@ -130,15 +141,57 @@ namespace MachineControlHub.Print
             }
         }
 
-
         /// <summary>
         /// Converts the size from megabytes to kilobytes.
         /// </summary>
         /// <param name="megaByte">The size in megabytes.</param>
         /// <returns>The size in kilobytes.</returns>
-        public double ConvertToMB(double megaByte)
+        public double ConvertToMB(double megaByte) => megaByte / (_kILOBYTE * _kILOBYTE);
+
+        /// <summary>
+        /// Estimates the remaining time for the print job based on the progress records.
+        /// </summary>
+        public async Task EstimateTimeRemainingAsync()
         {
-            return megaByte / (KILOBYTE * KILOBYTE);
+            // Run the estimation logic in a separate task to avoid blocking the main thread.
+            await Task.Run(() =>
+            {
+                // Check if there are enough progress records to make a reliable estimate.
+                if (PrintProgressRecords == null || PrintProgressRecords.Count < 5)
+                {
+                    // Not enough data to estimate time remaining
+                    EstimatePrintTime = TimeSpan.Zero;
+                }
+
+                // Initialize variables to accumulate total bytes printed and total time elapsed.
+                var totalBytesPrinted = 0L;
+                var totalTimeElapsed = TimeSpan.Zero;
+
+                // Iterate through the progress records starting from the second record.
+                for (int i = 1; i < PrintProgressRecords.Count; i++)
+                {
+                    var currentRecord = PrintProgressRecords[i];
+                    var previousRecord = PrintProgressRecords[i - 1];
+                    if (currentRecord != null && previousRecord != null)
+                    {
+                        // Accumulate the bytes printed and time elapsed between consecutive records.
+                        totalBytesPrinted += currentRecord.BytesPrinted - previousRecord.BytesPrinted;
+                        totalTimeElapsed += currentRecord.Timestamp - previousRecord.Timestamp;
+                    }
+                }
+
+                // Calculate the average printing speed in bytes per second.
+                var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds;
+
+                // Calculate the remaining bytes to be printed.
+                var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
+
+                // Estimate the remaining time in seconds based on the average speed.
+                var remainingTimeInSeconds = remainingBytes / averageSpeed;
+
+                // Set the estimated print time, rounding to the nearest second.
+                EstimatePrintTime = TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
+            });
         }
 
         public class PrintProgressRecord
@@ -147,36 +200,30 @@ namespace MachineControlHub.Print
             public DateTime Timestamp { get; set; }
         }
 
-
-        public async Task<TimeSpan> EstimateTimeRemainingAsync()
+        /// <summary>
+        /// Starts the stopwatch to measure the print time.
+        /// </summary>
+        public void StartStopwatch()
         {
-            return await Task.Run(() =>
-            {
-                if (PrintProgressRecords == null || PrintProgressRecords.Count < 5)
-                {
-                    // Not enough data to estimate time remaining
-                    return TimeSpan.Zero;
-                }
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+        }
 
-                var totalBytesPrinted = 0L;
-                var totalTimeElapsed = TimeSpan.Zero;
 
-                for (int i = 1; i < PrintProgressRecords.Count; i++)
-                {
-                    var currentRecord = PrintProgressRecords[i];
-                    var previousRecord = PrintProgressRecords[i - 1];
-                    if (currentRecord != null && previousRecord != null)
-                    {
-                        totalBytesPrinted += currentRecord.BytesPrinted - previousRecord.BytesPrinted;
-                        totalTimeElapsed += currentRecord.Timestamp - previousRecord.Timestamp;
-                    }
-                }
+        /// <summary>
+        /// Resets the stopwatch.
+        /// </summary>
+        public void ResetStopwatch()
+        {
+            stopwatch.Reset();
+        }
 
-                var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds; // bytes per second
-                var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
-                var remainingTimeInSeconds = remainingBytes / averageSpeed;
-                return TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
-            });
+        /// <summary>
+        /// Stops the stopwatch.
+        /// </summary>
+        public void StopStopwatch()
+        {
+            stopwatch.Stop();
         }
 
     }

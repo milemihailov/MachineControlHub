@@ -132,6 +132,8 @@
 
         if (PrinterManagerService.Printers != null && PrinterManagerService.Printers.Count > 0)
         {
+            PrinterManagerService.ActivePrinter.SerialConnection.Write("M211");
+
             PrinterManagerService.InputReceived += OnUpdate;
         }
 
@@ -198,7 +200,7 @@
         await Task.Run(() =>
         {
             ControlPanelService.UpdateParagraph(message);
-            PrinterDataService.SetBedVolume(message);
+            PrinterDataService.SetBedVolume(message, PrinterManagerService.ActivePrinter);
             InvokeAsync(StateHasChanged);
         });
     }

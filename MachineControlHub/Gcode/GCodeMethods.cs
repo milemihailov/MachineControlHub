@@ -15,7 +15,7 @@
         /// <returns>The generated G-code command string.</returns>
         public static string GCodeString(GCodeCommands gcode, string text)
         {
-            return $"{gcode.Type}{gcode.Instruction} {text};";
+            return $"{gcode.Type}{gcode.Instruction} {text};".ToUpper();
         }
 
         /// <summary>
@@ -26,7 +26,7 @@
         /// <returns>The generated G-code command string.</returns>
         public static string GCodeString(GCodeCommands gcode, int value)
         {
-            return $"{gcode.Type}{gcode.Instruction} S{value};";
+            return $"{gcode.Type}{gcode.Instruction} S{value};".ToUpper();
         }
 
         /// <summary>

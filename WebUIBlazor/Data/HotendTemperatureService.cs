@@ -65,7 +65,7 @@ namespace WebUI.Data
 
         public void SetHotendPIDValues()
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles, true));
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
             //_snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }

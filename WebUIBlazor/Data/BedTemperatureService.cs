@@ -46,7 +46,7 @@ namespace WebUI.Data
 
         public void SetBedPIDValues()
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles, true));
+            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles));
             //_snackbar.Add($"Setting PID Autotune for BED {PIDBedTemp}°C and {PIDBedCycles} cycles!", Severity.Info);
         }
     }

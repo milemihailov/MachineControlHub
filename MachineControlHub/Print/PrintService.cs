@@ -8,14 +8,15 @@ namespace MachineControlHub.Print
 
     public class PrintService
     {
-        const string GCODE_FILE_EXTENSION = ".gco";
-        const string PRINT_ABORT_MESSAGE = "Print Aborted";
+        const string _gCODE_FILE_EXTENSION = ".gco";
+        const string _pRINT_ABORT_MESSAGE = "Print Aborted";
 
-        private IPrinterConnection _connection;
+        private IPrinterConnection Connection { get; set;}
+        public List<(string FileName, string FileContent, long FileSize)> UploadedFiles { get; set; } = new List<(string FileName, string FileContent, long FileSize)>();
 
         public PrintService(IPrinterConnection connection)
         {
-            _connection = connection;
+            Connection = connection;
         }
 
 
@@ -38,15 +39,15 @@ namespace MachineControlHub.Print
                 using (StringReader reader = new StringReader(GcodeContent))
                 {
                     string line;
-                    _connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{GCODE_FILE_EXTENSION}");
+                    Connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{_gCODE_FILE_EXTENSION}");
 
                     while ((line = reader.ReadLine()) != null)
                     {
-                        _connection.Write(line);
+                        Connection.Write(line);
                         Console.WriteLine(line);
                     }
 
-                    _connection.Write(CommandMethods.BuildStopSDWriteCommand());
+                    Connection.Write(CommandMethods.BuildStopSDWriteCommand());
                 }
             }
             catch (FileNotFoundException ex)
@@ -63,9 +64,9 @@ namespace MachineControlHub.Print
         public void StartPrint(string gcodeFile)
         {
             // Build and send the command to select the specified G-code file
-            _connection.Write(CommandMethods.BuildSelectSDFileCommand(gcodeFile));
+            Connection.Write(CommandMethods.BuildSelectSDFileCommand(gcodeFile));
             // Build and send the command to start the SD card print
-            _connection.Write(CommandMethods.BuildStartSDPrintCommand());
+            Connection.Write(CommandMethods.BuildStartSDPrintCommand());
         }
 
 
@@ -76,15 +77,12 @@ namespace MachineControlHub.Print
         public void AbortCurrentPrint()
         {
             // Send commands to stop the SD print and set the LCD status.
-            _connection.Write(CommandMethods.BuildStopSDPrintCommand());
-            _connection.Write(CommandMethods.BuildSetLCDStatusCommand(PRINT_ABORT_MESSAGE));
+            Connection.Write(CommandMethods.BuildStopSDPrintCommand());
+            Connection.Write(CommandMethods.BuildSetLCDStatusCommand(_pRINT_ABORT_MESSAGE));
 
             // Print a message to the console.
-            Console.WriteLine(PRINT_ABORT_MESSAGE);
+            Console.WriteLine(_pRINT_ABORT_MESSAGE);
         }
-
-
-
 
         public List<(string FileName, string FileSize)> ListSDFiles(string inputText)
         {

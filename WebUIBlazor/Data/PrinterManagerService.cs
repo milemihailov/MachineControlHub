@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using System.Threading;
 using MachineControlHub;
 using MachineControlHub.Print;
@@ -12,21 +13,18 @@ namespace WebUI.Data
         public SerialConnection PrinterSerialConnection { get; set; } = new();
         public BackgroundTimer BackgroundTimer { get; set; } = new();
         private CancellationTokenSource CancellationTokenSource { get; set; }
-
+        private ConcurrentDictionary<string, string> PortData { get; set; } = new();
 
         public Dictionary<string, Printer> Printers { get; set; } = new();
 
         public event Action<string> InputReceived;
-
         public event EventHandler ActivePrinterChanged;
-
-        private string Input { get; set; }
 
         public string Notification { get; set; }
 
         public PrinterManagerService()
         {
-            BackgroundTimer.TenMilisecondsElapsed += ReadFromPort;
+            BackgroundTimer.TenMilisecondsElapsed += ReadFromAllPortsAsync;
         }
 
         public void AddPrinter(string comport, int baudrate, string name = null)
@@ -73,56 +71,108 @@ namespace WebUI.Data
             }
         }
 
-        public async void ReadFromPort()
+        /// <summary>
+        /// Asynchronously reads data from all connected printers' ports.
+        /// </summary>
+        /// <remarks>
+        /// This method cancels any existing read operations, creates a new cancellation token,
+        /// and starts reading from all printers' ports concurrently. If any task is canceled,
+        /// it catches the exception and does nothing.
+        /// </remarks>
+        public async void ReadFromAllPortsAsync()
         {
-            if (ActivePrinter.SerialConnection != null && ActivePrinter.SerialConnection.HasData())
+            if (CancellationTokenSource != null)
             {
-                ActivePrinter.SerialConnection.IsConnected = true;
-                string readData = await ActivePrinter.SerialConnection.ReadAsync();
-                string echoMessage = "";
+                CancellationTokenSource.Cancel();
+                CancellationTokenSource.Dispose();
+            }
 
-                if (readData.Contains("echo:busy: processing"))
-                {
-                    ActivePrinter.IsBusy = true;
-                    // Cancel the previous token if it exists
-                    CancellationTokenSource?.Cancel();
+            CancellationTokenSource = new CancellationTokenSource();
+            var tasks = Printers.Values.Select(printer => ReadFromPort(printer, CancellationTokenSource.Token));
 
-                    // Create a new CancellationTokenSource
-                    CancellationTokenSource = new CancellationTokenSource();
-
-                    // Start a new task to reset IsBusy after 5 seconds if no new messages are received
-                    var token = CancellationTokenSource.Token;
-                    await Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await Task.Delay(2000, token);
-                            ActivePrinter.IsBusy = false;
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            // Task was canceled, do nothing
-                        }
-                    }, token);
-                }
-
-                Input = $"{readData} \n";
-
-                if (echoMessage != "")
-                {
-                    Input = FilterData(echoMessage);
-                }
-
-
-                ParseNotifications(Input);
-
-                InputReceived?.Invoke(Input);
-                //Console.WriteLine($"{ActivePrinter.SerialConnection.PortName} : {readData}");
-
-                ActivePrinter.BedLevelData.OnBedLevelUpdate(Input);
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception)
+            {
+                // Task was canceled, do nothing
             }
         }
 
+        /// <summary>
+        /// Asynchronously reads data from a specified printer's port until the cancellation token is triggered.
+        /// </summary>
+        /// <param name="printer">The printer object from which to read data.</param>
+        /// <param name="token">The cancellation token used to cancel the read operation.</param>
+        /// <remarks>
+        /// This method continuously reads data from the printer's serial connection. If the data contains
+        /// "echo:busy: processing", it sets the printer's busy state and resets it after a delay. The method
+        /// also filters the data, updates the port data, parses notifications, and updates the bed level data.
+        /// </remarks>
+        private async Task ReadFromPort(Printer printer, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (printer.SerialConnection != null && printer.SerialConnection.HasData())
+                {
+                    printer.SerialConnection.IsConnected = true;
+                    string readData = await printer.SerialConnection.ReadAsync();
+                    string echoMessage = "";
+
+                    if (readData.Contains("echo:busy: processing"))
+                    {
+                        printer.IsBusy = true;
+                        printer.CancellationTokenSource?.Cancel();
+                        printer.CancellationTokenSource = new CancellationTokenSource();
+                        var resetToken = printer.CancellationTokenSource.Token;
+                        await Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await Task.Delay(2000, resetToken);
+                                printer.IsBusy = false;
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                // Task was canceled, do nothing
+                            }
+                        }, resetToken);
+                    }
+
+                    string input = $"{readData} \n";
+
+                    if (!string.IsNullOrWhiteSpace(echoMessage))
+                    {
+                        input = FilterData(echoMessage);
+                    }
+
+                    PortData[printer.SerialConnection.PortName] = input;
+
+                    if (printer == ActivePrinter)
+                    {
+                        ParseNotifications(input);
+                        InputReceived?.Invoke(input);
+                        Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                    }
+
+                    printer.BedLevelData.OnBedLevelUpdate(input);
+                    await printer.CurrentPrintJob.EstimateTimeRemainingAsync();
+                }
+
+                await Task.Delay(600, token);
+            }
+        }
+
+        /// <summary>
+        /// Filters out lines containing the word "echo" from the provided data.
+        /// </summary>
+        /// <param name="data">The input data string to be filtered.</param>
+        /// <returns>A string with lines containing "echo" removed.</returns>
+        /// <remarks>
+        /// This method splits the input data into lines, filters out any lines that contain the word "echo",
+        /// and then joins the remaining lines back into a single string.
+        /// </remarks>
         public string FilterData(string data)
         {
             var lines = data.Split('\n');
@@ -131,6 +181,14 @@ namespace WebUI.Data
             return filteredData;
         }
 
+        /// <summary>
+        /// Parses notification and prompt actions from the provided data string.
+        /// </summary>
+        /// <param name="data">The input data string to be parsed for notifications and prompts.</param>
+        /// <remarks>
+        /// This method uses regular expressions to identify and extract notification and prompt actions
+        /// from the input data. If a notification is found, it updates the <see cref="Notification"/> property.
+        /// </remarks>
         public void ParseNotifications(string data)
         {
             string patternNotification = @"//action:notification\s*(.*)";
@@ -143,7 +201,6 @@ namespace WebUI.Data
                 {
                     string result = match.Groups[1].Value;
                     Notification = result;
-                    Console.WriteLine(result);
                 }
             }
 
@@ -154,8 +211,6 @@ namespace WebUI.Data
                 if (match.Success)
                 {
                     string result = match.Groups[1].Value;
-                    //Notification = result;
-                    Console.WriteLine(result);
                 }
             }
         }

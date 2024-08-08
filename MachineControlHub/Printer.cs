@@ -65,6 +65,10 @@ namespace MachineControlHub
 
         public bool HasPowerLossRecovery { get; set; }
 
+        public bool MediaAttached { get; set; }
+
+        public bool IsTransferringFile { get; set; }
+
         /// <summary>
         /// Gets or sets the firmware version installed on the printer.
         /// </summary>
@@ -74,6 +78,8 @@ namespace MachineControlHub
         /// Gets or sets a value indicating whether the printer has auto bed leveling capability.
         /// </summary>
         public bool HasAutoBedLevel { get; set; }
+
+        public bool AutoBedLevelingEnabled { get; set; }
 
         public bool HasChamber { get; set; }
 
@@ -155,6 +161,7 @@ namespace MachineControlHub
         /// </summary>
         public CurrentPrintJob CurrentPrintJob { get; set; }
 
+        public CancellationTokenSource CancellationTokenSource { get; set; }
         public BedLevelData BedLevelData { get; set; }
 
         /// <summary>

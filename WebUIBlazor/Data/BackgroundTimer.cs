@@ -13,7 +13,7 @@ namespace WebUI.Data
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
 
         public CancellationTokenSource _cts = new();
-        public Stopwatch stopwatch = new Stopwatch();
+        public Stopwatch stopwatch = new();
 
         public event Action TenMilisecondsElapsed;
         public event Action SecondElapsed;
