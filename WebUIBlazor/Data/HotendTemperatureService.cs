@@ -11,12 +11,12 @@ namespace WebUI.Data
     {
         public PrinterManagerService Printer { get; set; }
 
-        public int currentHotendTemperature;
-        public int setHotendTemperature;
-        public int targetHotendTemperature;
-        public int PIDHotendCycles;
-        public int PIDHotendTemp;
-        private DateTime _lastChangeTime;
+        public int CurrentHotendTemp { get; set;}
+        public int SetHotendTemp { get; set;}
+        public int TargetHotendTemp { get; set;}
+        public int PIDHotendCycles { get; set;}
+        public int PIDHotendTemp { get; set;}
+        private DateTime LastChangeTime { get; set;}
 
         public HotendTemperatureService(PrinterManagerService Printer)
         {
@@ -26,10 +26,15 @@ namespace WebUI.Data
         public void SetHotendTemperature(int setTemp)
         {
             Printer.ActivePrinter.HotendTemperatures.SetTemperature(setTemp);
-            setHotendTemperature = 0;
-            targetHotendTemperature = setTemp;
-            _lastChangeTime = DateTime.Now; // Update the timestamp
-            //_snackbar.Add($"Hotend temperature set to {setTemp}°C", Severity.Info);
+
+            /// Reset the set temperature to 0
+            SetHotendTemp = 0;
+
+            /// Update the target temperature
+            TargetHotendTemp = setTemp;
+
+            // Update the timestamp
+            LastChangeTime = DateTime.Now;
         }
 
         public async Task ParseCurrentHotendTemperature(string input)
@@ -37,10 +42,14 @@ namespace WebUI.Data
             await Task.Run(() =>
             {
                 Printer.ActivePrinter.HotendTemperatures.ParseCurrentTemperature(input);
-                currentHotendTemperature = Printer.ActivePrinter.HotendTemperatures.CurrentTemp;
-                if ((DateTime.Now - _lastChangeTime).TotalSeconds >= 3)
+
+                /// Update the current temperature
+                CurrentHotendTemp = Printer.ActivePrinter.HotendTemperatures.CurrentTemp;
+
+                /// If the last change was more than 3 seconds ago, update the target temperature
+                if ((DateTime.Now - LastChangeTime).TotalSeconds >= 3)
                 {
-                    targetHotendTemperature = Printer.ActivePrinter.HotendTemperatures.TargetTemp;
+                    TargetHotendTemp = Printer.ActivePrinter.HotendTemperatures.TargetTemp;
                 }
             } );
         }
@@ -48,25 +57,21 @@ namespace WebUI.Data
         public void ChangeFilament()
         {
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
-            //_snackbar.Add("Filament Change Command Sent", Severity.Info);
         }
         
         public void LoadFilament()
         {
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());
-            //_snackbar.Add("Filament Load Command Sent", Severity.Info);
         }
 
         public void UnloadFilament()
         {
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
-            //_snackbar.Add("Filament Unload Command Sent", Severity.Info);
         }
 
         public void SetHotendPIDValues()
         {
             Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
-            //_snackbar.Add($"Setting PID Autotune for HOTEND {PIDHotendTemp}°C and {PIDHotendCycles} cycles!", Severity.Info);
         }
     }
 }

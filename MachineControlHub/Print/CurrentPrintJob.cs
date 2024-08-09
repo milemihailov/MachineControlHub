@@ -46,6 +46,9 @@ namespace MachineControlHub.Print
         /// </summary>
         public string FileName { get; set; }
 
+        public double PrintProgress { get; set; } = 0;
+
+
         /// <summary>
         /// Gets or sets the settings extracted from the printed file.
         /// </summary>
@@ -69,7 +72,6 @@ namespace MachineControlHub.Print
         /// </summary>
         public string TotalPrintTime { get; set; }
 
-        [JsonIgnore]
         /// <summary>
         /// Gets or sets the real-time printing speed in millimeters per second (mm/s).
         /// </summary>
@@ -85,6 +87,12 @@ namespace MachineControlHub.Print
         public long TotalBytes { get; set; }
 
         public long CurrentBytes { get; set; }
+
+        /// <summary>
+        /// A flag indicating whether the finalization steps of the print job have been executed.
+        /// </summary>
+        public bool FinalizationExecuted { get; set; } = false;
+
 
         /// <summary>
         /// Parses and extracts lines containing specific data from a printed file.
@@ -179,18 +187,29 @@ namespace MachineControlHub.Print
                         totalTimeElapsed += currentRecord.Timestamp - previousRecord.Timestamp;
                     }
                 }
+                if (totalTimeElapsed.TotalSeconds > 0)
+                {
+                    var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds;
+                    var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
+                    var remainingTimeInSeconds = remainingBytes / averageSpeed;
+                    EstimatePrintTime = TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
+                }
+                else
+                {
+                    EstimatePrintTime = TimeSpan.Zero; // or another default value
+                }
 
                 // Calculate the average printing speed in bytes per second.
-                var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds;
+                //var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds;
 
                 // Calculate the remaining bytes to be printed.
-                var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
+                //var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
 
                 // Estimate the remaining time in seconds based on the average speed.
-                var remainingTimeInSeconds = remainingBytes / averageSpeed;
+                //double remainingTimeInSeconds = remainingBytes / averageSpeed;
 
                 // Set the estimated print time, rounding to the nearest second.
-                EstimatePrintTime = TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
+                //EstimatePrintTime = TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
             });
         }
 
@@ -209,7 +228,6 @@ namespace MachineControlHub.Print
             stopwatch.Start();
         }
 
-
         /// <summary>
         /// Resets the stopwatch.
         /// </summary>
@@ -225,7 +243,5 @@ namespace MachineControlHub.Print
         {
             stopwatch.Stop();
         }
-
     }
-
 }

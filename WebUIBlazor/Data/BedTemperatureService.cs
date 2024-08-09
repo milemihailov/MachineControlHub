@@ -9,13 +9,13 @@ namespace WebUI.Data
     {
         public PrinterManagerService Printer { get; set; }
 
-        private DateTime _lastChangeTime;
 
         public int currentBedTemperature;
         public int setBedTemperature;
         public int targetBedTemperature;
         public int PIDBedCycles;
         public int PIDBedTemp;
+        private DateTime _lastChangeTime;
 
         public BedTemperatureService(PrinterManagerService Printer) 
         {

@@ -13,10 +13,10 @@ namespace WebUI.Data
         public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
 
         public CancellationTokenSource _cts = new();
-        public Stopwatch stopwatch = new();
 
         public event Action TenMilisecondsElapsed;
         public event Action SecondElapsed;
+        public event Action FiveSecondsElapsed;
 
         [Parameter]
         public bool IsBusy { get; set; }
@@ -65,28 +65,17 @@ namespace WebUI.Data
                     {
                         SecondElapsed?.Invoke();
                     }
+
+                    if( i % 500 == 0)
+                    {
+                        FiveSecondsElapsed?.Invoke();
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
                 Console.WriteLine("Timer Cancelled");
             }
-        }
-
-        public void StartStopwatch()
-        {
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
-        }
-
-        public void StopStopwatch()
-        {
-            stopwatch.Stop();
-        }
-
-        public void ResetStopwatch()
-        {
-            stopwatch.Reset();
         }
     }
 

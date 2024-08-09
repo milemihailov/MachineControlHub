@@ -120,7 +120,7 @@
             <MudSelect Disabled="@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintManager.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var port in PrintManager.DriversAvailable)
                 {
-                    <MudSelectItem  Value="@port.DriveName">
+                    <MudSelectItem Value="@port.DriveName">
                         <div style="display: flex; justify-content: space-between;">
                             <MudText> @port.DriveName @port.VolumeLabel </MudText>
                             @if (PrintManager.DriveLetter == port.DriveName)
@@ -168,7 +168,7 @@
                 <ContainerSpaceBetween>
                     <MudText>Elapsed print time:</MudText>
                     <MudText>
-                        @background.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+                        @printerManager.ActivePrinter.CurrentPrintJob.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
                     </MudText>
                 </ContainerSpaceBetween>
                 <ContainerSpaceBetween>
@@ -183,7 +183,7 @@
                 @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
                 {
                     <ContainerSpaceBetween>
-                        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrintManager.Progress" Class="pb-9">
+                        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printerManager.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
                             <MudText Typo="Typo.subtitle1" Color="Color.Surface">
                                 <b> @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
                             </MudText>
@@ -212,32 +212,32 @@
                         <ContainerSpaceBetween Class="pt-0 mt-0">
                             <MudText>Current Hotend Temperature:</MudText>
                             <MudText Style="display:flex; align-items:center;">
-                                @if (HotendTemperatureService.currentHotendTemperature < HotendTemperatureService.targetHotendTemperature)
+                                @if (HotendTemperatureService.CurrentHotendTemp < HotendTemperatureService.TargetHotendTemp)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
                                              Size="Size.Large"
                                              Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
                                              Class="pr-2 mr-2" />
                                 }
-                                @HotendTemperatureService.currentHotendTemperature
+                                @HotendTemperatureService.CurrentHotendTemp
                             </MudText>
                         </ContainerSpaceBetween>
                         <!-- Container with text for target hotend temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
                             <MudText>Target Hotend Temperature:</MudText>
-                            <MudText>@HotendTemperatureService.targetHotendTemperature</MudText>
+                            <MudText>@HotendTemperatureService.TargetHotendTemp</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="6">
                         <MudGrid Style="align-items: center;">
                             <!-- MudNumericField for setting hotend temperature -->
                             <MudItem xs="12" sm="6" md="12">
-                                <MudNumericField @bind-Value="HotendTemperatureService.setHotendTemperature" Label="Set Hotend Temperature" Immediate="true" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="HotendTemperatureService.SetHotendTemp" Label="Set Hotend Temperature" Immediate="true" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
                                     <!-- Button to set hotend temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.setHotendTemperature)">Set Temperature</MudButton>
+                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.SetHotendTemp)">Set Temperature</MudButton>
                                     <!-- Button to turn off hotend temperature -->
                                     <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => HotendTemperatureService.SetHotendTemperature(0)">Turn Off</MudButton>
                                 </ContainerSpaceBetween>
@@ -405,8 +405,14 @@
 </MudGrid>
 
 @code {
-    string FileMessage { get; set; } = "";
+
+    // Buffer to accumulate file content until processing is triggered
+    string FileContentBuffer { get; set; } = "";
+
+    // List of files on the SD card
     string SDFiles { get; set; } = "";
+
+    // Color state for the temperature display
     bool IsPrimaryColor { get; set; } = true;
 
     /// <summary>
@@ -417,6 +423,7 @@
     {
         // Subscribe to service events
         background.SecondElapsed += OnSecondElapsed;
+        background.FiveSecondsElapsed += OnFiveSecondsElapsed;
         printerManager.ActivePrinterChanged += OnSelectedPrinter;
         printerManager.InputReceived += OnUpdate;
     }
@@ -425,9 +432,12 @@
     {
         if (firstRender)
         {
-            if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+            // Check if the printer is connected, has printers available and is not printing
+            if ((printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected) && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
+                // Request the list of files on the SD card
                 printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
+
                 PrinterDataHandler.RequestFirmwareSettings(printerManager.ActivePrinter);
             }
 
@@ -445,10 +455,13 @@
     {
         try
         {
+            // Clear SDFiles list before switching printers
             if (PrintManager.SDFiles != null)
             {
                 PrintManager.SDFiles.Clear();
             }
+
+            // Asks for bed mesh
             printerManager.ActivePrinter.SerialConnection.Write("M420 V");
 
             await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
@@ -466,25 +479,34 @@
     /// <summary>
     /// Handles updates from the printer.
     /// </summary>
-    /// <param name="message">The message received from the printer.</param>
-    public async void OnUpdate(string message)
+    /// <param name="input">The input received from the printer.</param>
+    public async void OnUpdate(string input)
     {
+        // Check if the printer is connected and has printers
         if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
         {
+            // Accumulate file content
+            FileContentBuffer += input;
+
             // get the list of files on the SD card
-            FileMessage += message;
-            if (message.Contains("End"))
+            if (input.Contains("End file"))
             {
-                SDFiles = string.Join("\n", FileMessage.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                // remove empty lines from the file content buffer
+                SDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+
+                // Add the list of files to the SDFiles list
                 PrintManager.ListSDFiles(SDFiles, printerManager.ActivePrinter);
-                FileMessage = "";
+
+                // Clear the file content buffer
+                FileContentBuffer = "";
             }
 
-            PrintManager.GetPrintingFileName(message, printerManager.ActivePrinter);
+            // get the name of the file being printed
+            PrintManager.GetPrintingFileName(input, printerManager.ActivePrinter);
 
             // parse the current hotend and bed temperatures
-            await HotendTemperatureService.ParseCurrentHotendTemperature(message);
-            await BedTemperatureService.ParseCurrentBedTemperature(message);
+            await HotendTemperatureService.ParseCurrentHotendTemperature(input);
+            await BedTemperatureService.ParseCurrentBedTemperature(input);
 
             // Ensure the graph data does not exceed 30 entries by removing the oldest entries
             if (PrintingService.HotendGraph.Count >= 30)
@@ -494,145 +516,208 @@
             }
 
             // Add the current temperature data to the graph
-            PrintingService.HotendGraph.Add(HotendTemperatureService.currentHotendTemperature);
+            PrintingService.HotendGraph.Add(HotendTemperatureService.CurrentHotendTemp);
             PrintingService.BedGraph.Add(BedTemperatureService.currentBedTemperature);
 
             // Update the graph data with the latest values
             PrintManager.UpdateGraphData();
-            PrinterDataHandler.OnUpdateSettings(message, printerManager.ActivePrinter);
 
-            await PromptHandler(message);
+            // Parse the firmware settings
+            PrinterDataHandler.OnUpdateSettings(input, printerManager.ActivePrinter);
+
+            // Handles the prompt messages received from the printer
+            await PromptHandler(input);
+
             await InvokeAsync(StateHasChanged);
         }
     }
 
     /// <summary>
-    /// This method is called every second to update temperature data and print status.
+    /// This method is called every second to update temperature data, SD status, etc...
     /// </summary>
-    private void OnSecondElapsed()
+    private async void OnSecondElapsed()
     {
         if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
             if (!printerManager.ActivePrinter.IsBusy)
             {
-                Task.Run(async () =>
+                // If automatic temperature reporting is not enabled, request temperature data
+                if (!printerManager.ActivePrinter.HasAutoReportTemperature)
                 {
-                    // If automatic temperature reporting is not enabled, request temperature data
-                    if (!printerManager.ActivePrinter.HasAutoReportTemperature)
-                    {
-                        printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
-                    }
+                    printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                }
 
-                    // Asynchronously get the status of the drives
-                    await Task.Run(() => PrintManager.GetDrives());
+                // If automatic status reporting is not enabled, request the SD status
+                if (!printerManager.ActivePrinter.HasAutoReportSDStatus)
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M27");
+                }
 
-                    // If printing is in progress, request print time elapsed
+                // Asynchronously get the status of the drives
+                await Task.Run(() => PrintManager.GetDrives());
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        // Toggle the color state
+        IsPrimaryColor = !IsPrimaryColor;
+    }
+
+    /// <summary>
+    /// This method is called every five seconds.
+    /// </summary>
+    private async void OnFiveSecondsElapsed()
+    {
+        /// Check if the printer is connected and not busy
+        if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        {
+            if (!printerManager.ActivePrinter.IsBusy)
+            {
+                await Task.Run(() =>
+                {
+                    // If printing is in progress, request name of the file being printed
                     if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
                     {
-                        // await printerManager.ActivePrinter.CurrentPrintJob.EstimateTimeRemainingAsync();
                         printerManager.ActivePrinter.SerialConnection.Write("M27 C");
                     }
-
-                    await InvokeAsync(StateHasChanged);
                 });
             }
         }
-        IsPrimaryColor = !IsPrimaryColor; // Toggle the color state
-
     }
 
     /// <summary>
     /// Handles the loading of files from an input event.
     /// </summary>
-    /// <param name="e">The event arguments containing information about the file input change.</param>
-    /// <returns>A task representing the asynchronous file loading operation.</returns>
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         // Read the file's content into the print.file variable
-        PrintManager.File = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        PrintManager.UploadedFileContent = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
 
         // Get the file name and size from the event arguments
         var fileName = e.File.Name;
         var fileSize = e.File.Size;
 
         // Add the file's information to the list of uploaded files
-        printerManager.ActivePrinter.PrintService.UploadedFiles.Add((fileName, PrintManager.File, fileSize));
+        printerManager.ActivePrinter.PrintService.UploadedFiles.Add((fileName, PrintManager.UploadedFileContent, fileSize));
 
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Asynchronously confirms the start of a print job.
+    /// </summary>
     public async Task ConfirmStartAsync()
     {
+        // Check if the printer is connected
         if (printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
+            // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
             "Start Print",
             "Do you want to start a print job?",
             yesText: "Start!", cancelText: "Cancel");
 
+            // If the user confirms the start of the print job
             if (result == true)
             {
+                // Check if a file is selected for printing
                 if (PrintManager.FileToPrint == "")
                 {
+                    // Show an error message if no file is selected
                     Snackbar.Add("No file selected", Severity.Error);
                 }
                 else
                 {
+                    // Start the print job with the selected file
                     PrintManager.StartPrint(PrintManager.FileToPrint, printerManager.ActivePrinter);
+
+                    // Record the start time of the print job
                     PrintManager.StartTimeOfPrint(printerManager.ActivePrinter);
+
+                    // Reset and start the stopwatch for the current print job
                     printerManager.ActivePrinter.CurrentPrintJob.ResetStopwatch();
                     printerManager.ActivePrinter.CurrentPrintJob.StartStopwatch();
+
+                    // Get the file name and size of the file to be printed
                     PrintManager.GetFileNameAndSize(PrintManager.FileToPrint, printerManager.ActivePrinter);
-                    PrintManager.FinalizationExecuted = false; // Reset the flag
+
+                    // Reset the finalization flag
+                    printerManager.ActivePrinter.CurrentPrintJob.FinalizationExecuted = false;
+
+                    // Show a success message indicating the print job has started
                     Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {PrintManager.FileToPrint} </li></ul>", Severity.Success);
                 }
             }
         }
         else
         {
+            // Show a snackbar message indicating the printer is not connected
             Snackbar.Add("Printer is not connected", Severity.Error);
             return;
         }
     }
 
+    /// <summary>
+    /// Stops the current print job if the printer is connected and a print job is in progress.
+    /// </summary>
     public async Task StopPrint()
     {
+        // Check if the printer is connected
         if (printerManager.ActivePrinter.SerialConnection.IsConnected)
         {
+            // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
             "Stop Print",
             "Do you want to stop the print?",
             yesText: "Stop!", cancelText: "Cancel");
 
+            // If the user confirms and a print job is in progress
             if (result == true && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
+                // Stop the current print job
                 printerManager.ActivePrinter.PrintService.AbortCurrentPrint();
+
+                // Stop the stopwatch for the current print job
                 printerManager.ActivePrinter.CurrentPrintJob.StopStopwatch();
-                PrintManager.Progress = 0;
+
+                // Reset the print progress and format the total print time
+                printerManager.ActivePrinter.CurrentPrintJob.PrintProgress = 0;
                 PrintManager.FormatTotalPrintTime(printerManager.ActivePrinter);
+
+                // Set the print job status to not printing
                 printerManager.ActivePrinter.CurrentPrintJob.IsPrinting = false;
+
+                // Add the print job to the print history
                 PrinterDataHandler.AddPrintJobToHistory(printerManager.ActivePrinter);
 
+                // Show a success message indicating the print job has stopped
                 Snackbar.Add("Print Stopped", Severity.Error);
             }
             else
             {
+                // Show a snackbar message indicating no print job is in progress
                 Snackbar.Add("Not Printing", Severity.Error);
                 return;
             }
         }
         else
         {
+            // Show a snackbar message indicating the printer is not connected
             Snackbar.Add("Printer is not connected", Severity.Error);
             return;
         }
     }
 
-    public async Task PromptHandler(string message)
+    /// <summary>
+    /// Handles the prompt messages received from the printer.
+    ///</summary>
+    ///<param name="input">The input received from the printer.</param>
+    public async Task PromptHandler(string input)
     {
         await InvokeAsync(async () =>
         {
-            if (message.Contains("Insert filament"))
+            if (input.Contains("Insert filament"))
             {
                 bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
@@ -646,7 +731,7 @@
                 }
             }
 
-            if (message.Contains("action:prompt_begin Heater Timeout"))
+            if (input.Contains("action:prompt_begin Heater Timeout"))
             {
                 bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
@@ -659,7 +744,7 @@
                 }
             }
 
-            if (message.Contains("action:prompt_begin Reheat Done"))
+            if (input.Contains("action:prompt_begin Reheat Done"))
             {
                 bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
@@ -672,7 +757,7 @@
                 }
             }
 
-            if (message.Contains("action:prompt_button PurgeMore"))
+            if (input.Contains("action:prompt_button PurgeMore"))
             {
                 bool? result = await DialogService.ShowMessageBox(
                 "Filament Change",
@@ -696,6 +781,7 @@
     {
         printerManager.InputReceived -= OnUpdate;
         background.SecondElapsed -= OnSecondElapsed;
+        background.FiveSecondsElapsed -= OnFiveSecondsElapsed;
         printerManager.ActivePrinterChanged -= OnSelectedPrinter;
     }
 }
