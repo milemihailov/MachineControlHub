@@ -52,10 +52,9 @@ namespace WebUI.Data
 
 
 
-        public PrintingService(PrinterDataService printerDataServiceTest, BackgroundTimer background)
+        public PrintingService(PrinterDataService printerDataServiceTest)
         {
             PrinterDataServiceTest = printerDataServiceTest;
-            Background = background;
         }
 
         public void StartPrint(string fileName, Printer printer)

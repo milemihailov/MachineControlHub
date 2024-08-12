@@ -9,8 +9,6 @@ namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
-        public PrinterManagerService Printer { get; set; }
-
         public int CurrentHotendTemp { get; set;}
         public int SetHotendTemp { get; set;}
         public int TargetHotendTemp { get; set;}
@@ -18,14 +16,10 @@ namespace WebUI.Data
         public int PIDHotendTemp { get; set;}
         private DateTime LastChangeTime { get; set;}
 
-        public HotendTemperatureService(PrinterManagerService Printer)
-        {
-            this.Printer = Printer;
-        }
 
-        public void SetHotendTemperature(int setTemp)
+        public void SetHotendTemperature(int setTemp, Printer printer)
         {
-            Printer.ActivePrinter.HotendTemperatures.SetTemperature(setTemp);
+            printer.HotendTemperatures.SetTemperature(setTemp);
 
             /// Reset the set temperature to 0
             SetHotendTemp = 0;
@@ -37,41 +31,41 @@ namespace WebUI.Data
             LastChangeTime = DateTime.Now;
         }
 
-        public async Task ParseCurrentHotendTemperature(string input)
+        public async Task ParseCurrentHotendTemperature(string input, Printer printer)
         {
             await Task.Run(() =>
             {
-                Printer.ActivePrinter.HotendTemperatures.ParseCurrentTemperature(input);
+                printer.HotendTemperatures.ParseCurrentTemperature(input);
 
                 /// Update the current temperature
-                CurrentHotendTemp = Printer.ActivePrinter.HotendTemperatures.CurrentTemp;
+                CurrentHotendTemp = printer.HotendTemperatures.CurrentTemp;
 
                 /// If the last change was more than 3 seconds ago, update the target temperature
                 if ((DateTime.Now - LastChangeTime).TotalSeconds >= 3)
                 {
-                    TargetHotendTemp = Printer.ActivePrinter.HotendTemperatures.TargetTemp;
+                    TargetHotendTemp = printer.HotendTemperatures.TargetTemp;
                 }
             } );
         }
 
-        public void ChangeFilament()
+        public void ChangeFilament(Printer printer)
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
+            printer.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
         }
         
-        public void LoadFilament()
+        public void LoadFilament(Printer printer)
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());
+            printer.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());
         }
 
-        public void UnloadFilament()
+        public void UnloadFilament(Printer printer)
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
+            printer.SerialConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
         }
 
-        public void SetHotendPIDValues()
+        public void SetHotendPIDValues(Printer printer)
         {
-            Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
+            printer.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
         }
     }
 }

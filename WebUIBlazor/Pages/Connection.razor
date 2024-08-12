@@ -73,10 +73,12 @@
             PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
             //ask for bed volume
             PrinterManager.ActivePrinter.SerialConnection.Write("M211");
-            //Report SD status every 2 seconds
+            //report SD status every 2 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M27 S2");
             //report temperature every 1 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M155 S1");
+            //report current position every 1 seconds
+            PrinterManager.ActivePrinter.SerialConnection.Write("M154 S1");
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception e)

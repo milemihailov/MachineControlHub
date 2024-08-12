@@ -48,26 +48,6 @@
         public int? EMaxFeedrate { get; set; }
 
         /// <summary>
-        /// Gets or sets the default feedrate for the X-axis.
-        /// </summary>
-        public int? XDefaultFeedrate { get; set; }
-
-        /// <summary>
-        /// Gets or sets the default feedrate for the Y-axis.
-        /// </summary>
-        public int? YDefaultFeedrate { get; set; }
-
-        /// <summary>
-        /// Gets or sets the default feedrate for the Z-axis.
-        /// </summary>
-        public int? ZDefaultFeedrate { get; set; }
-
-        /// <summary>
-        /// Gets or sets the default feedrate for the extruder.
-        /// </summary>
-        public int? EDefaultFeedrate { get; set; }
-
-        /// <summary>
         /// Gets or sets the maximum acceleration for the X-axis.
         /// </summary>
         public int? XMaxAcceleration { get; set; }
@@ -121,7 +101,7 @@
         /// <summary>
         /// Gets or sets the print speed.
         /// </summary>
-        public double PrintSpeed { get; set; }
+        public int PrintSpeed { get; set; }
 
         /// <summary>
         /// Gets or sets the fan speed.
@@ -147,21 +127,6 @@
         /// Gets or sets the Z-axis home offset.
         /// </summary>
         public double? ZHomeOffset { get; set; }
-
-        /// <summary>
-        /// Gets or sets the X-axis home position.
-        /// </summary>
-        public double XHomePos { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Y-axis home position.
-        /// </summary>
-        public double YHomePos { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Z-axis home position.
-        /// </summary>
-        public double ZHomePos { get; set; }
 
         public int? PlannerFrequencyLimit { get; set; }
 

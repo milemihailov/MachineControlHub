@@ -549,12 +549,12 @@
             FilamentChange = 600,
 
             /// <summary>
-            /// Loads filament.
+            /// Loads filament code.
             /// </summary>
             LoadFilament = 701,
 
             /// <summary>
-            /// Unloads filament.
+            /// Unloads filament code.
             /// </summary>
             UnloadFilament,
 

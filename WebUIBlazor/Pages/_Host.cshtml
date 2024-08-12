@@ -5,4 +5,47 @@
     Layout = "_Layout";
 }
 
+@* java script to handle bottom auto scroll console output *@
+<script>
+    var autoScrollEnabled = true;
+    var userScrolled = false;
+    var scrollThreshold = 10; // Threshold to determine if user is at the bottom
+
+    function scrollToBottomIfNeeded(textAreaId) {
+        var textarea = document.getElementById(textAreaId);
+        if (textarea) {
+            if (autoScrollEnabled) {
+                textarea.scrollTop = textarea.scrollHeight;
+            }
+        }
+    }
+
+    function handleScroll(textAreaId) {
+        var textarea = document.getElementById(textAreaId);
+        if (textarea) {
+            // Check if user is scrolled up
+            if (textarea.scrollTop + textarea.clientHeight < textarea.scrollHeight - scrollThreshold) {
+                userScrolled = true; // User manually scrolled up
+                autoScrollEnabled = false; // Disable auto-scrolling
+            } else {
+                userScrolled = false; // User is at the bottom
+                autoScrollEnabled = true; // Enable auto-scrolling
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var textarea = document.getElementById("consoleOutput");
+        if (textarea) {
+            textarea.addEventListener('scroll', function () {
+                handleScroll("consoleOutput");
+            });
+        }
+    });
+
+    function updateConsole(textAreaId) {
+        scrollToBottomIfNeeded(textAreaId);
+    }
+</script>
+
 <component type="typeof(App)" render-mode="ServerPrerendered" />

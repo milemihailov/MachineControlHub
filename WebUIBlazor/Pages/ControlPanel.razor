@@ -3,6 +3,7 @@
 @inject PrinterDataService PrinterDataService
 @inject PrinterManagerService PrinterManagerService
 @inject NavigationManager MyNavigationManager
+@inject IJSRuntime JS
 
 @using Plotly.Blazor.Interop
 @using Plotly.Blazor.LayoutLib
@@ -22,6 +23,11 @@
                          @bind-Config="Config" @bind-Layout="Layout" @bind-Data="Data" @ref="Chart"
                          ClickAction="ClickAction" AfterRender="SubscribeEvents" />
         </MudPaper>
+        <MudContainer Style="display: flex; justify-content: center; align-items: center;">
+            <MudText>X:  <span style="color:limegreen;">@PrinterManagerService.ActivePrinter.Position.XCurrentPosition</span></MudText>
+            <MudText Class="pl-12">Y: <span style="color:limegreen;">@PrinterManagerService.ActivePrinter.Position.YCurrentPosition</span></MudText>
+            <MudText Class="pl-12">Z: <span style="color:limegreen;">@PrinterManagerService.ActivePrinter.Position.ZCurrentPosition</span></MudText>
+        </MudContainer>
     </MudItem>
 
     @* Control Panel -------------------------------------------------------------- *@
@@ -29,19 +35,19 @@
         <div Class="py-5">
             <MudContainer MaxWidth="MaxWidth.Small" Class="px-2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos,true)">X+</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos,true)">Y+</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos,true)">Z+</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(0.02)">Z +0.02</MudButton>
-                    <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="ControlPanelService.FeedRate.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos, true, PrinterManagerService.ActivePrinter)">X+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, true, PrinterManagerService.ActivePrinter)">Y+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, true, PrinterManagerService.ActivePrinter)">Z+</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(0.02, PrinterManagerService.ActivePrinter)">Z +0.02</MudButton>
+                    <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="PrinterManagerService.ActivePrinter.MotionSettings.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                 </MudStack>
 
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos,false)">X-</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos,false)">Y-</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos,false)">Z-</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(-0.02)">Z -0.02</MudButton>
-                    <MudText Typo="Typo.overline"><b>CURRENT FEEDRATE: </b> @(ControlPanelService.FeedRate.FeedRateFreeMove)(mm/min)</MudText>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos, false, PrinterManagerService.ActivePrinter)">X-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, false, PrinterManagerService.ActivePrinter)">Y-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, false, PrinterManagerService.ActivePrinter)">Z-</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(-0.02, PrinterManagerService.ActivePrinter)">Z -0.02</MudButton>
+                    <MudText Typo="Typo.overline"><b>CURRENT FEEDRATE: </b> @(PrinterManagerService.ActivePrinter.MotionSettings.FeedRateFreeMove)(mm/min)</MudText>
                 </MudStack>
 
 
@@ -62,31 +68,31 @@
                     <MudContainer>
                         <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
                             <MudItem xs="4" Class="px-0">
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos,true)">Extrude</MudButton>
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand()">HomeAll</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, true, PrinterManagerService.ActivePrinter)">Extrude</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter)">HomeAll</MudButton>
                             </MudItem>
                             <MudItem xs="4" Class="px-0">
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos,false)">Retract</MudButton>
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand(true,true)">HomeXY</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, false, PrinterManagerService.ActivePrinter)">Retract</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, true, true)">HomeXY</MudButton>
                             </MudItem>
                             <MudItem xs="4" Class="px-0">
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="ControlPanelService.DisableSteppers">Disable Motors</MudButton>
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand(false,false,true)">HomeZ</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.DisableSteppers(PrinterManagerService.ActivePrinter)">Disable Motors</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, false, false, true)">HomeZ</MudButton>
                             </MudItem>
                         </MudGrid>
 
                         <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
                             <MudItem xs="12" Class="px-0">
-                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="ControlPanelService.ZSteppersAutoAlignment">Align Z</MudButton>
+                                <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.ZSteppersAutoAlignment(PrinterManagerService.ActivePrinter)">Align Z</MudButton>
                             </MudItem>
                         </MudGrid>
 
-                        <MudSwitch Label="Turn Fan On/Off" @bind-Value="@ControlPanelService.SwitchValue" @onclick="() => {ControlPanelService.ToggleValue();ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeed);}" Color="Color.Success" Class="mr-n2 mb-6" />
-                        <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.DefaultFanSpeed" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.DefaultFanSpeed)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
-                        <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FeedRatePercentage" Min="0" Max="500" @onchange="() => ControlPanelService.SetFeedRatePercentage(ControlPanelService.FeedRatePercentage)">Print Speed: @ControlPanelService.FeedRatePercentage% </MudSlider>
-                        <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.PrintFlowPercentage" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(ControlPanelService.PrintFlowPercentage)">Print Flow: @ControlPanelService.PrintFlowPercentage% </MudSlider>
+                        <MudSwitch Label="Fan On/Off" @bind-Value="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter);}" Color="Color.Success" Class="mr-n2 mb-6" />
+                        <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
+                        <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed, PrinterManagerService.ActivePrinter)">Print Speed: @PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
+                        <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow, PrinterManagerService.ActivePrinter)">Print Flow: @PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
                         <div>
-                            <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
+                            <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="ControlPanelService.Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
                         </div>
                     </MudContainer>
                 </div>
@@ -97,15 +103,19 @@
 
     @* Console Output -------------------------------------------------------------- *@
     <MudItem xs="12" md="12" lg="4">
-        <MudPaper Class="d-flex mud-height-full" MaxHeight="600px">
+        <MudPaper Class="d-flex mud-height-full" MaxHeight="800px">
             <textarea id="consoleOutput" style="width:100%; padding:5px; resize: none;" readonly rows="10" cols="50">@ControlPanelService.ConsoleOutput</textarea>
         </MudPaper>
-        <form @onsubmit="() => ControlPanelService.SendGcodeViaTerminal(ControlPanelService.SendCommand)">
+        <form @onsubmit="() => ControlPanelService.SendGcodeViaTerminal(ControlPanelService.SendCommand, PrinterManagerService.ActivePrinter)">
             <MudFocusTrap>
                 <MudTextField T="string" Label="Send G-Code Commands" Variant="Variant.Outlined" Clearable="true" @bind-Value="ControlPanelService.SendCommand" />
             </MudFocusTrap>
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send" FullWidth="true">Send</MudButton>
         </form>
+        <MudSwitch Label="Show SD messages" @bind-Value="@ControlPanelService.ShowSDMessages" @onclick="ControlPanelService.ToggleSDMessages" Color="Color.Success" Class="mr-n2 mb-6" />
+        <MudSwitch Label="Show temperature messages" @bind-Value="@ControlPanelService.ShowTemperatureMessages" @onclick="ControlPanelService.ToggleTemperatureMessages" Color="Color.Success" Class="mr-n2 mb-6" />
+        <MudSwitch Label="Show position messages" @bind-Value="@ControlPanelService.ShowPositionMessages" @onclick="ControlPanelService.TogglePositionMessages" Color="Color.Success" Class="mr-n2 mb-6" />
+        <MudSwitch Label="Show busy messages" @bind-Value="@ControlPanelService.ShowBusyMessages" @onclick="ControlPanelService.ToggleBusyMessages" Color="Color.Success" Class="mr-n2 mb-6" />
     </MudItem>
 </MudGrid>
 
@@ -114,17 +124,14 @@
     private int Index = -1;
     public List<ChartSeries> Series { get; set; }
 
-    public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Flow", "Print Speed" };
-    [CascadingParameter]
-    private MudTheme Theme { get; set; }
+    public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
+
     MudChip Selected { get; set; }
     private PlotlyChart Chart { get; set; }
     private Config Config { get; set; }
     private Layout Layout { get; set; }
     private IList<ITrace> Data { get; set; }
     private IEnumerable<EventDataPoint> ClickInfos { get; set; }
-    int XSize { get; set; }
-    int YSize { get; set; }
 
     protected override void OnInitialized()
     {
@@ -132,18 +139,37 @@
 
         if (PrinterManagerService.Printers != null && PrinterManagerService.Printers.Count > 0)
         {
-            PrinterManagerService.ActivePrinter.SerialConnection.Write("M211");
+            // request x, y, z max values to set the interactive bed size
+            PrinterDataService.RequestSoftwareEndstopSettings(PrinterManagerService.ActivePrinter);
+
+            // request print flow value
+            PrinterDataService.RequestPrintFlow(PrinterManagerService.ActivePrinter);
+
+            // request print speed value
+            PrinterDataService.RequestPrintSpeed(PrinterManagerService.ActivePrinter);
+
+            // request current position
+            PrinterDataService.RequestCurrentPositions(PrinterManagerService.ActivePrinter);
 
             PrinterManagerService.InputReceived += OnUpdate;
         }
 
-        XSize = PrinterManagerService.ActivePrinter.Bed?.XSize ?? 0;
-        YSize = PrinterManagerService.ActivePrinter.Bed?.YSize ?? 0;
-
+        /// Initialize the chart for the fan speed, print speed, and print flow values
         Series = new List<ChartSeries>
-    {
-        new ChartSeries() { Name = "Fan Speed", Data = new double[] { ControlPanelService.FanSpeedInPercentage, ControlPanelService.FeedRatePercentage , ControlPanelService.PrintFlowPercentage } },
-    };
+        {
+            new ChartSeries()
+            {
+                Name = "Fan Speed",
+                Data = new double[]
+                {
+                    ControlPanelService.FanSpeedInPercentage,
+                    PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
+                    PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
+                }
+            },
+        };
+
+        /// Initialize the interactive bed
         Config = new Config
             {
                 Responsive = true
@@ -169,12 +195,17 @@
             {
                 Name = "ScatterTrace",
                 Mode = ModeFlag.None,
-                X = Enumerable.Range(0, XSize + 1).SelectMany(_ => Enumerable.Range(0, XSize + 1)).Cast<object>().ToList(),
-                Y = Enumerable.Range(0, YSize + 1).SelectMany(y => Enumerable.Repeat(y, YSize + 1)).Cast<object>().ToList()
+                X = Enumerable.Range(0, PrinterManagerService.ActivePrinter.Bed.XSize + 1).SelectMany(_ => Enumerable.Range(0, PrinterManagerService.ActivePrinter.Bed.XSize + 1)).Cast<object>().ToList(),
+                Y = Enumerable.Range(0, PrinterManagerService.ActivePrinter.Bed.YSize + 1).SelectMany(y => Enumerable.Repeat(y, PrinterManagerService.ActivePrinter.Bed.YSize + 1)).Cast<object>().ToList()
             }
             };
     }
 
+    /// <summary>
+    /// Refreshes the component state when toggling between printers.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     public async void OnSelectedPrinter(object sender, EventArgs e)
     {
         try
@@ -191,21 +222,62 @@
         }
     }
 
-    public async void OnUpdate(string message)
+    /// <summary>
+    ///  Automatically scrolls the console output to the bottom.
+    /// </summary>
+    /// <returns></returns>
+    public async Task ScrollConsoleOutputToBottom()
     {
+        await JS.InvokeVoidAsync("updateConsole", "consoleOutput");
+    }
+
+    /// <summary>
+    /// Handles updates from the printer.
+    /// </summary>
+    /// <param name="input"></param>
+    public async void OnUpdate(string input)
+    {
+        /// Update the print flow, print speed, and fan speed chart values
         Series = new List<ChartSeries>
     {
-        new ChartSeries() { Name = "Fan Speed", Data = new double[] { ControlPanelService.FanSpeedInPercentage, ControlPanelService.FeedRatePercentage ,ControlPanelService.PrintFlowPercentage } },
+        new ChartSeries()
+        {
+            Name = "Fan Speed",
+            Data = new double[]
+            {
+                ControlPanelService.FanSpeedInPercentage,
+                PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
+                PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
+            }
+        },
     };
         await Task.Run(() =>
         {
-            ControlPanelService.UpdateParagraph(message);
-            PrinterDataService.SetBedVolume(message, PrinterManagerService.ActivePrinter);
+            // update the interactive bed size
+            PrinterDataService.SetBedVolume(input, PrinterManagerService.ActivePrinter);
+
+            // update the current positions
+            PrinterDataService.GetCurrentPositions(input, PrinterManagerService.ActivePrinter);
+
+            // update the print flow value
+            PrinterDataService.GetPrintFlow(input, PrinterManagerService.ActivePrinter);
+
+            // update the print speed value
+            PrinterDataService.GetPrintSpeed(input, PrinterManagerService.ActivePrinter);
+
+            // update the console output
+            ControlPanelService.UpdateParagraph(input, PrinterManagerService.ActivePrinter);
+
             InvokeAsync(StateHasChanged);
         });
+
+        await ScrollConsoleOutputToBottom();
     }
 
-
+    /// <summary>
+    /// Handles the click event on the interactive bed.
+    /// </summary>
+    /// <param name="eventData"></param>
     public void ClickAction(IEnumerable<EventDataPoint> eventData)
     {
         ClickInfos = eventData;
@@ -213,28 +285,46 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Subscribes to the click event on the interactive bed.
+    /// </summary>
     public async void SubscribeEvents()
     {
         await Chart.SubscribeClickEvent();
     }
 
+    /// <summary>
+    /// Handles the interaction with the interactive bed.
+    /// </summary>
     private void StoreClickedValues()
     {
         if (ClickInfos != null && ClickInfos.Any())
         {
+            // get the x and y values from the clicked point
             string x = ClickInfos.First().X.ToString();
             string y = ClickInfos.FirstOrDefault(d => d.TraceIndex == 0)?.Y.ToString();
-            ControlPanelService.PositionToMove.XMovePosition = double.Parse(x);
-            ControlPanelService.PositionToMove.YMovePosition = double.Parse(y);
-            ControlPanelService.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
-            ControlPanelService.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(ControlPanelService.PositionToMove, ControlPanelService.FeedRate));
-            ControlPanelService.Printer.ActivePrinter.SerialConnection.Write(CommandMethods.BuildRelativePositionCommand());
+
+            // parse the x and y values to double and store them in the printer's position
+            PrinterManagerService.ActivePrinter.Position.XMovePosition = double.Parse(x);
+            PrinterManagerService.ActivePrinter.Position.YMovePosition = double.Parse(y);
+
+            // set to null to avoid unwanted movements
+            PrinterManagerService.ActivePrinter.Position.ZMovePosition = null;
+            PrinterManagerService.ActivePrinter.Position.EMovePosition = null;
+
+            // set positioning mode
+            PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+
+            // move to desired position
+            PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(PrinterManagerService.ActivePrinter.Position, PrinterManagerService.ActivePrinter.MotionSettings));
+
+            // request current position
+            PrinterManagerService.ActivePrinter.SerialConnection.Write("M114");
         }
     }
 
     void IDisposable.Dispose()
     {
-
         PrinterManagerService.InputReceived -= OnUpdate;
         PrinterManagerService.ActivePrinterChanged -= OnSelectedPrinter;
 

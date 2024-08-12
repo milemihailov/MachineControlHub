@@ -11,12 +11,12 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class HotendTemps : ITemperatures
     {
-        const string HOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)\.\d+\s*/(\d+)\.\d+";
-        private IPrinterConnection _connection;
+        const string _hOTEND_TEMP_PARSE_PATTERN = @"T:(\d+)\.\d+\s*/(\d+)\.\d+";
+        private IPrinterConnection Connection { get; set; }
 
         public HotendTemps(IPrinterConnection connection)
         {
-            _connection = connection;
+            Connection = connection;
             PIDValues = new PIDValues(connection);
         }
 
@@ -43,19 +43,8 @@ namespace MachineControlHub.Temps
         /// </remarks>
         public void ParseCurrentTemperature(string input)
         {
-            //Thread.Sleep(200);  // Simulating the initial delay asynchronously
-
-            //// Send a command to request temperature information
-            //_connection.Write(CommandMethods.BuildReportTemperaturesCommand());
-
-            // Simulate the delay asynchronously
-            //Thread.Sleep(200);
-
-            // Read the printer's response
-            //string input = _connection.Read();
-
             // Define a regular expression pattern to match the bed temperature
-            string pattern = HOTEND_TEMP_PARSE_PATTERN;
+            string pattern = _hOTEND_TEMP_PARSE_PATTERN;
 
             // Create a regular expression object and find matches in the input string
 
@@ -75,7 +64,7 @@ namespace MachineControlHub.Temps
         public void SetTemperature(int setTemp)
         {
             // Send the G-code command to set the hotend temperature
-            _connection.Write(CommandMethods.BuildSetHotendTempCommand(setTemp));
+            Connection.Write(CommandMethods.BuildSetHotendTempCommand(setTemp));
         }
     }
 

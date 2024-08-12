@@ -34,21 +34,6 @@
     <script src="plotlyInterop.js"></script>
     <script src="_content/Plotly.Blazor/plotly-latest.min.js" type="text/javascript"></script>
     <script src="_content/Plotly.Blazor/plotly-interop.js" type="text/javascript"></script>
-    <script>
-        window.scrollToBottom = () => {
-            var textarea = document.getElementById('consoleOutput');
-            if (textarea) {
-                textarea.scrollTop = textarea.scrollHeight;
-            }
-        }
 
-        window.isAtBottom = () => {
-            var textarea = document.getElementById('consoleOutput');
-            if (textarea) {
-                return textarea.scrollHeight - textarea.scrollTop === textarea.clientHeight;
-            }
-            return false;
-        }
-    </script>
 </body>
 </html>

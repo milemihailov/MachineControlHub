@@ -793,6 +793,64 @@ namespace MachineControlHub.Motion
             return GCodeMethods.GCodeString(checkSoftwareEndstops);
         }
 
+        public static string BuildRequestPrintFlowCommand()
+        {
+            var requestPrintSpeed = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetFlowPercentage
+            };
+
+            return GCodeMethods.GCodeString(requestPrintSpeed);
+        }
+
+        public static string BuildSetPrintFlowCommand(int flowrate)
+        {
+            var setFlowRate = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetFlowPercentage,
+                Parameters = new List<string>() { $"S{flowrate} " }
+            };
+
+            return GCodeMethods.GCodeString(setFlowRate);
+
+        }
+
+        public static string BuildRequestPrintSpeedCommand()
+        {
+            var requestPrintSpeed = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetFeedratePercentage
+            };
+
+            return GCodeMethods.GCodeString(requestPrintSpeed);
+        }
+
+        public static string BuildSetPrintSpeedCommand(int feedrate)
+        {
+            var setPrintSpeed = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.SetFeedratePercentage,
+                Parameters = new List<string>() { $"S{ feedrate } " }
+            };
+
+            return GCodeMethods.GCodeString(setPrintSpeed);
+        }
+
+        public static string BuildRequestCurrentPositionsCommand()
+        {
+            var requestCurrentPositions = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.GetCurrentPosition
+            };
+
+            return GCodeMethods.GCodeString(requestCurrentPositions);
+        }
+
         public static string BuildBabySteppingCommand(double value)
         {
             var babyStepping = new GCodeCommands
@@ -861,6 +919,18 @@ namespace MachineControlHub.Motion
             }
 
             return GCodeMethods.GCodeString(setDriverSteppingMode);
+        }
+
+        public static string BuildRequestPrintJobStatsCommand()
+        {
+
+           var requestPrintJobStats = new GCodeCommands
+            {
+                Type = M_PREFIX,
+                Instruction = (int)GCodeInstructionsEnums.MCommands.PrintJobStats
+            };
+
+            return GCodeMethods.GCodeString(requestPrintJobStats);
         }
 
         public static string BuildSetBumpSensitivity(StepperDriversData driver)

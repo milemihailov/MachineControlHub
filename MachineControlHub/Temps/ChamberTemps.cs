@@ -8,14 +8,14 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class ChamberTemps : ITemperatures
     {
-        private IPrinterConnection _printerConnection;
+        private IPrinterConnection PrinterConnection { get; set; }
 
 
         public PIDValues PIDValues { get; set; }
 
         public ChamberTemps(IPrinterConnection printerConnection)
         {
-            _printerConnection = printerConnection;
+            PrinterConnection = printerConnection;
         }
 
         public int CurrentTemp { get; set; }
@@ -30,7 +30,7 @@ namespace MachineControlHub.Temps
 
         public void SetTemperature(int setTemp)
         {
-            _printerConnection.Write(CommandMethods.BuildSetChamberTempCommand(setTemp));
+            PrinterConnection.Write(CommandMethods.BuildSetChamberTempCommand(setTemp));
         }
     }
 

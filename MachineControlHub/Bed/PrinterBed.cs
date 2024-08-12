@@ -13,23 +13,18 @@
             Custom
         }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the printer's bed is heated.
-        /// </summary>
-        public bool HeatedBed { get; set; }
-
         // Private field to store the selected shape
-        private BedShapes shapeOfBed;
+        private BedShapes _shapeOfBed;
 
         /// <summary>
         /// Gets or sets the shape of the printer's bed.
         /// </summary>
         public BedShapes ShapeOfBed
         {
-            get { return shapeOfBed; }
+            get { return _shapeOfBed; }
             set
             {
-                shapeOfBed = value;
+                _shapeOfBed = value;
             }
         }
 

@@ -12,12 +12,12 @@ namespace MachineControlHub.Temps
     {
         const string BED_TEMP_PARSE_PATTERN = @"B:(\d+)\.\d+\s*/(\d+)\.\d+";
 
-        private IPrinterConnection _connection;
+        private IPrinterConnection Connection { get; set; }
 
         public PIDValues PIDValues { get; set; }
         public BedTemps(IPrinterConnection connection)
         {
-            _connection = connection;
+            Connection = connection;
             PIDValues = new PIDValues(connection);
         }
 
@@ -38,17 +38,6 @@ namespace MachineControlHub.Temps
         /// <param name="serial">The serial interface used for communication with the printer.</param>
         public void ParseCurrentTemperature(string input)
         {
-            //Thread.Sleep(200);
-            //// Send a command to request temperature information
-            //_connection.Write(CommandMethods.BuildReportTemperaturesCommand());
-
-            //// Sleep for a brief moment to ensure the input has enough time to be received and processed.
-            //// This sleep is used to account for potential delays in serial communication.
-            //Thread.Sleep(200);
-
-            //// Read the printer's response
-            //string input = _connection.Read();
-
             // Define a regular expression pattern to match the bed temperature
             string pattern = BED_TEMP_PARSE_PATTERN;
 
@@ -73,7 +62,7 @@ namespace MachineControlHub.Temps
         public void SetTemperature(int setTemp)
         {
             // Send a command to set the target bed temperature
-            _connection.Write(CommandMethods.BuildSetBedTempCommand(setTemp));
+            Connection.Write(CommandMethods.BuildSetBedTempCommand(setTemp));
         }
 
     }

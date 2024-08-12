@@ -25,6 +25,22 @@ namespace WebUI.Data
         public PrinterManagerService()
         {
             BackgroundTimer.TenMilisecondsElapsed += ReadFromAllPortsAsync;
+            ActivePrinter = new();
+            ActivePrinter.CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection);
+            ActivePrinter.PrintHistory = new();
+            ActivePrinter.PrintService = new PrintService(PrinterSerialConnection);
+            ActivePrinter.HotendTemperatures = new(PrinterSerialConnection);
+            ActivePrinter.BedTemperatures = new(PrinterSerialConnection);
+            ActivePrinter.ChamberTemperatures = new(PrinterSerialConnection);
+            ActivePrinter.PreheatingProfiles = new();
+            ActivePrinter.MotionSettings = new();
+            ActivePrinter.StepperDrivers = new();
+            ActivePrinter.BedLevelData = new();
+            ActivePrinter.Bed = new();
+            ActivePrinter.Head = new();
+            ActivePrinter.SerialConnection = new();
+            ActivePrinter.Position = new();
+
         }
 
         public void AddPrinter(string comport, int baudrate, string name = null)
@@ -53,6 +69,7 @@ namespace WebUI.Data
                     ChamberTemperatures = new(PrinterSerialConnection),
                     PreheatingProfiles = new(),
                     MotionSettings = new(),
+                    Position = new(),
                     StepperDrivers = new(),
                     BedLevelData = new(),
                     Bed = new(),
@@ -153,7 +170,7 @@ namespace WebUI.Data
                     {
                         ParseNotifications(input);
                         InputReceived?.Invoke(input);
-                        Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                        //Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
                     }
 
                     printer.BedLevelData.OnBedLevelUpdate(input);

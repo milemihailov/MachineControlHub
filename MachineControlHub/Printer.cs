@@ -127,6 +127,8 @@ namespace MachineControlHub
         /// </summary>
         public HotendTemps HotendTemperatures { get; set; }
 
+        public Position Position { get; set; }
+
         /// <summary>
         /// Gets or sets the chamber temperatures data for the printer.
         /// </summary>

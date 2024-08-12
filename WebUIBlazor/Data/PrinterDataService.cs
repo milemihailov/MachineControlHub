@@ -33,15 +33,6 @@ namespace WebUI.Data
 
         public List<PreheatingProfiles> PreheatingProfiles { get; set; } = new List<PreheatingProfiles>();
         public List<CurrentPrintJob> PrintHistory { get; set; } = new List<CurrentPrintJob>();
-        public PrinterManagerService PrinterManagerService { get; set; }
-        public List<(string Label, string Value)> StepperModes { get; set; } = new();
-
-        public PrinterDataService(PrinterManagerService Printer)
-        {
-            Printer.ActivePrinter.PreheatingProfiles = new PreheatingProfiles();
-            Printer.ActivePrinter.PrintHistory = new PrintHistory();
-        }
-
 
         public void AddPrintJobToHistory(Printer printer)
         {
@@ -153,61 +144,77 @@ namespace WebUI.Data
 
         public void RequestPrintJobStats(Printer printer)
         {
-            printer.SerialConnection.Write("M78");
+            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintJobStatsCommand());
         }
 
-        public void RequestSoftwareEndstopSettings(string input, Printer printer)
+        public void RequestSoftwareEndstopSettings(Printer printer)
         {
-            printer.SerialConnection.Write($"M211 S{input}");
+            printer.SerialConnection.Write(CommandMethods.BuildCheckSoftwareEndstopsCommand());
         }
 
-        public async void OnUpdateSettings(string message, Printer printer)
+        public void RequestCurrentPositions(Printer printer)
+        {
+            printer.SerialConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand()); 
+        }
+
+        public void RequestPrintSpeed(Printer printer)
+        {
+            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintSpeedCommand());
+        }
+
+        public void RequestPrintFlow(Printer printer)
+        {
+            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintFlowCommand());
+        }
+
+        public async void OnUpdateSettings(string input, Printer printer)
         {
             await Task.Run(() =>
             {
-                if (message.Contains("G21") || message.Contains("G20"))
+                if (input.Contains("G21") || input.Contains("G20"))
                 {
-                    printer.LinearUnit = GetPrinterLinearUnits(message);
+                    printer.LinearUnit = GetPrinterLinearUnits(input);
                 }
-                if (message.Contains("M149"))
+                if (input.Contains("M149"))
                 {
-                    printer.TemperatureUnit = GetTemperatureUnits(message);
+                    printer.TemperatureUnit = GetTemperatureUnits(input);
                 }
 
-                GetStepsPerUnit(message, printer);
-                GetMaximumFeedrates(message, printer);
-                GetMaximumAccelerations(message, printer);
-                GetPrintRetractTravelAcceleration(message, printer);
-                GetStartingAccelerations(message, printer);
-                GetOffsetSettings(message, printer);
-                GetAutoBedLevelingSettings(message, printer);
-                GetHotendPIDValues(message, printer);
-                GetBedPIDValues(message, printer);
-                GetZProbeOffsets(message, printer);
-                GetFirmwareVersion(message, printer);
-                GetBinaryFileTransferState(message, printer);
-                GetAutoReportState(message, printer);
-                GetExtruderCount(message, printer);
-                GetEEPROMState(message, printer);
-                GetFilamentRunoutSensorState(message, printer);
-                GetAutoLevelState(message, printer);
-                GetZProbeState(message, printer);
-                GetSoftwarePowerState(message, printer);
-                GetEmergencyParserState(message, printer);
-                GetToggleLightsState(message, printer);
-                GetHostActionCommandsState(message, printer);
-                GetPromptSupportState(message, printer);
-                GetSDCardSupportState(message, printer);
-                GetLongFilenameSupportState(message, printer);
-                GetCustomFirmwareUploadState(message, printer);
-                GetExtendedM20Support(message, printer);
-                GetThermalProtectionState(message, printer);
-                GetBabyStepState(message, printer);
-                GetPowerLossRecoveryState(message, printer);
-                GetStepperDriverCurrents(message, printer);
-                GetStepperDriverMode(message, printer);
-                GetHomingSensitivityValues(message, printer);
-                SetBedVolume(message, printer);
+                GetStepsPerUnit(input, printer);
+                GetMaximumFeedrates(input, printer);
+                GetMaximumAccelerations(input, printer);
+                GetPrintRetractTravelAcceleration(input, printer);
+                GetStartingAccelerations(input, printer);
+                GetOffsetSettings(input, printer);
+                GetAutoBedLevelingSettings(input, printer);
+                GetHotendPIDValues(input, printer);
+                GetBedPIDValues(input, printer);
+                GetZProbeOffsets(input, printer);
+                GetFirmwareVersion(input, printer);
+                GetBinaryFileTransferState(input, printer);
+                GetAutoReportState(input, printer);
+                GetExtruderCount(input, printer);
+                GetEEPROMState(input, printer);
+                GetFilamentRunoutSensorState(input, printer);
+                GetAutoLevelState(input, printer);
+                GetZProbeState(input, printer);
+                GetSoftwarePowerState(input, printer);
+                GetEmergencyParserState(input, printer);
+                GetToggleLightsState(input, printer);
+                GetHostActionCommandsState(input, printer);
+                GetPromptSupportState(input, printer);
+                GetSDCardSupportState(input, printer);
+                GetLongFilenameSupportState(input, printer);
+                GetCustomFirmwareUploadState(input, printer);
+                GetExtendedM20Support(input, printer);
+                GetThermalProtectionState(input, printer);
+                GetBabyStepState(input, printer);
+                GetPowerLossRecoveryState(input, printer);
+                GetStepperDriverCurrents(input, printer);
+                GetStepperDriverMode(input, printer);
+                GetHomingSensitivityValues(input, printer);
+                SetBedVolume(input, printer);
+                GetChamberState(input, printer);
             });
         }
 
@@ -353,6 +360,7 @@ namespace WebUI.Data
             }
         }
 
+
         public void GetZProbeOffsets(string input, Printer printer)
         {
             var match = Regex.Match(input, _z_PROBE_OFFSETS_PATTERN);
@@ -491,6 +499,40 @@ namespace WebUI.Data
             }
         }
 
+        public void GetCurrentPositions(string message, Printer printer)
+        {
+            if (message.Contains("Count"))
+            {
+                var match = Regex.Match(message, @"X\s*:\s*(\d+\.?\d*)\s*Y\s*:\s*(\d+\.?\d*)\s*Z\s*:\s*(\d+\.?\d*)\s*E\s*:\s*(\d+\.?\d*)");
+
+                if (match.Success)
+                {
+                    printer.Position.XCurrentPosition = double.Parse(match.Groups[1].Value);
+                    printer.Position.YCurrentPosition = double.Parse(match.Groups[2].Value);
+                    printer.Position.ZCurrentPosition = double.Parse(match.Groups[3].Value);
+                    printer.Position.ECurrentPosition = double.Parse(match.Groups[4].Value);
+                }
+            }
+        }
+
+        public void GetPrintFlow(string message, Printer printer)
+        {
+            var match = Regex.Match(message, @"echo:E(\d+) Flow: (\d+)%");
+            if (match.Success)
+            {
+                printer.MotionSettings.PrintFlow = int.Parse(match.Groups[2].Value);
+            }
+        }
+
+        public void GetPrintSpeed(string message, Printer printer)
+        {
+            var match = Regex.Match(message, @"FR:(\d+)%");
+            if (match.Success)
+            {
+                printer.MotionSettings.PrintSpeed = int.Parse(match.Groups[1].Value);
+            }
+        }
+
         public void GetPrintJobStats(string input, Printer printer)
         {
             if (input.Contains("Stats"))
@@ -520,6 +562,16 @@ namespace WebUI.Data
                 {
                     printer.PrintHistory.FilamentUsed = filamentMatch.Groups[1].Value;
                 }
+            }
+        }
+
+
+        public void GetChamberState(string input, Printer printer)
+        {
+            var match = Regex.Match(input, @"CHAMBER_TEMPERATURE:(\d+)");
+            if (match.Success)
+            {
+                printer.HasChamber = BoolOutput(int.Parse(match.Groups[1].Value));
             }
         }
 
