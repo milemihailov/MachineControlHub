@@ -10,7 +10,7 @@ namespace MachineControlHub.Temps
     /// </summary>
     public class BedTemps : ITemperatures
     {
-        const string BED_TEMP_PARSE_PATTERN = @"B:(\d+)\.\d+\s*/(\d+)\.\d+";
+        const string _bED_TEMP_PARSE_PATTERN = @"B:(\d+)\.\d+\s*/(\d+)\.\d+";
 
         private IPrinterConnection Connection { get; set; }
 
@@ -39,7 +39,7 @@ namespace MachineControlHub.Temps
         public void ParseCurrentTemperature(string input)
         {
             // Define a regular expression pattern to match the bed temperature
-            string pattern = BED_TEMP_PARSE_PATTERN;
+            string pattern = _bED_TEMP_PARSE_PATTERN;
 
             // Create a regular expression object and find matches in the input string
             Regex regex = new Regex(pattern);

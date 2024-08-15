@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Dumpify;
 using MachineControlHub;
 using MachineControlHub.Print;
 using MachineControlHub.PrinterConnection;
@@ -25,21 +26,23 @@ namespace WebUI.Data
         public PrinterManagerService()
         {
             BackgroundTimer.TenMilisecondsElapsed += ReadFromAllPortsAsync;
-            ActivePrinter = new();
-            ActivePrinter.CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection);
-            ActivePrinter.PrintHistory = new();
-            ActivePrinter.PrintService = new PrintService(PrinterSerialConnection);
-            ActivePrinter.HotendTemperatures = new(PrinterSerialConnection);
-            ActivePrinter.BedTemperatures = new(PrinterSerialConnection);
-            ActivePrinter.ChamberTemperatures = new(PrinterSerialConnection);
-            ActivePrinter.PreheatingProfiles = new();
-            ActivePrinter.MotionSettings = new();
-            ActivePrinter.StepperDrivers = new();
-            ActivePrinter.BedLevelData = new();
-            ActivePrinter.Bed = new();
-            ActivePrinter.Head = new();
-            ActivePrinter.SerialConnection = new();
-            ActivePrinter.Position = new();
+            ActivePrinter = new()
+            {
+                CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection),
+                PrintHistory = new(),
+                PrintService = new PrintService(PrinterSerialConnection),
+                HotendTemperatures = new(PrinterSerialConnection),
+                BedTemperatures = new(PrinterSerialConnection),
+                ChamberTemperatures = new(PrinterSerialConnection),
+                PreheatingProfiles = new(),
+                MotionSettings = new(),
+                StepperDrivers = new(),
+                BedLevelData = new(),
+                Bed = new(),
+                Head = new(),
+                SerialConnection = new(),
+                Position = new()
+            };
 
         }
 
@@ -135,7 +138,6 @@ namespace WebUI.Data
                 {
                     printer.SerialConnection.IsConnected = true;
                     string readData = await printer.SerialConnection.ReadAsync();
-                    string echoMessage = "";
 
                     if (readData.Contains("echo:busy: processing"))
                     {
@@ -158,45 +160,22 @@ namespace WebUI.Data
                     }
 
                     string input = $"{readData} \n";
-
-                    if (!string.IsNullOrWhiteSpace(echoMessage))
-                    {
-                        input = FilterData(echoMessage);
-                    }
-
                     PortData[printer.SerialConnection.PortName] = input;
 
                     if (printer == ActivePrinter)
                     {
                         ParseNotifications(input);
                         InputReceived?.Invoke(input);
-                        //Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                        Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
                     }
 
                     printer.BedLevelData.OnBedLevelUpdate(input);
                     await printer.CurrentPrintJob.EstimateTimeRemainingAsync();
                 }
-
                 await Task.Delay(600, token);
             }
         }
 
-        /// <summary>
-        /// Filters out lines containing the word "echo" from the provided data.
-        /// </summary>
-        /// <param name="data">The input data string to be filtered.</param>
-        /// <returns>A string with lines containing "echo" removed.</returns>
-        /// <remarks>
-        /// This method splits the input data into lines, filters out any lines that contain the word "echo",
-        /// and then joins the remaining lines back into a single string.
-        /// </remarks>
-        public string FilterData(string data)
-        {
-            var lines = data.Split('\n');
-            var filteredLines = lines.Where(line => !line.Contains("echo"));
-            var filteredData = string.Join('\n', filteredLines);
-            return filteredData;
-        }
 
         /// <summary>
         /// Parses notification and prompt actions from the provided data string.
@@ -209,7 +188,6 @@ namespace WebUI.Data
         public void ParseNotifications(string data)
         {
             string patternNotification = @"//action:notification\s*(.*)";
-            string patternPrompt = @"//action:prompt\s*(.*)";
 
             if (data.Contains("//action:notification"))
             {
@@ -218,16 +196,6 @@ namespace WebUI.Data
                 {
                     string result = match.Groups[1].Value;
                     Notification = result;
-                }
-            }
-
-
-            if (data.Contains("//action:prompt"))
-            {
-                Match match = Regex.Match(data, patternPrompt);
-                if (match.Success)
-                {
-                    string result = match.Groups[1].Value;
                 }
             }
         }

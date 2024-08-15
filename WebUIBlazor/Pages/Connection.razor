@@ -1,7 +1,7 @@
 ﻿@using MachineControlHub.PrinterConnection
 @inject Data.PrinterDataService printer
 @inject Data.PrinterManagerService PrinterManager
-
+@inject ISnackbar Snackbar
 
 <MudContainer Style="display: flex; justify-content: center; align-items: center;" Class="pt-3">
     <MudStack Spacing="2">
@@ -23,7 +23,6 @@
                 </div>
 
                 <MudGrid Class="pt-5">
-
                     <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
                         <MudButton Disabled="@(PrinterManager.Printers.ContainsKey(portName) ? true : false )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => {ConnectionConfiguration(); OnExpandCollapseClick();}">Connect</MudButton>
                     </MudItem>
@@ -64,19 +63,32 @@
     {
         try
         {
-            PrinterManager.AddPrinter(portName, baudRate, printerName);
 
-            Thread.Sleep(1000);
+            PrinterManager.AddPrinter(portName, baudRate, printerName);
+            
+            if(printerName == null)
+            {
+                printerName = portName;
+            }
+
+            Snackbar.Add($"Printer {printerName} connected", Severity.Success);
+
+            await Task.Delay(1000);
 
             PrinterManager.SelectPrinter(portName);
+
             //set the host keep alive command to 1 second after connection
             PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
+
             //ask for bed volume
             PrinterManager.ActivePrinter.SerialConnection.Write("M211");
+
             //report SD status every 2 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M27 S2");
+
             //report temperature every 1 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M155 S1");
+
             //report current position every 1 seconds
             PrinterManager.ActivePrinter.SerialConnection.Write("M154 S1");
             await InvokeAsync(StateHasChanged);
@@ -91,7 +103,6 @@
     {
         PrinterManager.ActivePrinter.SerialConnection.Disconnect();
         PrinterManager.Printers.Remove(portName);
-        StateHasChanged();
         Console.WriteLine($"Disconecting port{portName}");
     }
 

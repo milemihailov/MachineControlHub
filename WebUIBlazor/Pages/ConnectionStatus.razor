@@ -2,7 +2,7 @@
 @inject Data.BackgroundTimer background
 @inject Data.PrinterManagerService printerManager
 
-<MudText Class="pr-9" Typo="Typo.h6" Color="Color.Tertiary">@printerManager.ActivePrinter.Name</MudText>
+<MudText Class="pr-9" Typo="Typo.h6" Color="@(printerManager.ActivePrinter.SerialConnection.IsConnected ? Color.Tertiary : Color.Error)">@printerManager.ActivePrinter.Name</MudText>
 
 
 <MudMenu Class="pr-12" Icon="@Icons.Material.Filled.AdUnits">

@@ -1,0 +1,110 @@
+﻿@inject Data.PrinterManagerService printerManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@implements IDisposable
+
+<style>
+    .my-custom-class {
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+@code {
+    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true};
+
+    protected override void OnInitialized()
+    {
+        printerManager.InputReceived += OnUpdate;
+        printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
+    }
+
+    public async void OnUpdate(string input)
+    {
+        // Handles the prompt messages received from the printer
+        await PromptHandlerMethod(input);
+    }
+
+    /// <summary>
+    /// Handles the prompt messages received from the printer.
+    ///</summary>
+    ///<param name="input">The input received from the printer.</param>
+    public async Task PromptHandlerMethod(string input)
+    {
+        await InvokeAsync(async () =>
+        {
+            if (input.Contains("Insert filament"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+                "Filament Change",
+                "Insert filament and click continue!",
+                yesText: "Continue",
+                options: _dialogOptions);
+
+                if (result == true)
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
+                }
+            }
+
+            if (input.Contains("action:prompt_begin Heater Timeout"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+                "Filament Change",
+                "Heater timeout reheat to continue!",
+                yesText: "Reheat",
+                options: _dialogOptions);
+
+                if (result == true)
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
+                }
+            }
+
+            if (input.Contains("action:prompt_begin Reheat Done"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+                "Filament Change",
+                "Reheat done add new filament and click continue!",
+                yesText: "Change",
+                options: _dialogOptions);
+
+                if (result == true)
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
+                }
+            }
+
+            if (input.Contains("action:prompt_button PurgeMore"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+                "Filament Change",
+                "Purge more or continue!",
+                yesText: "Continue", 
+                noText: "Purge More", 
+                options: _dialogOptions);
+
+                if (result == true)
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
+                }
+                else
+                {
+                    printerManager.ActivePrinter.SerialConnection.Write("M876 S0");
+                    Snackbar.Add("Purging", Severity.Info);
+                }
+            }
+        });
+    }
+
+    public void OnDisconnecting()
+    {
+        Snackbar.Add($"Printer {printerManager.ActivePrinter.Name} disconnected", Severity.Error);
+    }
+
+    public void Dispose()
+    {
+        printerManager.InputReceived -= OnUpdate;
+        printerManager.ActivePrinter.SerialConnection.Disconnected -= OnDisconnecting;
+    }
+}

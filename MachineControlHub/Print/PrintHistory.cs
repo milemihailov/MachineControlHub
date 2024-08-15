@@ -5,11 +5,6 @@
     /// </summary>
     public class PrintHistory
     {
-        /// <summary>
-        /// Gets or sets the list of printed jobs.
-        /// </summary>
-        public List<CurrentPrintJob> Prints { get; set; }
-
         public int TotalPrints { get; set; }
 
         public int TotalFinishedPrints { get; set; }

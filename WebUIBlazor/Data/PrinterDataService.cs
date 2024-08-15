@@ -119,6 +119,7 @@ namespace WebUI.Data
             }
             return new List<T>();
         }
+
         public T LoadPrinterData<T>(string filePath)
         {
             if (File.Exists(filePath))
@@ -129,12 +130,10 @@ namespace WebUI.Data
             return default(T);
         }
 
-
         public void RequestPrinterSettings(Printer printer)
         {
             printer.SerialConnection.Write(CommandMethods.BuildReportSettings());
         }
-
 
         public void RequestFirmwareSettings(Printer printer)
         {
@@ -167,6 +166,11 @@ namespace WebUI.Data
             printer.SerialConnection.Write(CommandMethods.BuildRequestPrintFlowCommand());
         }
 
+        /// <summary>
+        /// Gets the settings from the input and updates the printer instance
+        /// </summary>
+        /// <param name="input">Input from the message</param>
+        /// <param name="printer">Printer instance</param>
         public async void OnUpdateSettings(string input, Printer printer)
         {
             await Task.Run(() =>
@@ -359,7 +363,6 @@ namespace WebUI.Data
                 printer.BedTemperatures.PIDValues.Derivative = double.Parse(match.Groups[3].Value);
             }
         }
-
 
         public void GetZProbeOffsets(string input, Printer printer)
         {
@@ -564,7 +567,6 @@ namespace WebUI.Data
                 }
             }
         }
-
 
         public void GetChamberState(string input, Printer printer)
         {
@@ -816,7 +818,6 @@ namespace WebUI.Data
                 printer.SerialConnection.Write(CommandMethods.BuildSetHomeOffsetsCommand(printer.MotionSettings));
             }
         }
-
 
         public void SetBedLevelingOn(Printer printer)
         {

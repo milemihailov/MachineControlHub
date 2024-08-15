@@ -14,6 +14,9 @@
 
 
 <PrinterState />
+<PromptAndNotificationsHandler />
+
+
 <MudGrid Style="width: 100vw;">
 
     @* Interactive Bed -------------------------------------------------------------- *@
@@ -120,12 +123,8 @@
 </MudGrid>
 
 @code {
-
-    private int Index = -1;
     public List<ChartSeries> Series { get; set; }
-
     public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
-
     MudChip Selected { get; set; }
     private PlotlyChart Chart { get; set; }
     private Config Config { get; set; }

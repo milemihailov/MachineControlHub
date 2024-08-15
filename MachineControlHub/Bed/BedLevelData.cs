@@ -26,9 +26,9 @@ namespace MachineControlHub.Bed
             BedLevelGridData = index >= 0 ? csv.Substring(0, index) : csv; 
         }
 
-        string _calibrateMessage = "";
-        string LoopMessage { get; set; } = "";
-        private bool isProcessingBilinear { get; set; }
+        private string CalibrateMessage { get; set; } = "";
+        private string LoopMessage { get; set; } = "";
+        private bool IsProcessingBilinear { get; set; }
 
 
         /// <summary>
@@ -42,19 +42,19 @@ namespace MachineControlHub.Bed
             // get the bed leveling data
             if (LoopMessage.Contains("Bilinear"))
             {
-                isProcessingBilinear = true;
-                _calibrateMessage += message;
+                IsProcessingBilinear = true;
+                CalibrateMessage += message;
                 if (message.Contains("X:" ) || message.Contains("echo"))
                 {
                     Processing = false;
-                    isProcessingBilinear = false;
-                    GetGrid(_calibrateMessage);
-                    _calibrateMessage = "";
+                    IsProcessingBilinear = false;
+                    GetGrid(CalibrateMessage);
+                    CalibrateMessage = "";
                     BedLevelingStateChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
 
-            if (!isProcessingBilinear)
+            if (!IsProcessingBilinear)
             {
                 LoopMessage = "";
             }

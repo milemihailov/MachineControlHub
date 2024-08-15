@@ -10,19 +10,23 @@ namespace MachineControlHub.PrinterConnection
     /// </summary>
     public class SerialConnection : IPrinterConnection
     {
-        const string BUSY_CHECK = "echo:busy: processing\n";
-        const int SLEEP_TIME_AFTER_BUSY_CHECK = 1500;
+        const string _bUSY_CHECK = "echo:busy: processing\n";
+        const int _sLEEP_TIME_AFTER_BUSY_CHECK = 1500;
 
-        private SerialPort serialPort;
+        public event Action Disconnected;
+
+        private SerialPort _serialPort;
         public bool IsConnected { get; set; }
         public SerialConnection()
         {
-            serialPort = new SerialPort();
-            serialPort.StopBits = StopBits.One;
-            serialPort.DataBits = 8;
-            serialPort.Parity = Parity.None;
-            serialPort.RtsEnable = true;
-            serialPort.DtrEnable = true;
+            _serialPort = new SerialPort
+            {
+                StopBits = StopBits.One,
+                DataBits = 8,
+                Parity = Parity.None,
+                RtsEnable = true,
+                DtrEnable = true
+            };
         }
 
         public void Initialize(string connectionString)
@@ -31,8 +35,8 @@ namespace MachineControlHub.PrinterConnection
             string portName = connectionParams[0].Trim();
             int baudRate = int.Parse(connectionParams[1].Trim());
 
-            serialPort.PortName = portName;
-            serialPort.BaudRate = baudRate;
+            _serialPort.PortName = portName;
+            _serialPort.BaudRate = baudRate;
         }
 
 
@@ -45,12 +49,12 @@ namespace MachineControlHub.PrinterConnection
         /// <exception cref="Exception">Thrown for other general errors.</exception>
         public string PortName
         {
-            get { return serialPort.PortName; }
+            get { return _serialPort.PortName; }
             set
             {
                 try
                 {
-                    serialPort.PortName = value;
+                    _serialPort.PortName = value;
                 }
                 catch (Exception ex)
                 {
@@ -68,12 +72,12 @@ namespace MachineControlHub.PrinterConnection
         /// <exception cref="Exception">Thrown for other general errors.</exception>
         public int BaudRate
         {
-            get { return serialPort.BaudRate; }
+            get { return _serialPort.BaudRate; }
             set
             {
                 try
                 {
-                    serialPort.BaudRate = value;
+                    _serialPort.BaudRate = value;
                 }
                 catch (Exception ex)
                 {
@@ -91,9 +95,9 @@ namespace MachineControlHub.PrinterConnection
         {
             try
             {
-                if (!serialPort.IsOpen)
+                if (!_serialPort.IsOpen)
                 {
-                    serialPort.Open();
+                    _serialPort.Open();
                     Console.WriteLine("Port opened");
                     IsConnected = true;
                 }
@@ -114,9 +118,10 @@ namespace MachineControlHub.PrinterConnection
         {
             try
             {
-                serialPort.Close();
+                _serialPort.Close();
                 Console.WriteLine("Port closed");
                 IsConnected = false;
+                Disconnected?.Invoke();
             }
             catch (Exception ex)
             {
@@ -132,16 +137,17 @@ namespace MachineControlHub.PrinterConnection
         /// <param name="data">The data to be written to the serial port.</param>
         public void Write(string data)
         {
-            serialPort.WriteTimeout = 1000;
+            _serialPort.WriteTimeout = 5000;
 
             try
             {
-                serialPort.WriteLine(data);
+                _serialPort.WriteLine(data);
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error writing to serial port: {ex.Message}");
-                //IsConnected = false;
+                IsConnected = false;
+                Disconnected?.Invoke();
             }
         }
 
@@ -151,66 +157,72 @@ namespace MachineControlHub.PrinterConnection
         /// <returns></returns>
         public string Read()
         {
-            serialPort.ReadTimeout = 5000;
+            _serialPort.ReadTimeout = 5000;
 
             try
             {
-                string data = serialPort.ReadLine();
+                string data = _serialPort.ReadLine();
                 return data;
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
                 IsConnected = false;
+                Disconnected?.Invoke();
                 return null;
             }
         }
 
         public string ReadAll()
         {
-            serialPort.ReadTimeout = 5000;
+            _serialPort.ReadTimeout = 5000;
 
             try
             {
-                string data = serialPort.ReadExisting();
+                string data = _serialPort.ReadExisting();
                 return data;
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
                 IsConnected = false;
+                Disconnected?.Invoke();
                 return null;
             }
         }
 
         public async Task<string> ReadAsync()
         {
-            serialPort.ReadTimeout = 5000;
+            _serialPort.ReadTimeout = 5000;
 
             try
             {
-                string data = await Task.Run(() => serialPort.ReadLine());
+                string data = await Task.Run(() => _serialPort.ReadLine());
                 return data;
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
+                IsConnected = false;
+                Disconnected?.Invoke();
                 return null;
             }
         }
 
         public async Task<string> ReadAllAsync()
         {
-            serialPort.ReadTimeout = 5000;
+            _serialPort.ReadTimeout = 5000;
 
             try
             {
-                string data = await Task.Run(() => serialPort.ReadExisting());
+                string data = await Task.Run(() => _serialPort.ReadExisting());
                 return data;
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error reading from serial port: {ex.Message}");
+                IsConnected = false;
+                Disconnected?.Invoke();
                 return null;
             }
         }
@@ -221,12 +233,12 @@ namespace MachineControlHub.PrinterConnection
         /// </summary>
         public bool CheckForBusy()
         {
-            string data = serialPort.ReadLine();
+            string data = _serialPort.ReadLine();
 
-            while (data == BUSY_CHECK || !HasData())
+            while (data == _bUSY_CHECK || !HasData())
             {
-                Console.WriteLine(serialPort.ReadLine());
-                Thread.Sleep(SLEEP_TIME_AFTER_BUSY_CHECK);
+                Console.WriteLine(_serialPort.ReadLine());
+                Thread.Sleep(_sLEEP_TIME_AFTER_BUSY_CHECK);
                 return true;
             }
             return false;
@@ -239,8 +251,9 @@ namespace MachineControlHub.PrinterConnection
         /// <returns></returns>
         public bool HasData()
         {
-            if (serialPort.IsOpen && serialPort.BytesToRead > 0)
+            if (_serialPort.IsOpen && _serialPort.BytesToRead > 0)
             {
+                IsConnected = true;
                 return true;
             }
             return false;

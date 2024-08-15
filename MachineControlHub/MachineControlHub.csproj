@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dumpify" Version="0.6.6" />
     <PackageReference Include="LibUsbDotNet" Version="2.2.29" />
     <PackageReference Include="System.IO.Ports" Version="7.0.0" />
   </ItemGroup>

@@ -18,9 +18,6 @@ namespace WebUI.Data
         public event Action SecondElapsed;
         public event Action FiveSecondsElapsed;
 
-        [Parameter]
-        public bool IsBusy { get; set; }
-
         public BackgroundTimer(string portName = null)
         {
             StartTimer();

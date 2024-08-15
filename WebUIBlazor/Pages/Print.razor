@@ -25,6 +25,7 @@
 @using System.Diagnostics
 
 <PrinterState />
+<PromptAndNotificationsHandler />
 
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
 
@@ -423,6 +424,8 @@
         background.FiveSecondsElapsed += OnFiveSecondsElapsed;
         printerManager.ActivePrinterChanged += OnSelectedPrinter;
         printerManager.InputReceived += OnUpdate;
+        // printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
+        // printerManager.ActivePrinter.SerialConnection.Connected += OnConnecting;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -531,9 +534,6 @@
 
             // Parse the firmware settings
             PrinterDataHandler.OnUpdateSettings(input, printerManager.ActivePrinter);
-
-            // Handles the prompt messages received from the printer
-            await PromptHandler(input);
 
             await InvokeAsync(StateHasChanged);
         }
@@ -716,73 +716,15 @@
         }
     }
 
-    /// <summary>
-    /// Handles the prompt messages received from the printer.
-    ///</summary>
-    ///<param name="input">The input received from the printer.</param>
-    public async Task PromptHandler(string input)
-    {
-        await InvokeAsync(async () =>
-        {
-            if (input.Contains("Insert filament"))
-            {
-                bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Insert filament and click continue!",
-                yesText: "Continue");
+    // public void OnDisconnecting()
+    // {
+    //     Snackbar.Add("Printer disconnected", Severity.Error);
+    // }
 
-                if (result == true)
-                {
-                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
-                    Console.WriteLine("sending");
-                }
-            }
-
-            if (input.Contains("action:prompt_begin Heater Timeout"))
-            {
-                bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Heater timeout reheat to continue!",
-                yesText: "Reheat");
-
-                if (result == true)
-                {
-                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
-                }
-            }
-
-            if (input.Contains("action:prompt_begin Reheat Done"))
-            {
-                bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Reheat done add new filament and click continue!",
-                yesText: "Change");
-
-                if (result == true)
-                {
-                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
-                }
-            }
-
-            if (input.Contains("action:prompt_button PurgeMore"))
-            {
-                bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Purge more or continue!",
-                yesText: "Continue", noText: "Purge More");
-
-                if (result == true)
-                {
-                    printerManager.ActivePrinter.SerialConnection.Write("M876 S1");
-                }
-                else
-                {
-                    printerManager.ActivePrinter.SerialConnection.Write("M876 S0");
-                    Snackbar.Add("Purging", Severity.Info);
-                }
-            }
-        });
-    }
+    // public void OnConnecting()
+    // {
+    //     Snackbar.Add("Printer connected", Severity.Success);
+    // }
 
     public void Dispose()
     {
