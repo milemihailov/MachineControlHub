@@ -5,7 +5,7 @@
 <MudText Class="pr-9" Typo="Typo.h6" Color="@(printerManager.ActivePrinter.SerialConnection.IsConnected ? Color.Tertiary : Color.Error)">@printerManager.ActivePrinter.Name</MudText>
 
 
-<MudMenu Class="pr-12" Icon="@Icons.Material.Filled.AdUnits">
+<MudMenu Class="pr-12" Icon="@Icons.Material.Filled.Cable">
     <ChildContent>
         @foreach (var bs in printerManager.Printers.Values)
         {

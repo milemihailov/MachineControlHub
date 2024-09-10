@@ -15,24 +15,25 @@ namespace WebUI.Data
 {
     public class PrinterDataService
     {
-        public const string PRINTER_DATA_PATH = "printers.json";
-        public const string PREHEATING_PROFILES_PATH = "preheatingProfiles.json";
+        public const string PRINTERS_JSON_PATH = "printers.json";
+        public const string PREHEATING_PROFILES_JSON_PATH = "preheatingProfiles.json";
         public const string SELECTED_PRINTER_SETTINGS_PATH = "selectedPrinter.json";
         public const string PRINT_HISTORY_PATH = "printHistory.json";
 
-        const string _sTEPS_PER_UNIT_PATTERN = @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
-        const string _mAX_FEEDRATES_PATTERN = @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
-        const string _mAX_ACCELERATIONS_PATTERN = @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
-        const string _pRINT_RETRACT_TRAVEL_ACCELERATION_PATTERN = @"M204 P(\d+\.?\d*) R(\d+\.?\d*) T(\d+\.?\d*)";
-        const string _aDVANCED_SETTINGS_PATTERN = @"M205 B(\d+\.?\d*) S(\d+\.?\d*) T(\d+\.?\d*) J(\d+\.?\d*)";
-        const string _oFFSET_SETTINGS_PATTERN = @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)";
-        const string _aUTO_BED_LEVELING_PATTERN = @"M420 S(\d) Z(\d+\.?\d*)";
-        const string _z_PROBE_OFFSETS_PATTERN = @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)";
-        const string _bED_VOLUME_PATTERN = @"Max\s*:\s*X(\d+\.?\d*)\s*Y(\d+\.?\d*)\s*Z(\d+\.?\d*)";
+        const string _sTEPS_PER_UNIT_VALUES_PATTERN = @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _mAX_FEEDRATE_VALUES_PATTERN = @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _mAX_ACCELERATION_VALUES_PATTERN = @"M201 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
+        const string _pRINT_RETRACT_TRAVEL_ACCELERATION_VALUES_PATTERN = @"M204 P(\d+\.?\d*) R(\d+\.?\d*) T(\d+\.?\d*)";
+        const string _aDVANCED_SETTINGS_VALUES_PATTERN = @"M205 B(\d+\.?\d*) S(\d+\.?\d*) T(\d+\.?\d*) J(\d+\.?\d*)";
+        const string _oFFSET_VALUES_PATTERN = @"M206 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*)";
+        const string _aUTO_BED_LEVELING_VALUES_PATTERN = @"M420 S(\d) Z(\d+\.?\d*)";
+        const string _z_PROBE_OFFSETS_VALUES_PATTERN = @"M851 X(-?\d+\.?\d*) Y(-?\d+\.?\d*) Z(-?\d+\.?\d*)";
+        const string _mAX_BED_VOLUME_PATTERN = @"Max\s*:\s*X(\d+\.?\d*)\s*Y(\d+\.?\d*)\s*Z(\d+\.?\d*)";
 
 
         public List<PreheatingProfiles> PreheatingProfiles { get; set; } = new List<PreheatingProfiles>();
         public List<CurrentPrintJob> PrintHistory { get; set; } = new List<CurrentPrintJob>();
+        public List<PrinterHead> PrinterHeads { get; set; }
 
         public void AddPrintJobToHistory(Printer printer)
         {
@@ -77,13 +78,13 @@ namespace WebUI.Data
         {
             PreheatingProfiles.Add(printer.PreheatingProfiles);
             printer.PreheatingProfiles = new PreheatingProfiles();
-            SavePrinterData(PREHEATING_PROFILES_PATH, PreheatingProfiles);
+            SavePrinterData(PREHEATING_PROFILES_JSON_PATH, PreheatingProfiles);
         }
 
         public void DeletePreheatingProfile(PreheatingProfiles profile)
         {
             PreheatingProfiles.Remove(profile);
-            SavePrinterData(PREHEATING_PROFILES_PATH, PreheatingProfiles);
+            SavePrinterData(PREHEATING_PROFILES_JSON_PATH, PreheatingProfiles);
         }
 
         public void StartPreheating(PreheatingProfiles profile, Printer printer)
@@ -130,12 +131,12 @@ namespace WebUI.Data
             return default(T);
         }
 
-        public void RequestPrinterSettings(Printer printer)
+        public void RequestPrinterSettingsReport(Printer printer)
         {
             printer.SerialConnection.Write(CommandMethods.BuildReportSettings());
         }
 
-        public void RequestFirmwareSettings(Printer printer)
+        public void RequestFirmwareReport(Printer printer)
         {
             printer.SerialConnection.Write("M115");
             printer.SerialConnection.Write("M569");
@@ -258,7 +259,7 @@ namespace WebUI.Data
 
         public void GetStepsPerUnit(string input, Printer printer)
         {
-            var match = Regex.Match(input, _sTEPS_PER_UNIT_PATTERN);
+            var match = Regex.Match(input, _sTEPS_PER_UNIT_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -271,7 +272,7 @@ namespace WebUI.Data
 
         public void GetMaximumFeedrates(string input, Printer printer)
         {
-            var match = Regex.Match(input, _mAX_FEEDRATES_PATTERN);
+            var match = Regex.Match(input, _mAX_FEEDRATE_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -284,7 +285,7 @@ namespace WebUI.Data
 
         public void GetMaximumAccelerations(string input, Printer printer)
         {
-            var match = Regex.Match(input, _mAX_ACCELERATIONS_PATTERN);
+            var match = Regex.Match(input, _mAX_ACCELERATION_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -297,7 +298,7 @@ namespace WebUI.Data
 
         public void GetPrintRetractTravelAcceleration(string input, Printer printer)
         {
-            var match = Regex.Match(input, _pRINT_RETRACT_TRAVEL_ACCELERATION_PATTERN);
+            var match = Regex.Match(input, _pRINT_RETRACT_TRAVEL_ACCELERATION_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -309,7 +310,7 @@ namespace WebUI.Data
 
         public void GetStartingAccelerations(string input, Printer printer)
         {
-            var match = Regex.Match(input, _aDVANCED_SETTINGS_PATTERN);
+            var match = Regex.Match(input, _aDVANCED_SETTINGS_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -322,7 +323,7 @@ namespace WebUI.Data
 
         public void GetOffsetSettings(string input, Printer printer)
         {
-            var match = Regex.Match(input, _oFFSET_SETTINGS_PATTERN);
+            var match = Regex.Match(input, _oFFSET_VALUES_PATTERN);
 
             if (match.Success)
             {
@@ -334,7 +335,7 @@ namespace WebUI.Data
 
         public void GetAutoBedLevelingSettings(string input, Printer printer)
         {
-            var match = Regex.Match(input, _aUTO_BED_LEVELING_PATTERN);
+            var match = Regex.Match(input, _aUTO_BED_LEVELING_VALUES_PATTERN);
             if (match.Success)
             {
                 printer.HasAutoBedLevel = (int)double.Parse(match.Groups[1].Value) == 1;
@@ -366,7 +367,7 @@ namespace WebUI.Data
 
         public void GetZProbeOffsets(string input, Printer printer)
         {
-            var match = Regex.Match(input, _z_PROBE_OFFSETS_PATTERN);
+            var match = Regex.Match(input, _z_PROBE_OFFSETS_VALUES_PATTERN);
             if (match.Success)
             {
                 printer.Head.XProbeOffset = double.Parse(match.Groups[1].Value);
@@ -762,7 +763,7 @@ namespace WebUI.Data
         {
             if (input != null)
             {
-                var match = Regex.Match(input, _bED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
+                var match = Regex.Match(input, _mAX_BED_VOLUME_PATTERN, RegexOptions.IgnoreCase);
                 if (match.Success)
                 {
                     printer.Bed.XSize = (int)double.Parse(match.Groups[1].Value);

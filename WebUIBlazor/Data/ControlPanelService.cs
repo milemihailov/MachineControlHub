@@ -215,18 +215,6 @@ namespace WebUI.Data
         /// <param name="printer">The printer object containing the serial connection.</param>
         public void UpdateParagraph(string input, Printer printer)
         {
-            double value;
-
-            // Check if the message matches the fan speed pattern
-            Match match = Regex.Match(input, _fAN_PATTERN);
-            if (match.Success)
-            {
-                // Extract the fan speed value and calculate its percentage
-                value = double.Parse(match.Groups[1].Value);
-                CalculateFanSpeedIntoPercentage(value);
-                input = $"Fan Speed: {FanSpeedInPercentage}%\n";
-            }
-
             // Filter out SD card related messages if ShowSDMessages is false
             if (!ShowSDMessages && (input.Contains("Not SD printing") || input.Contains("printing byte"))) 
             {
@@ -270,6 +258,18 @@ namespace WebUI.Data
                     // Join the remaining lines back into the ConsoleOutput string
                     ConsoleOutput = string.Join("\n", lines) + "\n";
                 }
+            }
+        }
+
+        public void GetFanSpeed(string input)
+        {
+            // Check if the message matches the fan speed pattern
+            Match match = Regex.Match(input, _fAN_PATTERN);
+
+            if (match.Success)
+            {
+                // Extract the fan speed value and calculate its percentage
+                CalculateFanSpeedIntoPercentage(double.Parse(match.Groups[1].Value));
             }
         }
 

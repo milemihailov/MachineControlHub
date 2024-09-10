@@ -9,6 +9,7 @@
 @inject BackgroundTimer background
 @inject PrinterManagerService printerManager
 @inject BedLevelingService levelBed
+@inject ControlPanelService ControlPanelService
 
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -30,7 +31,7 @@
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
 
     <!-- Print Controls and Progress ------------------------------------------------->
-    <MudItem Style="width:100%;" xs="12" sm="12" md="12" lg="5" Class="pl-6 mr-0 pr-0 pt-10">
+    <MudItem Style="width:100%;" xs="12" sm="12" md="12" lg="4" Class="pl-6 mr-0 pr-0 pt-10 mb-8">
 
         <!-- Container for controlling print operations -->
         <ContainerSpaceBetween>
@@ -48,7 +49,7 @@
             }
             else
             {
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="ConfirmStartAsync">Start</MudButton>
+                <MudButton Disabled="@(printerManager.ActivePrinter.MediaAttached ? false : true )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="ConfirmStartAsync">Start</MudButton>
 
                 <!-- Button to pause printing -->
                 <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.PausePrint(printerManager.ActivePrinter)">Pause</MudButton>
@@ -80,38 +81,42 @@
 
             <!-- MudExpansionPanel for displaying uploaded files -->
             <MudItem xs="12" md="8" lg="8">
-                <MudExpansionPanel Disabled="@(printerManager.ActivePrinter.MediaAttached || PrintManager.DriveLetter == null)" Text="Uploaded Files">
-                    @if (printerManager.ActivePrinter.SerialConnection != null)
+                <MudExpansionPanel>
+                    @*                     @if (printerManager.ActivePrinter.SerialConnection != null)
+                    { *@
+                    @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
                     {
-                        @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
-                        {
-                            <MudListItem>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <!-- Displaying file name -->
-                                    <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
-                                    <!-- Displaying file size -->
-                                    <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
-                                    <!-- Progress indicator -->
-                                    <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
-                                    <!-- Button to start adding file to media -->
-                                    <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
-                                </div>
-                            </MudListItem>
-                        }
+                        <MudListItem>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <!-- Displaying file name -->
+                                <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
+                                <!-- Displaying file size -->
+                                <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                                <!-- Progress indicator -->
+                                <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
+                                <!-- Button to start adding file to media -->
+                                <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
+                            </div>
+                        </MudListItem>
                     }
+                    @* } *@
                 </MudExpansionPanel>
             </MudItem>
         </MudGrid>
 
         <!-- Grid for media control buttons -->
         <MudGrid Justify="Justify.SpaceAround">
-            <MudItem xs="6" lg="6" Class="px-0">
+            <MudItem xs="6" md="4" lg="4" Class="px-0">
                 <!-- Button to release media -->
                 <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)">Release Media</MudButton>
             </MudItem>
-            <MudItem xs="6" lg="6" Class="px-0">
+            <MudItem xs="6" md="4" lg="4" Class="px-0">
                 <!-- Button to attach media -->
                 <MudButton FullWidth="true" Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}">Attach Media</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="4" lg="4" Class="px-0">
+                <!-- Button to attach media -->
+                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)">Transfer to SD</MudButton>
             </MudItem>
         </MudGrid>
 
@@ -167,7 +172,7 @@
             <ContainerSpaceBetween>
                 <MudText>Elapsed print time:</MudText>
                 <MudText>
-                    @printerManager.ActivePrinter.CurrentPrintJob.stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+                    @printerManager.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
                 </MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
@@ -199,16 +204,30 @@
     </MudItem>
 
     <!-- Temperatures ---------------------------------------------------------------->
-    <MudItem xs="12" sm="12" md="12" lg="7" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
+    <MudItem xs="12" sm="12" md="12" lg="8" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
         <!-- Container for controlling temperature settings -->
         <MudGrid>
-            <MudItem xs="12" sm="12" md="12" lg="12">
+            <!-- Temperature Graph ----------------------------------------------------------->
+            <MudItem xs="12" md="6" lg="6" Class="pa-0 mr-0">
+                <!-- Centering div for the MudChart component -->
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <!-- MudChart component displaying a line chart -->
+                    <MudChart ChartType="ChartType.Line"
+                              ChartSeries="@PrintManager.Series"
+                              @bind-SelectedIndex="PrintManager.Index"
+                              XAxisLabels="@PrintManager.XAxisLabels"
+                              Width="100%"
+                              Height="350px"
+                              ChartOptions="PrintManager.Options" />
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="6" lg="6">
                 <!-- Grid for displaying hotend temperature settings -->
                 <MudGrid Class="pb-6">
                     <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                         <!-- Container with text for current hotend temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Hotend Temperature:</MudText>
+                            <MudText>Current Hotend:</MudText>
                             <MudText Style="display:flex; align-items:center;">
                                 @if (HotendTemperatureService.CurrentHotendTemp < HotendTemperatureService.TargetHotendTemp)
                                 {
@@ -222,7 +241,7 @@
                         </ContainerSpaceBetween>
                         <!-- Container with text for target hotend temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Hotend Temperature:</MudText>
+                            <MudText>Target Hotend:</MudText>
                             <MudText>@HotendTemperatureService.TargetHotendTemp</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
@@ -230,7 +249,7 @@
                         <MudGrid Style="align-items: center;">
                             <!-- MudNumericField for setting hotend temperature -->
                             <MudItem xs="12" sm="6" md="12">
-                                <MudNumericField @bind-Value="HotendTemperatureService.SetHotendTemp" Label="Set Hotend Temperature" Immediate="true" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="HotendTemperatureService.SetHotendTemp" Label="Set Hotend" Immediate="true" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
@@ -249,7 +268,7 @@
                     <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                         <!-- Container with text for current bed temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Bed Temperature:</MudText>
+                            <MudText>Current Bed:</MudText>
                             <MudText Style="display:flex; align-items:center;">
                                 @if (BedTemperatureService.CurrentBedTemp < BedTemperatureService.TargetBedTemp)
                                 {
@@ -263,7 +282,7 @@
                         </ContainerSpaceBetween>
                         <!-- Container with text for target bed temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Bed Temperature:</MudText>
+                            <MudText>Target Bed:</MudText>
                             <MudText>@BedTemperatureService.TargetBedTemp</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
@@ -271,7 +290,7 @@
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting bed temperature -->
-                                <MudNumericField @bind-Value="BedTemperatureService.SetBedTemp" Label="Set Bed Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="BedTemperatureService.SetBedTemp" Label="Set Bed" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
@@ -290,7 +309,7 @@
                     <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
                         <!-- Container with text for current chamber temperature -->
                         <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Chamber Temperature:</MudText>
+                            <MudText>Current Chamber:</MudText>
                             <MudText Style="display:flex; align-items:center;">
                                 @if (ChamberTemperatureService.CurrentChamberTemp < ChamberTemperatureService.TargetChamberTemp)
                                 {
@@ -304,7 +323,7 @@
                         </ContainerSpaceBetween>
                         <!-- Container with text for target chamber temperature -->
                         <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Chamber Temperature:</MudText>
+                            <MudText>Target Chamber:</MudText>
                             <MudText>@ChamberTemperatureService.TargetChamberTemp</MudText>
                         </ContainerSpaceBetween>
                     </MudItem>
@@ -312,7 +331,7 @@
                         <MudGrid Style="align-items: center;">
                             <MudItem xs="12" sm="6" md="12">
                                 <!-- MudNumericField for setting chamber temperature -->
-                                <MudNumericField @bind-Value="ChamberTemperatureService.SetChamberTemp" Label="Set Chamber Temperature" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
+                                <MudNumericField @bind-Value="ChamberTemperatureService.SetChamberTemp" Label="Set Chamber" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
                                 <ContainerSpaceBetween Class="ma-0 pa-0">
@@ -326,6 +345,10 @@
                     </MudItem>
                     <MudDivider />
                 </MudGrid>
+
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+
                 <!-- Buttons for filament operations -->
                 <MudGrid>
                     <!-- Button to change filament -->
@@ -341,6 +364,32 @@
                         <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">Unload Filament</MudButton>
                     </MudItem>
                 </MudGrid>
+            </MudItem>
+
+        </MudGrid>
+    </MudItem>
+
+    <!-- Bed Leveling ---------------------------------------------------------------->
+    @if (printerManager.ActivePrinter.HasAutoBedLevel)
+    {
+        <BedLevel />
+    }
+
+    <!-- Temperature Graph ----------------------------------------------------------->
+    <MudItem xs="12" md="6" lg="6" Class="pa-8 mr-0">
+        <MudGrid>
+            <MudItem xs="12" md="12" lg="6">
+                <MudSwitch Label="Fan On/Off" @bind-Value="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}" Color="Color.Success" Class="mr-n2 mb-6" />
+                <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(printerManager.ActivePrinter.MotionSettings.PrintSpeed, printerManager.ActivePrinter)">Print Speed: @printerManager.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(printerManager.ActivePrinter.MotionSettings.PrintFlow, printerManager.ActivePrinter)">Print Flow: @printerManager.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
+            </MudItem>
+            <MudItem xs="12" md="12" lg="6">
+                <div>
+                    <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="ControlPanelService.Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="12">
 
                 <!-- Preheating Profiles -------------------------------------------------------------->
                 <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)" EnableSwipeGesture="true" Elevation="1">
@@ -379,30 +428,37 @@
             </MudItem>
         </MudGrid>
     </MudItem>
-
-    <!-- Bed Leveling ---------------------------------------------------------------->
-    @if (printerManager.ActivePrinter.HasAutoBedLevel)
-    {
-        <BedLevel />
-    }
-
-    <!-- Temperature Graph ----------------------------------------------------------->
-    <MudItem xs="12" md="6" Class="pa-0 mr-0">
-        <!-- Centering div for the MudChart component -->
-        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-            <!-- MudChart component displaying a line chart -->
-            <MudChart ChartType="ChartType.Line"
-                      ChartSeries="@PrintManager.Series"
-                      @bind-SelectedIndex="PrintManager.Index"
-                      XAxisLabels="@PrintManager.XAxisLabels"
-                      Width="100%"
-                      Height="350px"
-                      ChartOptions="PrintManager.Options" />
-        </div>
-    </MudItem>
 </MudGrid>
 
+
 @code {
+
+    public List<ChartSeries> Series { get; set; }
+    public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
+
+    public async void PlayTune(string content)
+    {
+
+        await Task.Run(() =>
+        {
+            using (StringReader reader = new StringReader(content))
+            {
+                printerManager.ActivePrinter.SerialConnection.Write(content);
+            }
+        });
+    }
+
+    public async void SendFileToSD(string file)
+    {
+        printerManager.ActivePrinter.IsBusy = true;
+        await printerManager.ActivePrinter.PrintService.TransferFileToSD(file, "name.gco");
+        printerManager.ActivePrinter.IsBusy = false;
+    }
+
+    public void OnRefreshProgressState()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     // Buffer to accumulate file content until processing is triggered
     string FileContentBuffer { get; set; } = "";
@@ -424,8 +480,31 @@
         background.FiveSecondsElapsed += OnFiveSecondsElapsed;
         printerManager.ActivePrinterChanged += OnSelectedPrinter;
         printerManager.InputReceived += OnUpdate;
+        printerManager.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
+
+
+        // request print flow value
+        PrinterDataHandler.RequestPrintFlow(printerManager.ActivePrinter);
+
+        // request print speed value
+        PrinterDataHandler.RequestPrintSpeed(printerManager.ActivePrinter);
         // printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
         // printerManager.ActivePrinter.SerialConnection.Connected += OnConnecting;
+
+        /// Initialize the chart for the fan speed, print speed, and print flow values
+        Series = new List<ChartSeries>
+        {
+            new ChartSeries()
+            {
+                Name = "Fan Speed",
+                Data = new double[]
+                {
+                    ControlPanelService.FanSpeedInPercentage,
+                    printerManager.ActivePrinter.MotionSettings.PrintSpeed,
+                    printerManager.ActivePrinter.MotionSettings.PrintFlow
+                }
+            },
+        };
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -439,11 +518,11 @@
                 printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
                 printerManager.ActivePrinter.SerialConnection.Write("M304");
 
-                PrinterDataHandler.RequestFirmwareSettings(printerManager.ActivePrinter);
+                PrinterDataHandler.RequestFirmwareReport(printerManager.ActivePrinter);
             }
 
             // Load preheating profiles from the specified path
-            PrinterDataHandler.PreheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_PATH);
+            PrinterDataHandler.PreheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_JSON_PATH);
         }
     }
 
@@ -488,54 +567,81 @@
     /// <param name="input">The input received from the printer.</param>
     public async void OnUpdate(string input)
     {
-        // Check if the printer is connected and has printers
-        if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
+        if (!printerManager.ActivePrinter.IsBusy)
         {
-            // Accumulate file content
-            FileContentBuffer += input;
-
-            // get the list of files on the SD card
-            if (input.Contains("End file"))
+            // Check if the printer is connected and has printers
+            if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
             {
-                // remove empty lines from the file content buffer
-                SDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                // Accumulate file content
+                FileContentBuffer += input;
 
-                // Add the list of files to the SDFiles list
-                PrintManager.ListSDFiles(SDFiles, printerManager.ActivePrinter);
+                // get the list of files on the SD card
+                if (input.Contains("End file"))
+                {
+                    // remove empty lines from the file content buffer
+                    SDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
 
-                // Clear the file content buffer
-                FileContentBuffer = "";
-            }
+                    // Add the list of files to the SDFiles list
+                    PrintManager.ListSDFiles(SDFiles, printerManager.ActivePrinter);
 
-            // get the name of the file being printed
-            PrintManager.GetPrintingFileName(input, printerManager.ActivePrinter);
+                    // Clear the file content buffer
+                    FileContentBuffer = "";
+                }
 
-            // parse the current hotend, bed and chamber temperatures
-            await HotendTemperatureService.ParseCurrentHotendTemperature(input, printerManager.ActivePrinter);
-            await BedTemperatureService.ParseCurrentBedTemperature(input, printerManager.ActivePrinter);
-            if (printerManager.ActivePrinter.HasChamber)
+                // get the name of the file being printed
+                PrintManager.GetPrintingFileName(input, printerManager.ActivePrinter);
+
+                // parse the current hotend, bed and chamber temperatures
+                await HotendTemperatureService.ParseCurrentHotendTemperature(input, printerManager.ActivePrinter);
+                await BedTemperatureService.ParseCurrentBedTemperature(input, printerManager.ActivePrinter);
+                if (printerManager.ActivePrinter.HasChamber)
+                {
+                    await ChamberTemperatureService.ParseCurrentChamberTemperature(input, printerManager.ActivePrinter);
+                }
+
+                // Ensure the graph data does not exceed 30 entries by removing the oldest entries
+                if (PrintingService.HotendGraph.Count >= 30)
+                {
+                    PrintingService.HotendGraph.RemoveAt(0);
+                    PrintingService.BedGraph.RemoveAt(0);
+                }
+
+                // Add the current temperature data to the graph
+                PrintingService.HotendGraph.Add(HotendTemperatureService.CurrentHotendTemp);
+                PrintingService.BedGraph.Add(BedTemperatureService.CurrentBedTemp);
+
+                // Update the graph data with the latest values
+                PrintManager.UpdateGraphData();
+
+                // Parse the firmware settings
+                PrinterDataHandler.OnUpdateSettings(input, printerManager.ActivePrinter);
+
+
+                /// Update the print flow, print speed, and fan speed chart values
+                Series = new List<ChartSeries>
+    {
+        new ChartSeries()
+        {
+            Name = "Fan Speed",
+            Data = new double[]
             {
-                await ChamberTemperatureService.ParseCurrentChamberTemperature(input, printerManager.ActivePrinter);
+                ControlPanelService.FanSpeedInPercentage,
+                printerManager.ActivePrinter.MotionSettings.PrintSpeed,
+                printerManager.ActivePrinter.MotionSettings.PrintFlow
             }
+        },
+    };
 
-            // Ensure the graph data does not exceed 30 entries by removing the oldest entries
-            if (PrintingService.HotendGraph.Count >= 30)
-            {
-                PrintingService.HotendGraph.RemoveAt(0);
-                PrintingService.BedGraph.RemoveAt(0);
+                // update the print flow value
+                PrinterDataHandler.GetPrintFlow(input, printerManager.ActivePrinter);
+
+                // update the print speed value
+                PrinterDataHandler.GetPrintSpeed(input, printerManager.ActivePrinter);
+
+                ControlPanelService.GetFanSpeed(input);
+
+                await InvokeAsync(StateHasChanged);
             }
-
-            // Add the current temperature data to the graph
-            PrintingService.HotendGraph.Add(HotendTemperatureService.CurrentHotendTemp);
-            PrintingService.BedGraph.Add(BedTemperatureService.CurrentBedTemp);
-
-            // Update the graph data with the latest values
-            PrintManager.UpdateGraphData();
-
-            // Parse the firmware settings
-            PrinterDataHandler.OnUpdateSettings(input, printerManager.ActivePrinter);
-
-            await InvokeAsync(StateHasChanged);
         }
     }
 

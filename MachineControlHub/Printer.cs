@@ -1,4 +1,5 @@
-﻿using MachineControlHub.Bed;
+﻿using System.Text.RegularExpressions;
+using MachineControlHub.Bed;
 using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
@@ -176,6 +177,7 @@ namespace MachineControlHub
         public IPrinterConnection PrinterConnection { get; set; }
 
         public SerialConnection SerialConnection { get; set; }
+
     }
 
 }

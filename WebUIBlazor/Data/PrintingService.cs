@@ -87,12 +87,14 @@ namespace WebUI.Data
             if (printer.HasLongFilenameSupport)
             {
                 SDFiles = printer.PrintService.ListLongNameSDFiles(inputText);
+                printer.MediaAttached = true;
             }
 
             // If the printer's firmware does not support long filenames, use the standard method
             else
             {
                 SDFiles = printer.PrintService.ListSDFiles(inputText);
+                printer.MediaAttached = true;
             }
         }
 
@@ -109,7 +111,7 @@ namespace WebUI.Data
         public void FormatTotalPrintTime(Printer printer)
         {
             // Calculate the elapsed time from the print job's stopwatch
-            TimeSpan elapsed = TimeSpan.FromMilliseconds(printer.CurrentPrintJob.stopwatch.ElapsedMilliseconds);
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(printer.CurrentPrintJob.Stopwatch.ElapsedMilliseconds);
 
             // Format the elapsed time as a string in the format "HH:mm:ss"
             printer.CurrentPrintJob.TotalPrintTime = string.Format($"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
@@ -309,6 +311,7 @@ namespace WebUI.Data
 
             // Clear the drive letter and SD files list
             DriveLetter = null;
+            FileToPrint = null;
             SDFiles.Clear();
 
             // Update the media attached status

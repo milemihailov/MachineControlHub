@@ -14,6 +14,16 @@
     </MudProgressLinear>
 }
 
+@if (printerManager.ActivePrinter.PrintService.TransferToSD)
+{
+    <MudProgressLinear Color="Color.Success" Rounded="true" Size="Size.Large" Value="printerManager.ActivePrinter.PrintService.TransferToSDProgress" Class="pb-9">
+        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+            <b>Transfer to SD: @printerManager.ActivePrinter.PrintService.TransferToSDProgress % Time elapsed: (@printerManager.ActivePrinter.PrintService.TransferToSDTimeElapsed) Time Remaining: (@printerManager.ActivePrinter.PrintService.TransferToSDRemainingTime)</b>
+        </MudText>
+    </MudProgressLinear>
+
+}
+
 <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
     <MudText Typo="Typo.h6" Color="Color.Primary">@printerManager.Notification</MudText>
 </MudAlert>
@@ -24,6 +34,7 @@
     {
         printerManager.InputReceived += OnMessageReceived;
         printerManager.ActivePrinterChanged += OnPrinterChanged;
+        printerManager.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
     }
 
     public void OnMessageReceived(string message)
@@ -37,6 +48,10 @@
         printerManager.ActivePrinter.CurrentPrintJob.PrintProgress = 0;
     }
 
+    public void OnRefreshProgressState()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     public void Dispose()
     {

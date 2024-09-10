@@ -14,7 +14,7 @@
 <MudPaper Class="my-0 pt-5" Elevation="0" Height="95vh" Width="100vw">
     <div style="display: flex; justify-content:center; padding-top:10px; padding-bottom: 10px; padding-left: 20px;">
         <MudTooltip Text="Refresh if some settings are missing">
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {PrinterDataService.RequestPrinterSettings(PrinterManager.ActivePrinter); PrinterDataService.RequestFirmwareSettings(PrinterManager.ActivePrinter);}" />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {PrinterDataService.RequestPrinterSettingsReport(PrinterManager.ActivePrinter); PrinterDataService.RequestFirmwareReport(PrinterManager.ActivePrinter);}" />
         </MudTooltip>
         <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary"> Printer Settings</MudText>
         <MudTooltip Text="Save Changes to EEPROM">
@@ -890,8 +890,8 @@
         {
             if (PrinterManager.Printers != null && PrinterManager.Printers.Count > 0)
             {
-                PrinterDataService.RequestPrinterSettings(PrinterManager.ActivePrinter);
-                PrinterDataService.RequestFirmwareSettings(PrinterManager.ActivePrinter);
+                PrinterDataService.RequestPrinterSettingsReport(PrinterManager.ActivePrinter);
+                PrinterDataService.RequestFirmwareReport(PrinterManager.ActivePrinter);
             }
         }
     }

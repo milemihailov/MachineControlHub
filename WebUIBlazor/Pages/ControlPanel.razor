@@ -89,14 +89,6 @@
                                 <MudButton Style="white-space: nowrap;" FullWidth="true" Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.ZSteppersAutoAlignment(PrinterManagerService.ActivePrinter)">Align Z</MudButton>
                             </MudItem>
                         </MudGrid>
-
-                        <MudSwitch Label="Fan On/Off" @bind-Value="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter);}" Color="Color.Success" Class="mr-n2 mb-6" />
-                        <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
-                        <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed, PrinterManagerService.ActivePrinter)">Print Speed: @PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
-                        <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow, PrinterManagerService.ActivePrinter)">Print Flow: @PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
-                        <div>
-                            <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="ControlPanelService.Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
-                        </div>
                     </MudContainer>
                 </div>
             </MudContainer>
@@ -123,8 +115,7 @@
 </MudGrid>
 
 @code {
-    public List<ChartSeries> Series { get; set; }
-    public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
+
     MudChip Selected { get; set; }
     private PlotlyChart Chart { get; set; }
     private Config Config { get; set; }
@@ -141,32 +132,13 @@
             // request x, y, z max values to set the interactive bed size
             PrinterDataService.RequestSoftwareEndstopSettings(PrinterManagerService.ActivePrinter);
 
-            // request print flow value
-            PrinterDataService.RequestPrintFlow(PrinterManagerService.ActivePrinter);
-
-            // request print speed value
-            PrinterDataService.RequestPrintSpeed(PrinterManagerService.ActivePrinter);
-
             // request current position
             PrinterDataService.RequestCurrentPositions(PrinterManagerService.ActivePrinter);
 
             PrinterManagerService.InputReceived += OnUpdate;
         }
 
-        /// Initialize the chart for the fan speed, print speed, and print flow values
-        Series = new List<ChartSeries>
-        {
-            new ChartSeries()
-            {
-                Name = "Fan Speed",
-                Data = new double[]
-                {
-                    ControlPanelService.FanSpeedInPercentage,
-                    PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
-                    PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
-                }
-            },
-        };
+
 
         /// Initialize the interactive bed
         Config = new Config
@@ -236,20 +208,6 @@
     /// <param name="input"></param>
     public async void OnUpdate(string input)
     {
-        /// Update the print flow, print speed, and fan speed chart values
-        Series = new List<ChartSeries>
-    {
-        new ChartSeries()
-        {
-            Name = "Fan Speed",
-            Data = new double[]
-            {
-                ControlPanelService.FanSpeedInPercentage,
-                PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
-                PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
-            }
-        },
-    };
         await Task.Run(() =>
         {
             // update the interactive bed size
@@ -257,12 +215,6 @@
 
             // update the current positions
             PrinterDataService.GetCurrentPositions(input, PrinterManagerService.ActivePrinter);
-
-            // update the print flow value
-            PrinterDataService.GetPrintFlow(input, PrinterManagerService.ActivePrinter);
-
-            // update the print speed value
-            PrinterDataService.GetPrintSpeed(input, PrinterManagerService.ActivePrinter);
 
             // update the console output
             ControlPanelService.UpdateParagraph(input, PrinterManagerService.ActivePrinter);

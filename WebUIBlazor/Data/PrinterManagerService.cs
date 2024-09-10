@@ -132,47 +132,50 @@ namespace WebUI.Data
         /// </remarks>
         private async Task ReadFromPort(Printer printer, CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            if (!printer.IsBusy)
             {
-                if (printer.SerialConnection != null && printer.SerialConnection.HasData())
+                while (!token.IsCancellationRequested)
                 {
-                    printer.SerialConnection.IsConnected = true;
-                    string readData = await printer.SerialConnection.ReadAsync();
-
-                    if (readData.Contains("echo:busy: processing"))
+                    if (printer.SerialConnection != null && printer.SerialConnection.HasData())
                     {
-                        printer.IsBusy = true;
-                        printer.CancellationTokenSource?.Cancel();
-                        printer.CancellationTokenSource = new CancellationTokenSource();
-                        var resetToken = printer.CancellationTokenSource.Token;
-                        await Task.Run(async () =>
+                        printer.SerialConnection.IsConnected = true;
+                        string readData = await printer.SerialConnection.ReadAsync();
+
+                        if (readData.Contains("echo:busy: processing"))
                         {
-                            try
+                            printer.IsBusy = true;
+                            printer.CancellationTokenSource?.Cancel();
+                            printer.CancellationTokenSource = new CancellationTokenSource();
+                            var resetToken = printer.CancellationTokenSource.Token;
+                            await Task.Run(async () =>
                             {
-                                await Task.Delay(2000, resetToken);
-                                printer.IsBusy = false;
-                            }
-                            catch (TaskCanceledException)
-                            {
-                                // Task was canceled, do nothing
-                            }
-                        }, resetToken);
+                                try
+                                {
+                                    await Task.Delay(2000, resetToken);
+                                    printer.IsBusy = false;
+                                }
+                                catch (TaskCanceledException)
+                                {
+                                    // Task was canceled, do nothing
+                                }
+                            }, resetToken);
+                        }
+
+                        string input = $"{readData} \n";
+                        PortData[printer.SerialConnection.PortName] = input;
+
+                        if (printer == ActivePrinter)
+                        {
+                            ParseNotifications(input);
+                            InputReceived?.Invoke(input);
+                            Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                        }
+
+                        printer.BedLevelData.OnBedLevelUpdate(input);
+                        await printer.CurrentPrintJob.EstimateTimeRemainingAsync();
                     }
-
-                    string input = $"{readData} \n";
-                    PortData[printer.SerialConnection.PortName] = input;
-
-                    if (printer == ActivePrinter)
-                    {
-                        ParseNotifications(input);
-                        InputReceived?.Invoke(input);
-                        Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
-                    }
-
-                    printer.BedLevelData.OnBedLevelUpdate(input);
-                    await printer.CurrentPrintJob.EstimateTimeRemainingAsync();
+                    await Task.Delay(600, token);
                 }
-                await Task.Delay(600, token);
             }
         }
 

@@ -19,7 +19,7 @@ namespace MachineControlHub.Print
         const char _nEW_LINE = '\n';
         const char _cARRIAGE_RETURN = '\r';
 
-        public Stopwatch stopwatch = new();
+        public Stopwatch Stopwatch { get; set; } = new();
         private IPrinterConnection Connection {get; set;}
 
         public CurrentPrintJob(IPrinterConnection connection)
@@ -198,18 +198,6 @@ namespace MachineControlHub.Print
                 {
                     EstimatePrintTime = TimeSpan.Zero; // or another default value
                 }
-
-                // Calculate the average printing speed in bytes per second.
-                //var averageSpeed = totalBytesPrinted / totalTimeElapsed.TotalSeconds;
-
-                // Calculate the remaining bytes to be printed.
-                //var remainingBytes = TotalBytes - (PrintProgressRecords.LastOrDefault()?.BytesPrinted ?? 0);
-
-                // Estimate the remaining time in seconds based on the average speed.
-                //double remainingTimeInSeconds = remainingBytes / averageSpeed;
-
-                // Set the estimated print time, rounding to the nearest second.
-                //EstimatePrintTime = TimeSpan.FromSeconds(Math.Round(remainingTimeInSeconds));
             });
         }
 
@@ -224,8 +212,8 @@ namespace MachineControlHub.Print
         /// </summary>
         public void StartStopwatch()
         {
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
+            Stopwatch = new Stopwatch();
+            Stopwatch.Start();
         }
 
         /// <summary>
@@ -233,7 +221,7 @@ namespace MachineControlHub.Print
         /// </summary>
         public void ResetStopwatch()
         {
-            stopwatch.Reset();
+            Stopwatch.Reset();
         }
 
         /// <summary>
@@ -241,7 +229,7 @@ namespace MachineControlHub.Print
         /// </summary>
         public void StopStopwatch()
         {
-            stopwatch.Stop();
+            Stopwatch.Stop();
         }
     }
 }

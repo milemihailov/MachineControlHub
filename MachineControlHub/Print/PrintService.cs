@@ -1,6 +1,7 @@
 ﻿using MachineControlHub.LogErrorHistory;
 using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Print
@@ -11,7 +12,16 @@ namespace MachineControlHub.Print
         const string _gCODE_FILE_EXTENSION = ".gco";
         const string _pRINT_ABORT_MESSAGE = "Print Aborted";
 
-        private IPrinterConnection Connection { get; set;}
+        public double TransferToSDProgress { get; set; }
+        public Stopwatch Stopwatch { get; set; } = new();
+        public string TransferToSDTimeElapsed { get; set; }
+        public string TransferToSDRemainingTime { get; set; }
+        public bool TransferToSD { get; set; }
+
+        public Action RefreshProgressState;
+
+
+        private IPrinterConnection Connection { get; set; }
         public List<(string FileName, string FileContent, long FileSize)> UploadedFiles { get; set; } = new List<(string FileName, string FileContent, long FileSize)>();
 
         public PrintService(IPrinterConnection connection)
@@ -19,7 +29,35 @@ namespace MachineControlHub.Print
             Connection = connection;
         }
 
+        /// <summary>
+        /// Calculate checksum of a line from given input
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        private static int CalculateChecksum(string command)
+        {
+            int checksum = 0;
+            foreach (char c in command)
+            {
+                checksum ^= c; // XOR each character
+            }
+            return checksum;
+        }
 
+        /// <summary>
+        /// Removes unwanted characters from given string
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="charactersToRemove"></param>
+        /// <returns>Empty string</returns>
+        static string RemoveCharacters(string input, string charactersToRemove)
+        {
+            foreach (char c in charactersToRemove)
+            {
+                input = input.Replace(c.ToString(), string.Empty);
+            }
+            return input;
+        }
 
         /// <summary>
         /// Transfers a G-code file to the SD card using a serial connection.
@@ -32,32 +70,123 @@ namespace MachineControlHub.Print
         /// </remarks>
         /// <exception cref="FileNotFoundException">Thrown when the specified file is not found.</exception>
         /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
-        public void TransferFileToSD(string GcodeContent, string fileName)
+        public async Task TransferFileToSD(string GcodeContent, string fileName)
         {
-            try
+            await Task.Run(() =>
             {
-                using (StringReader reader = new StringReader(GcodeContent))
+                try
                 {
-                    string line;
-                    Connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{_gCODE_FILE_EXTENSION}");
+                    TransferToSD = true;
+                    Stopwatch.Reset();
+                    Stopwatch.Start();
 
-                    while ((line = reader.ReadLine()) != null)
+                    // Adds all the content in a list (seemed easier to filter from unwanted characters from the firmware)
+                    List<string> lines = new();
+                    using (StringReader reader = new(GcodeContent))
                     {
-                        Connection.Write(line);
-                        Console.WriteLine(line);
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            if (line.StartsWith(";"))
+                            {
+                                lines.Add("");
+                            }
+                            else
+                            {
+                                lines.Add(line);
+                            }
+                        }
                     }
 
-                    Connection.Write(CommandMethods.BuildStopSDWriteCommand());
+                    // Remove all empty lines after adding
+                    lines.RemoveAll(l => string.IsNullOrWhiteSpace(l));
+
+                    // Set line number and initialize the SD write process
+                    Connection.Write("M110 N0");
+                    Connection.Write($"{CommandMethods.BuildStartSDWriteCommand(fileName)}{_gCODE_FILE_EXTENSION}");
+
+                    int retryCount = 0;
+                    bool success = true;
+
+                    // Sends all lines to the SD attached to printer
+                    for (int i = 1; i < lines.Count; i++)
+                    {
+                        if (lines[i - 1] != string.Empty)
+                        {
+                            // Removes unnessecary characters and then calculates checksum
+                            string cleanedLine = RemoveCharacters(lines[i - 1], ";,");
+                            int checkSum = CalculateChecksum($"N{i} {cleanedLine}");
+
+                            // Formated line to send to the SD
+                            string lineToSend = $"N{i} {cleanedLine}*{checkSum}\n";
+
+                            // Send the line
+                            Connection.Write(lineToSend);
+
+                            // If error when sending a line it will retry to send the error line
+                            string input = Connection.Read();
+                            if (input.Contains("Resend"))
+                            {
+                                Match resendMatch = Regex.Match(input, @"(?<=Resend:\s*)\d+");
+                                if (resendMatch.Success)
+                                {
+                                    int resendLine = int.Parse(resendMatch.Value);
+                                    i = resendLine;
+                                    checkSum = CalculateChecksum($"N{i} {cleanedLine}");
+                                    lineToSend = $"N{resendLine} {cleanedLine}*{checkSum}\n";
+                                    success = false;
+                                }
+                                else
+                                {
+                                    throw new FormatException("Unexpected Resend format: " + input);
+                                }
+                            }
+
+                            // Event to update the progress in the UI
+                            RefreshProgressState?.Invoke();
+
+                            // Progress in percentage
+                            TransferToSDProgress = Math.Round(((double)i / (lines.Count - 1)) * 100, 1);
+
+                            // Time elapsed
+                            TimeSpan TimeElapsed = TimeSpan.FromMilliseconds(Stopwatch.ElapsedMilliseconds);
+                            TransferToSDTimeElapsed = string.Format($"{TimeElapsed.Hours:D2}:{TimeElapsed.Minutes:D2}:{TimeElapsed.Seconds:D2}");
+
+                            // Estimate remaining time
+                            double progressPercentage = (double)i / lines.Count;
+                            double timePerLine = Stopwatch.ElapsedMilliseconds / (double)i; // Time spent per line
+                            double remainingTimeMs = timePerLine * (lines.Count - i); // Estimate remaining time in milliseconds
+                            TimeSpan remainingTime = TimeSpan.FromMilliseconds(remainingTimeMs);
+
+                            // Format the remaining time
+                            TransferToSDRemainingTime = string.Format($"{remainingTime.Hours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}");
+
+                            // Retry up to 3 times
+                            while (!success && retryCount < 3)
+                            {
+                                Connection.Write(lineToSend);
+                                string response = Connection.Read();
+
+                                retryCount++;
+                            }
+                            success = true;
+                            retryCount = 0;
+                        }
+                    }
                 }
-            }
-            catch (FileNotFoundException ex)
-            {
-                Logger.LogError($"File not found. {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"An error occurred: {ex.Message}");
-            }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.LogError($"File not found. {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"An error occurred: {ex.Message}");
+                }
+
+                Connection.Write(CommandMethods.BuildStopSDWriteCommand());
+                Stopwatch.Stop();
+                TransferToSD = false;
+            });
         }
 
 
@@ -84,6 +213,11 @@ namespace MachineControlHub.Print
             Console.WriteLine(_pRINT_ABORT_MESSAGE);
         }
 
+        /// <summary>
+        /// Reads and lists all the files from the media attached to the printer
+        /// </summary>
+        /// <param name="inputText"></param>
+        /// <returns>List of gcode files</returns>
         public List<(string FileName, string FileSize)> ListSDFiles(string inputText)
         {
             string pattern = @"Begin file list([\s\S]+?)End file list";
@@ -114,6 +248,11 @@ namespace MachineControlHub.Print
             return files;
         }
 
+        /// <summary>
+        /// Reads and lists all the files with long names from the media attached to the printer
+        /// </summary>
+        /// <param name="inputText"></param>
+        /// <returns>List of gcode files</returns>
         public List<(string FileName, string FileSize)> ListLongNameSDFiles(string input)
         {
             string pattern = @"(\d+)\s0x[A-Fa-f0-9]+\s(.+?)\r?\n";
@@ -130,5 +269,5 @@ namespace MachineControlHub.Print
         }
     }
 
-    
+
 }
