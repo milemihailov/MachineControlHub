@@ -1,6 +1,6 @@
-﻿using MachineControlHub.Motion;
+﻿using System.Text.RegularExpressions;
+using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
-using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Temps
 {

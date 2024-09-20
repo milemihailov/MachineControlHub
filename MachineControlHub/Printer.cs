@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using MachineControlHub.Bed;
+﻿using MachineControlHub.Bed;
 using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
@@ -111,7 +110,7 @@ namespace MachineControlHub
         /// <summary>
         /// Gets or sets the print head configuration and properties of the printer.
         /// </summary>
-        public List <PrinterHead> Extruders { get; set; }
+        public List<PrinterHead> Extruders { get; set; }
 
         /// <summary>
         /// Gets or sets the camera configuration and properties of the printer.

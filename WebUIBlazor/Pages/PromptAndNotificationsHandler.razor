@@ -1,4 +1,6 @@
-﻿@inject Data.PrinterManagerService printerManager
+﻿@using MachineControlHub.Motion
+@inject Data.PrinterManagerService printerManager
+@inject PrinterDataService PrinterDataService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -11,7 +13,7 @@
 </style>
 
 @code {
-    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true};
+    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true };
 
     protected override void OnInitialized()
     {
@@ -33,13 +35,14 @@
     {
         await InvokeAsync(async () =>
         {
+            // Filament change prompts
             if (input.Contains("Insert filament"))
             {
                 bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Insert filament and click continue!",
-                yesText: "Continue",
-                options: _dialogOptions);
+        "Filament Change",
+        "Insert filament and click continue!",
+        yesText: "Continue",
+        options: _dialogOptions);
 
                 if (result == true)
                 {
@@ -50,10 +53,10 @@
             if (input.Contains("action:prompt_begin Heater Timeout"))
             {
                 bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Heater timeout reheat to continue!",
-                yesText: "Reheat",
-                options: _dialogOptions);
+        "Filament Change",
+        "Heater timeout reheat to continue!",
+        yesText: "Reheat",
+        options: _dialogOptions);
 
                 if (result == true)
                 {
@@ -64,10 +67,10 @@
             if (input.Contains("action:prompt_begin Reheat Done"))
             {
                 bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Reheat done add new filament and click continue!",
-                yesText: "Change",
-                options: _dialogOptions);
+        "Filament Change",
+        "Reheat done add new filament and click continue!",
+        yesText: "Change",
+        options: _dialogOptions);
 
                 if (result == true)
                 {
@@ -78,11 +81,11 @@
             if (input.Contains("action:prompt_button PurgeMore"))
             {
                 bool? result = await DialogService.ShowMessageBox(
-                "Filament Change",
-                "Purge more or continue!",
-                yesText: "Continue", 
-                noText: "Purge More", 
-                options: _dialogOptions);
+        "Filament Change",
+        "Purge more or continue!",
+        yesText: "Continue",
+        noText: "Purge More",
+        options: _dialogOptions);
 
                 if (result == true)
                 {
@@ -92,6 +95,56 @@
                 {
                     printerManager.ActivePrinter.SerialConnection.Write("M876 S0");
                     Snackbar.Add("Purging", Severity.Info);
+                }
+            }
+
+            PrinterDataService.GetCalibratedBedPIDValues(input, printerManager.ActivePrinter);
+            PrinterDataService.GetCalibratedHotendPIDValues(input, printerManager.ActivePrinter);
+
+            //PID tuning prompts
+            if (input.Contains("DEFAULT_bedKd"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+        "Bed PID Autotune",
+        $"Would you like to store the new values and save? Kp: {printerManager.ActivePrinter.BedTemperatures.PIDValues.Proportional}, Ki: {printerManager.ActivePrinter.BedTemperatures.PIDValues.Integral}, Kd: {printerManager.ActivePrinter.BedTemperatures.PIDValues.Derivative}",
+        yesText: "Store values",
+        noText: "Cancel",
+        options: _dialogOptions);
+
+                PrinterDataService.SetBedPidValues(printerManager.ActivePrinter);
+
+                if (result == true)
+                {
+                    PrinterDataService.SetBedPidValues(printerManager.ActivePrinter);
+                    printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
+                    Snackbar.Add("Values stored", Severity.Info);
+                }
+                else
+                {
+                    Snackbar.Add("Not stored", Severity.Info);
+                }
+            }
+
+            if (input.Contains("DEFAULT_Kd"))
+            {
+                bool? result = await DialogService.ShowMessageBox(
+        "Hotend PID Autotune",
+        $"Would you like to store the new values and save? Kp: {printerManager.ActivePrinter.HotendTemperatures.PIDValues.Proportional}, Ki: {printerManager.ActivePrinter.HotendTemperatures.PIDValues.Integral}, Kd: {printerManager.ActivePrinter.HotendTemperatures.PIDValues.Derivative}",
+        yesText: "Store values",
+        noText: "Cancel",
+        options: _dialogOptions);
+
+                PrinterDataService.SetHotendPidValues(printerManager.ActivePrinter);
+
+                if (result == true)
+                {
+                    PrinterDataService.SetHotendPidValues(printerManager.ActivePrinter);
+                    printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
+                    Snackbar.Add("Values stored", Severity.Info);
+                }
+                else
+                {
+                    Snackbar.Add("Not stored", Severity.Info);
                 }
             }
         });

@@ -27,8 +27,8 @@
 
         <MudTabPanel Text="Printer Information">
             <MudGrid Style="width: 100vw;">
-                <MudItem xs="12" md="4" lg="3">
-                    <MudPaper Class="pa-4" Elevation="0">
+                <MudItem xs="12" sm="12" md="4" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="300px" Class="pa-4 px-8" Outlined="true">
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Firmware Version: </MudText>
                             <MudText> @PrinterManager.ActivePrinter.PrinterFirmwareVersion</MudText>
@@ -58,7 +58,10 @@
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasBinaryFileTransfer)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="4" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="300px" Class="pa-4 px-8" Outlined="true">
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Extruder Count: </MudText>
                             <MudText> @PrinterManager.ActivePrinter.NumberOfExtruders</MudText>
@@ -88,7 +91,10 @@
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoReportTemperature) </MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="4" lg="4" Class="mx-0 px-0 mb-0 pb-0">
+                    <MudPaper MinHeight="300px" Class="pa-4 px-8" Outlined="true">
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Auto Level: </MudText>
                             <MudText> @PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoBedLevel)</MudText>
@@ -118,7 +124,10 @@
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasToggleLights)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="6" lg="6" Class="mx-0 px-0 ma-0 pa-0">
+                    <MudPaper MinHeight="300px" Class="pa-4 px-8" Outlined="true">
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Emergency Parser: </MudText>
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasEmergencyParser)</MudText>
@@ -148,7 +157,10 @@
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasAutoReportSDStatus)</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
-
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="6" lg="6" Class="mx-0 px-0 ma-0 pa-0">
+                    <MudPaper MinHeight="300px" Class="pa-4 px-8" Outlined="true">
                         <ContainerSpaceBetween>
                             <MudText Typo="Typo.subtitle2"> Long Filename: </MudText>
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasLongFilenameSupport)</MudText>
@@ -177,6 +189,7 @@
                             <MudText Typo="Typo.subtitle2"> Babystepping: </MudText>
                             <MudText>@PrinterDataService.StringOutput(PrinterManager.ActivePrinter.HasBabystep)</MudText>
                         </ContainerSpaceBetween>
+                        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
                     </MudPaper>
                 </MudItem>
             </MudGrid>
@@ -225,7 +238,7 @@
                                 <MudNumericField @bind-Value="BedTemperature.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => BedTemperature.SetBedPIDValues(PrinterManager.ActivePrinter)">Set bed PID Values</MudButton>
+                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => BedTemperature.SetBedPIDValues(PrinterManager.ActivePrinter)">Start Bed PID Autotune</MudButton>
                             </MudItem>
                         </MudGrid>
                         <MudText Class="mt-4">
@@ -307,7 +320,7 @@
                                 <MudNumericField @bind-Value="HotendTemperature.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => HotendTemperature.SetHotendPIDValues(PrinterManager.ActivePrinter)">Set PID Values</MudButton>
+                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => HotendTemperature.SetHotendPIDValues(PrinterManager.ActivePrinter)">Start Hotend PID Autotune</MudButton>
                             </MudItem>
                         </MudGrid>
                         <MudText Class="mt-4">
@@ -580,7 +593,7 @@
         <MudTabPanel Text="Preheating Profiles">
             <MudGrid Style="width: 100vw;">
                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0" Style="width: 100vw;">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
+                    <MudPaper MinHeight="400px" Class="pa-4 px-10" Outlined="true">
                         <MudTextField Class="px-4" Label="Material" Immediate="true"
                                       @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.MaterialName" />
                         <MudNumericField Label="Hotend Temperature" Class="px-4 mt-4" Immediate="true"
@@ -588,11 +601,13 @@
                         <MudNumericField Label="Bed Temperature" Class="px-4 mt-4" Immediate="true"
                                          @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp" />
                         <MudNumericField Label="Fan Speed" Class="px-4 mt-4" Immediate="true"
-                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed" />
+                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeedInPercent" />
+                        <MudNumericField Label="Material Index" Class="px-4 mt-4" Immediate="true"
+                                         @bind-Value="PrinterManager.ActivePrinter.PreheatingProfiles.MaterialIndex" />
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" md="6" lg="6" Class="mx-0 px-0 mb-0 pb-0">
-                    <MudPaper MaxHeight="300px" MinHeight="300px" Class="pa-4 px-10" Outlined="true">
+                    <MudPaper MinHeight="400px" Class="pa-4 px-10" Outlined="true">
                         <MudCardHeader Class="pt-1" Style="display: flex; justify-content: center;">
                             <MudText Color="Color.Primary" Typo="Typo.button">Summary</MudText>
                         </MudCardHeader>
@@ -616,13 +631,33 @@
                             <MudText Typo="Typo.subtitle2">Bed Temperature:</MudText>
                             <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.BedTemp °C</MudText>
                         </MudContainer>
-                        <MudContainer Class="mb-5 pb-5" Style="display: flex; justify-content:space-between;">
+                        <MudContainer Class="pb-3" Style="display: flex; justify-content:space-between;">
                             <MudText Typo="Typo.subtitle2">Fan Speed:</MudText>
-                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeed %</MudText>
+                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeedInPercent %</MudText>
+                        </MudContainer>
+                        <MudContainer Class="mb-5 pb-5" Style="display: flex; justify-content:space-between;">
+                            <MudText Typo="Typo.subtitle2">Material Index:</MudText>
+                            <MudText>@PrinterManager.ActivePrinter.PreheatingProfiles.MaterialIndex</MudText>
                         </MudContainer>
                         <MudContainer Class="pb-3" Style="display: flex; justify-content:center;">
-                            <MudButton Type="submit" OnClick="() => PrinterDataService.CreatePreheatProfile(PrinterManager.ActivePrinter)" Color="Color.Tertiary">Save Presets</MudButton>
-                            <MudButton OnClick="() => PrinterDataService.SetPreheatingProfiles(PrinterManager.ActivePrinter)" Color="Color.Tertiary">Send Presets To Printer</MudButton>
+                            <MudButton Type="submit"
+                                       OnClick="() =>
+                                    {
+                                        PrinterManager.ActivePrinter.PreheatingProfiles.CalculatePercentageIntoFanSpeed(PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeedInPercent);
+                                        PrinterDataService.CreatePreheatProfile(PrinterManager.ActivePrinter);
+                                    }"
+                                       Color="Color.Tertiary">
+                                Save Preset
+                            </MudButton>
+
+                            <MudButton OnClick="() =>
+                            {
+                                PrinterManager.ActivePrinter.PreheatingProfiles.CalculatePercentageIntoFanSpeed(PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeedInPercent);
+                                PrinterDataService.SetPreheatingProfiles(PrinterManager.ActivePrinter);
+                            }"
+                                Color="Color.Tertiary">
+                                Send Preset To Printer
+                            </MudButton>
                         </MudContainer>
                     </MudPaper>
                 </MudItem>

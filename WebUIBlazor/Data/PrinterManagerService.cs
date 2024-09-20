@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using System.Threading;
-using Dumpify;
 using MachineControlHub;
 using MachineControlHub.Print;
 using MachineControlHub.PrinterConnection;
@@ -20,8 +18,9 @@ namespace WebUI.Data
 
         public event Action<string> InputReceived;
         public event EventHandler ActivePrinterChanged;
-
+        public event Action PrinterBusy;
         public string Notification { get; set; }
+        public string UnknownCommandMessage { get; set; }
 
         public PrinterManagerService()
         {
@@ -147,6 +146,7 @@ namespace WebUI.Data
                             printer.CancellationTokenSource?.Cancel();
                             printer.CancellationTokenSource = new CancellationTokenSource();
                             var resetToken = printer.CancellationTokenSource.Token;
+                            PrinterBusy?.Invoke();
                             await Task.Run(async () =>
                             {
                                 try
@@ -167,6 +167,7 @@ namespace WebUI.Data
                         if (printer == ActivePrinter)
                         {
                             ParseNotifications(input);
+                            ParseUnknownCommandMessage(input);
                             InputReceived?.Invoke(input);
                             Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
                         }
@@ -200,6 +201,14 @@ namespace WebUI.Data
                     string result = match.Groups[1].Value;
                     Notification = result;
                 }
+            }
+        }
+
+        public void ParseUnknownCommandMessage(string input)
+        {
+            if (input.Contains("Unknown command:"))
+            {
+                UnknownCommandMessage = input;
             }
         }
     }

@@ -28,13 +28,13 @@ namespace MachineControlHub.Motion
             {
                 Type = G_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.GCommands.LinearMove,
-                Parameters = new List<string>() 
-                { 
-                    position.XYZEMoveString(MovePositions.XMovePos), 
-                    position.XYZEMoveString(MovePositions.YMovePos), 
-                    position.XYZEMoveString(MovePositions.ZMovePos), 
-                    position.XYZEMoveString(MovePositions.EMovePos), 
-                    feedRate.FeedRateString(feedRate.FeedRateFreeMove) 
+                Parameters = new List<string>()
+                {
+                    position.XYZEMoveString(MovePositions.XMovePos),
+                    position.XYZEMoveString(MovePositions.YMovePos),
+                    position.XYZEMoveString(MovePositions.ZMovePos),
+                    position.XYZEMoveString(MovePositions.EMovePos),
+                    feedRate.FeedRateString(feedRate.FeedRateFreeMove)
                 }
             };
             return GCodeMethods.GCodeString(linearMoveCommand);
@@ -503,12 +503,12 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaterialPreset,
-                Parameters = new List<string>() 
-                { 
-                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.MaterialIndex, profiles.MaterialIndex), 
-                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Hotend, profiles.HotendTemp), 
-                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Bed, profiles.BedTemp), 
-                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Fan, profiles.FanSpeed) 
+                Parameters = new List<string>()
+                {
+                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.MaterialIndex, profiles.MaterialIndex),
+                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Hotend, profiles.HotendTemp),
+                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Bed, profiles.BedTemp),
+                    profiles.StringWithPrefixAndValue(PreheatingProfiles.Prefixes.Fan, profiles.FanSpeed)
                 }
             };
 
@@ -557,12 +557,12 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetMaxFeedrates,
-                Parameters = new List<string>() 
+                Parameters = new List<string>()
                 {
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.E, motion.EMaxFeedrate),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.X, motion.XMaxFeedrate),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.Y, motion.YMaxFeedrate),
-                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZMaxFeedrate) 
+                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZMaxFeedrate)
                 }
             };
 
@@ -593,11 +593,11 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
-                Parameters = new List<string>() 
+                Parameters = new List<string>()
                 {
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.X, motion.XHomeOffset),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.Y, motion.YHomeOffset),
-                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZHomeOffset) 
+                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZHomeOffset)
                 }
             };
 
@@ -679,12 +679,12 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetAxisStepsPerUnit,
-                Parameters = new List<string>() 
+                Parameters = new List<string>()
                 {
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.E, motion.EStepsPerUnit),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.X, motion.XStepsPerUnit),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.Y, motion.YStepsPerUnit),
-                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZStepsPerUnit) 
+                    MotionSettingsData.AxisString(MotionSettingsData.Axis.Z, motion.ZStepsPerUnit)
                 }
 
             };
@@ -699,7 +699,7 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetStartingAcceleration,
-                Parameters = new List<string>() { $"P{motion.PrintAcceleration} ", $"R{motion.RetractAcceleration} " , $"T{motion.TravelAcceleration} " }
+                Parameters = new List<string>() { $"P{motion.PrintAcceleration} ", $"R{motion.RetractAcceleration} ", $"T{motion.TravelAcceleration} " }
             };
 
             return GCodeMethods.GCodeString(startingAcceleration);
@@ -711,7 +711,7 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.PrintTravelMoveLimits,
-                Parameters = new List<string>() 
+                Parameters = new List<string>()
                 {
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.E, motion.EMaxAcceleration), $"F{motion.PlannerFrequencyLimit} ", $"S{motion.PlannerXYFrequencyMinimumSpeedPercentage} ",$"T{motion.TargetExtruder} ",
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.X, motion.XMaxAcceleration), MotionSettingsData.AxisString(MotionSettingsData.Axis.Y, motion.YMaxAcceleration),
@@ -727,10 +727,10 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetAdvancedSettings,
-                Parameters = new List<string>() 
-                { 
-                    $"B{motion.MinSegmentTime} ", 
-                    $"E{motion.EMaxJerk} ", 
+                Parameters = new List<string>()
+                {
+                    $"B{motion.MinSegmentTime} ",
+                    $"E{motion.EMaxJerk} ",
                     $"J{motion.JunctionDeviation} ",
                     $"S{motion.MinPrintFeedrate} ",
                     $"T{motion.MinTravelFeedrate} ",
@@ -748,7 +748,7 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetHomeOffsets,
-                Parameters = new List<string>() 
+                Parameters = new List<string>()
                 {
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.X, motion.XHomeOffset),
                     MotionSettingsData.AxisString(MotionSettingsData.Axis.Y, motion.YHomeOffset),
@@ -834,7 +834,7 @@ namespace MachineControlHub.Motion
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.SetFeedratePercentage,
-                Parameters = new List<string>() { $"S{ feedrate } " }
+                Parameters = new List<string>() { $"S{feedrate} " }
             };
 
             return GCodeMethods.GCodeString(setPrintSpeed);
@@ -879,8 +879,8 @@ namespace MachineControlHub.Motion
             var setDriverCurrents = new GCodeCommands
             {
                 Parameters = new List<string>()
-            }; 
-            
+            };
+
             var driverCurrents = driver.GetDriverCurrents();
 
             foreach (var kvp in driverCurrents)
@@ -905,7 +905,7 @@ namespace MachineControlHub.Motion
 
             foreach (var kvp in driverSteppingMode)
             {
-                if(kvp.Value != string.Empty)
+                if (kvp.Value != string.Empty)
                 {
                     if (kvp.Value == "StealthChop")
                     {
@@ -924,7 +924,7 @@ namespace MachineControlHub.Motion
         public static string BuildRequestPrintJobStatsCommand()
         {
 
-           var requestPrintJobStats = new GCodeCommands
+            var requestPrintJobStats = new GCodeCommands
             {
                 Type = M_PREFIX,
                 Instruction = (int)GCodeInstructionsEnums.MCommands.PrintJobStats

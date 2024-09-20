@@ -24,8 +24,17 @@
 
 }
 
+<MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!printerManager.ActivePrinter.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
+    @if (printerManager.ActivePrinter.IsBusy)
+    {
+        <MudProgressLinear Striped="true" Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+    }
+    @(new MarkupString(!printerManager.ActivePrinter.IsBusy ? $"Printer is ready" : "Printer Busy... Please wait"))
+</MudAlert>
+
 <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
     <MudText Typo="Typo.h6" Color="Color.Primary">@printerManager.Notification</MudText>
+    <MudText Typo="Typo.h6" Color="Color.Error">@printerManager.UnknownCommandMessage</MudText>
 </MudAlert>
 
 @code {
@@ -35,6 +44,7 @@
         printerManager.InputReceived += OnMessageReceived;
         printerManager.ActivePrinterChanged += OnPrinterChanged;
         printerManager.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
+        printerManager.PrinterBusy += OnPrinterBusy;
     }
 
     public void OnMessageReceived(string message)
@@ -49,6 +59,11 @@
     }
 
     public void OnRefreshProgressState()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void OnPrinterBusy()
     {
         InvokeAsync(StateHasChanged);
     }

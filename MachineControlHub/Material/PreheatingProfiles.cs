@@ -28,6 +28,8 @@
         /// </summary>
         public int FanSpeed { get; set; }
 
+        public int FanSpeedInPercent { get; set; }
+
         /// <summary>
         /// Gets or sets the material index.
         /// </summary>
@@ -49,6 +51,11 @@
                 return $"{(char)prefix}{value}";
             }
             return null;
+        }
+
+        public void CalculatePercentageIntoFanSpeed(double percentage)
+        {
+            FanSpeed = (int)Math.Round(percentage / 100 * 255);
         }
     }
 

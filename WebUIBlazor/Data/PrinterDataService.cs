@@ -1,15 +1,11 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using MachineControlHub;
-using MachineControlHub.Bed;
 using MachineControlHub.Head;
 using MachineControlHub.Material;
 using MachineControlHub.Motion;
 using MachineControlHub.Print;
-using MachineControlHub.PrinterConnection;
 using MachineControlHub.Temps;
-using MudBlazor;
-using Plotly.Blazor.Traces.SankeyLib;
 
 namespace WebUI.Data
 {
@@ -154,7 +150,7 @@ namespace WebUI.Data
 
         public void RequestCurrentPositions(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand()); 
+            printer.SerialConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand());
         }
 
         public void RequestPrintSpeed(Printer printer)
@@ -192,8 +188,8 @@ namespace WebUI.Data
                 GetStartingAccelerations(input, printer);
                 GetOffsetSettings(input, printer);
                 GetAutoBedLevelingSettings(input, printer);
-                GetHotendPIDValues(input, printer);
-                GetBedPIDValues(input, printer);
+                GetStoredHotendPIDValues(input, printer);
+                GetStoredBedPIDValues(input, printer);
                 GetZProbeOffsets(input, printer);
                 GetFirmwareVersion(input, printer);
                 GetBinaryFileTransferState(input, printer);
@@ -343,7 +339,7 @@ namespace WebUI.Data
             }
         }
 
-        public void GetHotendPIDValues(string input, Printer printer)
+        public void GetStoredHotendPIDValues(string input, Printer printer)
         {
             var match = Regex.Match(input, PIDValues.PARSE_HOTEND_PID_PATTERN);
             if (match.Success)
@@ -354,7 +350,7 @@ namespace WebUI.Data
             }
         }
 
-        public void GetBedPIDValues(string input, Printer printer)
+        public void GetStoredBedPIDValues(string input, Printer printer)
         {
             var match = Regex.Match(input, PIDValues.PARSE_BED_PID_PATTERN);
             if (match.Success)
@@ -392,6 +388,64 @@ namespace WebUI.Data
             if (match.Success)
             {
                 printer.NumberOfExtruders = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        public void GetCalibratedBedPIDValues(string input,Printer printer)
+        {
+            string bedKpPattern = @"#define\s+DEFAULT_bedKp\s+([0-9]+(?:\.\d+)?)";
+            string bedKiPattern = @"#define\s+DEFAULT_bedKi\s+([0-9]+(?:\.\d+)?)";
+            string bedKdPattern = @"#define\s+DEFAULT_bedKd\s+([0-9]+(?:\.\d+)?)";
+
+            var matchKp = Regex.Match(input, bedKpPattern);
+            var matchKi = Regex.Match(input, bedKiPattern);
+            var matchKd = Regex.Match(input, bedKdPattern);
+
+
+            if (matchKp.Success)
+            {
+                printer.BedTemperatures.PIDValues.Proportional = double.Parse(matchKp.Groups[1].Value);
+                Console.WriteLine(printer.BedTemperatures.PIDValues.Proportional);
+                Console.WriteLine("Suceed");
+            } 
+            
+            if (matchKi.Success)
+            {
+                printer.BedTemperatures.PIDValues.Integral = double.Parse(matchKi.Groups[1].Value);
+                Console.WriteLine(printer.BedTemperatures.PIDValues.Integral);
+            }      
+            
+            if (matchKd.Success)
+            {
+                printer.BedTemperatures.PIDValues.Derivative = double.Parse(matchKd.Groups[1].Value);
+                Console.WriteLine(printer.BedTemperatures.PIDValues.Derivative);
+            }
+        }
+
+        public void GetCalibratedHotendPIDValues(string input, Printer printer)
+        {
+            string hotendKpPattern = @"#define\s+DEFAULT_Kp\s+([0-9]+(?:\.\d+)?)";
+            string hotendKiPattern = @"#define\s+DEFAULT_Ki\s+([0-9]+(?:\.\d+)?)";
+            string hotendKdPattern = @"#define\s+DEFAULT_Kd\s+([0-9]+(?:\.\d+)?)";
+
+            var matchKp = Regex.Match(input, hotendKpPattern);
+            var matchKi = Regex.Match(input, hotendKiPattern);
+            var matchKd = Regex.Match(input, hotendKdPattern);
+
+
+            if (matchKp.Success)
+            {
+                printer.HotendTemperatures.PIDValues.Proportional = double.Parse(matchKp.Groups[1].Value);
+            }
+
+            if (matchKi.Success)
+            {
+                printer.HotendTemperatures.PIDValues.Integral = double.Parse(matchKi.Groups[1].Value);
+            }
+
+            if (matchKd.Success)
+            {
+                printer.HotendTemperatures.PIDValues.Derivative = double.Parse(matchKd.Groups[1].Value);
             }
         }
 
@@ -845,10 +899,7 @@ namespace WebUI.Data
 
         public void SetPreheatingProfiles(Printer printer)
         {
-            PreheatingProfiles.ForEach(profile =>
-            {
-                printer.SerialConnection.Write(CommandMethods.BuildMaterialPresetCommand(profile));
-            });
+                printer.SerialConnection.Write(CommandMethods.BuildMaterialPresetCommand(printer.PreheatingProfiles));
         }
 
         public void SetDriverCurrents(Printer printer)

@@ -1,20 +1,16 @@
 ﻿using MachineControlHub;
 using MachineControlHub.Motion;
-using MachineControlHub.PrinterConnection;
-using MachineControlHub.Temps;
-using MudBlazor;
-using WebUI.Pages;
 
 namespace WebUI.Data
 {
     public class HotendTemperatureService
     {
-        public int CurrentHotendTemp { get; set;}
-        public int SetHotendTemp { get; set;}
-        public int TargetHotendTemp { get; set;}
-        public int PIDHotendCycles { get; set;}
-        public int PIDHotendTemp { get; set;}
-        private DateTime LastChangeTime { get; set;}
+        public int CurrentHotendTemp { get; set; }
+        public int SetHotendTemp { get; set; }
+        public int TargetHotendTemp { get; set; }
+        public int PIDHotendCycles { get; set; }
+        public int PIDHotendTemp { get; set; }
+        private DateTime LastChangeTime { get; set; }
 
 
         public void SetHotendTemperature(int setTemp, Printer printer)
@@ -45,14 +41,14 @@ namespace WebUI.Data
                 {
                     TargetHotendTemp = printer.HotendTemperatures.TargetTemp;
                 }
-            } );
+            });
         }
 
         public void ChangeFilament(Printer printer)
         {
             printer.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
         }
-        
+
         public void LoadFilament(Printer printer)
         {
             printer.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());

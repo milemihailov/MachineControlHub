@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace MachineControlHub.Bed
+﻿namespace MachineControlHub.Bed
 {
     /// <summary>
     /// This class holds the data obtained from autobedleveling "G29"
@@ -23,7 +21,7 @@ namespace MachineControlHub.Bed
             var csv = string.Join("\n", rows.Where(row => char.IsDigit(row.TrimStart().FirstOrDefault())) // Only include lines that start with a digit
                                            .Select(row => string.Join(",", row.Split(' ', StringSplitOptions.RemoveEmptyEntries))));
             int index = csv.IndexOf("X:");
-            BedLevelGridData = index >= 0 ? csv.Substring(0, index) : csv; 
+            BedLevelGridData = index >= 0 ? csv.Substring(0, index) : csv;
         }
 
         private string CalibrateMessage { get; set; } = "";
@@ -44,7 +42,7 @@ namespace MachineControlHub.Bed
             {
                 IsProcessingBilinear = true;
                 CalibrateMessage += message;
-                if (message.Contains("X:" ) || message.Contains("echo"))
+                if (message.Contains("X:") || message.Contains("echo"))
                 {
                     Processing = false;
                     IsProcessingBilinear = false;

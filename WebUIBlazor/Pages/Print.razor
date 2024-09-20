@@ -30,96 +30,28 @@
 
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
 
-    <!-- Print Controls and Progress ------------------------------------------------->
-    <MudItem Style="width:100%;" xs="12" sm="12" md="12" lg="4" Class="pl-6 mr-0 pr-0 pt-10 mb-8">
 
-        <!-- Container for controlling print operations -->
-        <ContainerSpaceBetween>
-            <!-- Button to start printing -->
-            @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+
+    <MudItem xs="12" sm="12" md="8" lg="4" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
+
+        <!-- MudExpansionPanel for displaying uploaded files -->
+        <MudExpansionPanel Text="UPLOADED FILES">
+            @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
             {
-                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="ConfirmStartAsync">Start</MudButton>
-
-                <!-- Button to pause printing -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.PausePrint(printerManager.ActivePrinter)">Pause</MudButton>
-                <!-- Button to resume printing -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)">Resume</MudButton>
-                <!-- Button to stop printing -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => StopPrint()">Stop</MudButton>
+                <MudListItem>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <!-- Displaying file name -->
+                        <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
+                        <!-- Displaying file size -->
+                        <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                        <!-- Progress indicator -->
+                        <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
+                        <!-- Button to start adding file to media -->
+                        <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
+                    </div>
+                </MudListItem>
             }
-            else
-            {
-                <MudButton Disabled="@(printerManager.ActivePrinter.MediaAttached ? false : true )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="ConfirmStartAsync">Start</MudButton>
-
-                <!-- Button to pause printing -->
-                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.PausePrint(printerManager.ActivePrinter)">Pause</MudButton>
-                <!-- Button to resume printing -->
-                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)">Resume</MudButton>
-                <!-- Button to stop printing -->
-                <MudButton Disabled="true" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => StopPrint()">Stop</MudButton>
-            }
-        </ContainerSpaceBetween>
-
-        <MudDivider Class="pt-5" />
-
-        <!-- Grid for file upload and display -->
-        <MudGrid Justify="Justify.SpaceAround">
-            <MudItem xs="12" md="4" lg="4" Class="pr-0 pl-5">
-                <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
-                    <!--Upload button-->
-                    <ButtonTemplate>
-                        <MudButton HtmlTag="label"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.CloudUpload"
-                                   for="@context.Id">
-                            Upload Files
-                        </MudButton>
-                    </ButtonTemplate>
-                </MudFileUpload>
-            </MudItem>
-
-            <!-- MudExpansionPanel for displaying uploaded files -->
-            <MudItem xs="12" md="8" lg="8">
-                <MudExpansionPanel>
-                    @*                     @if (printerManager.ActivePrinter.SerialConnection != null)
-                    { *@
-                    @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
-                    {
-                        <MudListItem>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <!-- Displaying file name -->
-                                <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
-                                <!-- Displaying file size -->
-                                <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
-                                <!-- Progress indicator -->
-                                <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
-                                <!-- Button to start adding file to media -->
-                                <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
-                            </div>
-                        </MudListItem>
-                    }
-                    @* } *@
-                </MudExpansionPanel>
-            </MudItem>
-        </MudGrid>
-
-        <!-- Grid for media control buttons -->
-        <MudGrid Justify="Justify.SpaceAround">
-            <MudItem xs="6" md="4" lg="4" Class="px-0">
-                <!-- Button to release media -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)">Release Media</MudButton>
-            </MudItem>
-            <MudItem xs="6" md="4" lg="4" Class="px-0">
-                <!-- Button to attach media -->
-                <MudButton FullWidth="true" Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}">Attach Media</MudButton>
-            </MudItem>
-            <MudItem xs="12" md="4" lg="4" Class="px-0">
-                <!-- Button to attach media -->
-                <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)">Transfer to SD</MudButton>
-            </MudItem>
-        </MudGrid>
-
+        </MudExpansionPanel>
         <!-- Select dropdown for choosing media -->
         @if (PrintManager.DriversAvailable != null)
         {
@@ -157,7 +89,6 @@
                 }
             </MudSelect>
         }
-
 
         <!-- Displaying print details -->
         <div>
@@ -203,8 +134,280 @@
         </div>
     </MudItem>
 
+
+    <!-- Print Controls ------------------------------------------------->
+    <MudItem Style="width:100%;" xs="12" sm="12" md="4" lg="2" Class="pl-6 mr-0 pr-0 pt-10 mb-8">
+
+        <!-- Conditions to enable\disable buttons -->
+        @if (printerManager.ActivePrinter.SerialConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+        {
+            PrintManager.StartButtonEnableDisable = false;
+            PrintManager.PrintJobControlsEnableDisable = true;
+        }
+        @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+        {
+            PrintManager.StartButtonEnableDisable = true;
+            PrintManager.PrintJobControlsEnableDisable = false;
+        }
+
+        <!-- Container for controlling print operations -->
+        <MudStack Justify="Justify.Center" Row="true">
+            <!-- Button to start printing -->
+            <MudTooltip Text="Start Print">
+                <MudIconButton Disabled="@PrintManager.StartButtonEnableDisable"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="@(PrintManager.StartButtonEnableDisable ? null : ConfirmStartAsync)"
+                               Size="Size.Small"
+                               Color="Color.Tertiary">
+                    <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.StartButtonEnableDisable ? 0.5 : 1); cursor:@(PrintManager.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
+            <!-- Button to pause printing -->
+            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                           Class="mt-2"
+                           Variant="Variant.Text"
+                           OnClick="() => PrintManager.PausePrint(printerManager.ActivePrinter)"
+                           Size="Size.Small"
+                           Color="Color.Tertiary"
+                           Title="Pause Print">
+                <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+            </MudIconButton>
+
+            <!-- Button to resume printing -->
+            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                           Class="mt-2"
+                           Variant="Variant.Text"
+                           OnClick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)"
+                           Size="Size.Small"
+                           Color="Color.Tertiary"
+                           Title="Resume Print">
+                <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+            </MudIconButton>
+
+            <!-- Button to stop printing -->
+            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                           Class="mt-2"
+                           Variant="Variant.Text"
+                           OnClick="StopPrint"
+                           Size="Size.Small"
+                           Color="Color.Tertiary"
+                           Title="Stop Print">
+                <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+            </MudIconButton>
+        </MudStack>
+
+
+        <!-- Container for media control buttons -->
+        <MudStack Justify="Justify.Center" Row="true">
+
+            <!-- Button to release media -->
+            <MudTooltip Text="Release Media">
+                <MudIconButton Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)"
+                               Size="Size.Small"
+                               Color="Color.Tertiary">
+                    <img src="/svg/ReleaseMedia.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                </MudIconButton>
+            </MudTooltip>
+
+            <!-- Button to attach media -->
+            <MudTooltip Text="Attach Media">
+                <MudIconButton Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}"
+                               Size="Size.Small"
+                               Color="Color.Tertiary">
+                    <img src="/svg/AttachMedia.svg" alt="Custom SVG" style="width:40px; height:30px;
+                        opacity:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? 0.5 : 1);
+                        cursor:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
+
+            <!-- Button to attach media -->
+            <MudTooltip Text="Send gcode to the SD">
+                <MudIconButton Disabled="printerManager.ActivePrinter.CurrentPrintJob.IsPrinting"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)"
+                               Size="Size.Small"
+                               Color="Color.Tertiary">
+                    <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
+                        opacity:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
+                        cursor:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
+
+            <!--Upload button-->
+            <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt" Class="mr-0 pr-0">
+                <ActivatorContent>
+                    <MudTooltip Text="Upload files">
+                        <MudIconButton Class="mr-0 pr-0"
+                                       HtmlTag="label"
+                                       Variant="Variant.Text"
+                                       Size="Size.Small"
+                                       Color="Color.Tertiary"
+                                       Title="Release Media">
+                            <img src="/svg/Upload.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                        </MudIconButton>
+                    </MudTooltip>
+                </ActivatorContent>
+            </MudFileUpload>
+        </MudStack>
+        <!-- Grid for file upload and display -->
+        @* <!-- MudExpansionPanel for displaying uploaded files -->
+        <MudItem xs="12" md="12" lg="12">
+        <MudExpansionPanel>
+        @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
+        {
+        <MudListItem>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <!-- Displaying file name -->
+        <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
+        <!-- Displaying file size -->
+        <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+        <!-- Progress indicator -->
+        <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
+        <!-- Button to start adding file to media -->
+        <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
+        </div>
+        </MudListItem>
+        }
+        </MudExpansionPanel>
+        </MudItem> *@
+
+        @*         <!-- Grid for media control buttons -->
+        <MudGrid Justify="Justify.SpaceAround">
+        <MudItem xs="6" md="4" lg="4" Class="px-0">
+        <!-- Button to release media -->
+
+        <MudIconButton Class="mt-2"
+        Variant="Variant.Text"
+        OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)"
+        Size="Size.Small"
+        Color="Color.Tertiary"
+        Title="Release Media">
+        <img src="/svg/ReleaseMedia.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+        </MudIconButton>
+        </MudItem>
+        <MudItem xs="6" md="4" lg="4" Class="px-0">
+        <!-- Button to attach media -->
+        <MudIconButton Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached"
+        Class="mt-2"
+        Variant="Variant.Text"
+        OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}"
+        Size="Size.Small"
+        Color="Color.Tertiary"
+        Title="Attach Media">
+        <img src="/svg/AttachMedia.svg" alt="Custom SVG" style="width:40px; height:30px;
+        opacity:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? 0.5 : 1);
+        cursor:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
+        </MudIconButton>
+        </MudItem>
+        <MudItem xs="12" md="4" lg="4" Class="px-0">
+        <!-- Button to attach media -->
+        <MudIconButton Disabled="printerManager.ActivePrinter.CurrentPrintJob.IsPrinting"
+        Class="mt-2"
+        Variant="Variant.Text"
+        OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)"
+        Size="Size.Small"
+        Color="Color.Tertiary"
+        Title="Transfer to machine if attached any media">
+        <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
+        opacity:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
+        cursor:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
+        </MudIconButton>
+        </MudItem>
+        </MudGrid> *@
+        @*
+        <!-- Select dropdown for choosing media -->
+        @if (PrintManager.DriversAvailable != null)
+        {
+        <MudSelect Disabled="@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintManager.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+        @foreach (var port in PrintManager.DriversAvailable)
+        {
+        <MudSelectItem Value="@port.DriveName">
+        <div style="display: flex; justify-content: space-between;">
+        <MudText> @port.DriveName @port.VolumeLabel </MudText>
+        @if (PrintManager.DriveLetter == port.DriveName)
+        {
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+        }
+        </div>
+        </MudSelectItem>
+        }
+        </MudSelect>
+        }
+
+        @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        {
+        <MudSelect @bind-Value="@PrintManager.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+
+        @if (PrintManager.SDFiles != null)
+        {
+        @foreach (var file in PrintManager.SDFiles)
+        {
+        <MudSelectItem Value="@file.FileName">
+        <div style="display: flex; justify-content: space-around;">
+        <span>@file.FileName</span>
+        <span>@($"{Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+        </div>
+        </MudSelectItem>
+        }
+        }
+        </MudSelect>
+        }
+
+
+        <!-- Displaying print details -->
+        <div>
+        <ContainerSpaceBetween Class="pt-8">
+        <MudText>File printing:</MudText>
+        <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
+        </ContainerSpaceBetween>
+        <ContainerSpaceBetween>
+        <MudText>Estimated print time left:</MudText>
+        <MudText>@printerManager.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
+        </ContainerSpaceBetween>
+        <ContainerSpaceBetween>
+        <MudText>Elapsed print time:</MudText>
+        <MudText>
+        @printerManager.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+        </MudText>
+        </ContainerSpaceBetween>
+        <ContainerSpaceBetween>
+        <MudText>Start time:</MudText>
+        <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
+        </ContainerSpaceBetween>
+
+        <ContainerSpaceBetween>
+        <MudText>File Size:</MudText>
+        <MudText><strong>@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(printerManager.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
+        </ContainerSpaceBetween>
+        @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+        {
+        <ContainerSpaceBetween>
+        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printerManager.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
+        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+        <b> @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+        </MudText>
+        </MudProgressLinear>
+        </ContainerSpaceBetween>
+
+        <ContainerSpaceBetween>
+        <MudButton FullWidth="true" OnClick="() => PrintManager.CancelCurrentObject(printerManager.ActivePrinter)" Color="Color.Tertiary">
+        Cancel Current Object
+        </MudButton>
+        </ContainerSpaceBetween>
+        }
+        </div> *@
+    </MudItem>
+
+
     <!-- Temperatures ---------------------------------------------------------------->
-    <MudItem xs="12" sm="12" md="12" lg="8" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
+    <MudItem xs="12" sm="12" md="12" lg="6" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
         <!-- Container for controlling temperature settings -->
         <MudGrid>
             <!-- Temperature Graph ----------------------------------------------------------->
@@ -347,42 +550,65 @@
                 </MudGrid>
 
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="12">
-
-                <!-- Buttons for filament operations -->
-                <MudGrid>
-                    <!-- Button to change filament -->
-                    <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.ChangeFilament(printerManager.ActivePrinter)">Change Filament</MudButton>
-                    </MudItem>
-                    <!-- Button to load filament -->
-                    <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.LoadFilament(printerManager.ActivePrinter)">Load Filament</MudButton>
-                    </MudItem>
-                    <!-- Button to unload filament -->
-                    <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">Unload Filament</MudButton>
-                    </MudItem>
-                </MudGrid>
-            </MudItem>
-
         </MudGrid>
     </MudItem>
 
     <!-- Bed Leveling ---------------------------------------------------------------->
-    @if (printerManager.ActivePrinter.HasAutoBedLevel)
-    {
-        <BedLevel />
-    }
+    <BedLevel />
+
 
     <!-- Temperature Graph ----------------------------------------------------------->
     <MudItem xs="12" md="6" lg="6" Class="pa-8 mr-0">
         <MudGrid>
             <MudItem xs="12" md="12" lg="6">
-                <MudSwitch Label="Fan On/Off" @bind-Value="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}" Color="Color.Success" Class="mr-n2 mb-6" />
+
+                <!-- Button to toggle fan on/off-->
+                <MudTooltip Text="Turn fan on/off">
+                    <MudToggleIconButton @bind-Toggled="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}"
+                                         Color="@Color.Error"
+                                         ToggledColor="@Color.Success">
+                        @if (!ControlPanelService.ToggleFanValue)
+                        {
+                            <!-- Custom SVG for Fan Off -->
+                            <img src="/svg/FanOff.svg" alt="Fan On" style="width: 40px; height: 30px;" />
+                        }
+                        else
+                        {
+                            <!-- Custom SVG for Fan On -->
+                            <img src="/svg/FanOn.svg" alt="Home All" style="width: 40px; height: 30px;" />
+                        }
+                    </MudToggleIconButton>
+                </MudTooltip>
+
+                <!-- Button to change filament -->
+                <MudTooltip Text="Change filament">
+                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.ChangeFilament(printerManager.ActivePrinter)">
+                        <!-- Render the custom SVG file from wwwroot/svg/ -->
+                        <img src="/svg/ChangeFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                    </MudIconButton>
+                </MudTooltip>
+
+                <!-- Button to load filament -->
+                <MudTooltip Text="Load filament">
+                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.LoadFilament(printerManager.ActivePrinter)">
+                        <!-- Render the custom SVG file from wwwroot/svg/ -->
+                        <img src="/svg/LoadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                    </MudIconButton>
+                </MudTooltip>
+
+                <!-- Button to unload filament -->
+                <MudTooltip Text="Unload filament">
+                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">
+                        <!-- Render the custom SVG file from wwwroot/svg/ -->
+                        <img src="/svg/UnloadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                    </MudIconButton>
+                </MudTooltip>
+
+                <!-- Sliders to control fan speed, print speed and print flow -->
                 <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
                 <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(printerManager.ActivePrinter.MotionSettings.PrintSpeed, printerManager.ActivePrinter)">Print Speed: @printerManager.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
                 <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(printerManager.ActivePrinter.MotionSettings.PrintFlow, printerManager.ActivePrinter)">Print Flow: @printerManager.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
+
             </MudItem>
             <MudItem xs="12" md="12" lg="6">
                 <div>
@@ -407,13 +633,12 @@
                                 <!-- Bed temperature -->
                                 <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
                                 <!-- Fan speed -->
-                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeed)%</MudText>
+                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeedInPercent)%</MudText>
                             </div>
 
                             <!-- Div for preheat and delete buttons -->
                             <div Style="display: flex; justify-content: center;" class="pt-2">
                                 <!-- Button to start preheating -->
-                                @* <MudButton Class="mr-5 px-5" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => printer.StartPreheating(profile)">Preheat</MudButton> *@
                                 <MudIconButton Icon="@Icons.Material.Filled.LocalFireDepartment"
                                                Size="Size.Medium"
                                                Variant="Variant.Text"
@@ -429,8 +654,6 @@
         </MudGrid>
     </MudItem>
 </MudGrid>
-
-
 @code {
 
     public List<ChartSeries> Series { get; set; }
@@ -517,7 +740,6 @@
                 // Request the list of files on the SD card
                 printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
                 printerManager.ActivePrinter.SerialConnection.Write("M304");
-
                 PrinterDataHandler.RequestFirmwareReport(printerManager.ActivePrinter);
             }
 

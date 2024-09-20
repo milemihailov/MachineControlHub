@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static MachineControlHub.Motion.MotionSettingsData;
-
-namespace MachineControlHub.Motion
+﻿namespace MachineControlHub.Motion
 {
     public class StepperDriversData
     {

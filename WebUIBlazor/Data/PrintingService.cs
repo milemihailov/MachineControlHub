@@ -1,15 +1,8 @@
-﻿using MachineControlHub.Print;
-using MachineControlHub.Motion;
-using System.Text.RegularExpressions;
-using MudBlazor;
-using WebUI.Pages;
-using Microsoft.AspNetCore.Components;
-using System;
+﻿using System.Text.RegularExpressions;
 using MachineControlHub;
-using static MudBlazor.Colors;
+using MachineControlHub.Motion;
+using MudBlazor;
 using static MachineControlHub.Print.CurrentPrintJob;
-using System.Reflection;
-using MachineControlHub.PrinterConnection;
 
 namespace WebUI.Data
 {
@@ -49,6 +42,12 @@ namespace WebUI.Data
 
         // Index for tracking purposes
         public int Index { get; set; } = -1;
+
+        // Used to enable or disable start button on UI
+        public bool StartButtonEnableDisable { get; set; } = true;
+
+        // Used to enable or disable pause, resume and stop buttons on UI
+        public bool PrintJobControlsEnableDisable { get; set; } = true;
 
 
 
@@ -312,7 +311,7 @@ namespace WebUI.Data
             // Clear the drive letter and SD files list
             DriveLetter = null;
             FileToPrint = null;
-            SDFiles.Clear();
+            SDFiles?.Clear();
 
             // Update the media attached status
             printer.MediaAttached = false;

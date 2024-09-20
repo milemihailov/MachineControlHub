@@ -1,7 +1,4 @@
-﻿using MachineControlHub.PrinterConnection;
-using System.Text.RegularExpressions;
-
-namespace MachineControlHub.Motion
+﻿namespace MachineControlHub.Motion
 
 {
     /// <summary>

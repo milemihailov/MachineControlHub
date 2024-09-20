@@ -1,12 +1,4 @@
-﻿
-using System;
-using System.Diagnostics;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Components;
-using MudBlazor;
-
-namespace WebUI.Data
+﻿namespace WebUI.Data
 {
     public class BackgroundTimer
     {
@@ -63,7 +55,7 @@ namespace WebUI.Data
                         SecondElapsed?.Invoke();
                     }
 
-                    if( i % 500 == 0)
+                    if (i % 500 == 0)
                     {
                         FiveSecondsElapsed?.Invoke();
                     }

@@ -1,8 +1,8 @@
-﻿using MachineControlHub.LogErrorHistory;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+using MachineControlHub.LogErrorHistory;
 using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Print
 {

@@ -1,8 +1,3 @@
-using MachineControlHub.PrinterConnection;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.DependencyInjection;
-using MudBlazor;
 using MudBlazor.Services;
 using WebUI.Data;
 

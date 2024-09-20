@@ -1,9 +1,6 @@
-﻿using MachineControlHub;
+﻿using System.Text.RegularExpressions;
+using MachineControlHub;
 using MachineControlHub.Motion;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using Plotly.Blazor.Interop;
-using System.Text.RegularExpressions;
 
 namespace WebUI.Data
 {
@@ -204,9 +201,9 @@ namespace WebUI.Data
         /// Calculates the fan speed as a percentage based on the provided value.
         /// </summary>
         /// <param name="value">The fan speed value (0 to 255).</param>
-        public void CalculateFanSpeedIntoPercentage(double value)
+        public double CalculateFanSpeedIntoPercentage(double value)
         {
-            FanSpeedInPercentage = Math.Round(value / 255 * 100);
+            return Math.Round(value / 255 * 100);
         }
         /// <summary>
         /// Updates the console output with the provided message after processing it.
@@ -216,7 +213,7 @@ namespace WebUI.Data
         public void UpdateParagraph(string input, Printer printer)
         {
             // Filter out SD card related messages if ShowSDMessages is false
-            if (!ShowSDMessages && (input.Contains("Not SD printing") || input.Contains("printing byte"))) 
+            if (!ShowSDMessages && (input.Contains("Not SD printing") || input.Contains("printing byte")))
             {
                 input = null;
             }
@@ -247,7 +244,7 @@ namespace WebUI.Data
                 int newlineCount = ConsoleOutput.Count(c => c == '\n');
 
                 // Avoids infinite appending to ConsoleOutput
-                if(newlineCount > 500)
+                if (newlineCount > 500)
                 {
                     // Split the ConsoleOutput into lines
                     var lines = ConsoleOutput.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -269,7 +266,7 @@ namespace WebUI.Data
             if (match.Success)
             {
                 // Extract the fan speed value and calculate its percentage
-                CalculateFanSpeedIntoPercentage(double.Parse(match.Groups[1].Value));
+                FanSpeedInPercentage = CalculateFanSpeedIntoPercentage(double.Parse(match.Groups[1].Value));
             }
         }
 
@@ -314,7 +311,6 @@ namespace WebUI.Data
             if (ToggleFanValue)
             {
                 FanSpeedValue = 255;
-
             }
             else
             {

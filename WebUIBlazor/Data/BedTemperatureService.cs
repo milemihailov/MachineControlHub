@@ -1,8 +1,5 @@
 ﻿using MachineControlHub;
 using MachineControlHub.Motion;
-using MachineControlHub.PrinterConnection;
-using MachineControlHub.Temps;
-using MudBlazor;
 
 namespace WebUI.Data
 {
@@ -16,7 +13,7 @@ namespace WebUI.Data
         public int PIDBedTemp { get; set; }
         private DateTime LastChangeTime { get; set; }
 
-        public void SetBedTemperature(int setTemp, Printer printer) 
+        public void SetBedTemperature(int setTemp, Printer printer)
         {
             printer.BedTemperatures.SetTemperature(setTemp);
 
@@ -32,7 +29,8 @@ namespace WebUI.Data
 
         public async Task ParseCurrentBedTemperature(string input, Printer printer)
         {
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 printer.BedTemperatures.ParseCurrentTemperature(input);
 
                 // Update the current bed temperature
@@ -43,8 +41,8 @@ namespace WebUI.Data
                 {
                     TargetBedTemp = printer.BedTemperatures.TargetTemp;
                 }
-            } );
-            
+            });
+
         }
 
         public void SetBedPIDValues(Printer printer)

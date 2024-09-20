@@ -1,8 +1,6 @@
-﻿using MachineControlHub.Motion;
+﻿using System.Diagnostics;
+using MachineControlHub.Motion;
 using MachineControlHub.PrinterConnection;
-using System.Diagnostics;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 
 namespace MachineControlHub.Print
 {
@@ -20,7 +18,7 @@ namespace MachineControlHub.Print
         const char _cARRIAGE_RETURN = '\r';
 
         public Stopwatch Stopwatch { get; set; } = new();
-        private IPrinterConnection Connection {get; set;}
+        private IPrinterConnection Connection { get; set; }
 
         public CurrentPrintJob(IPrinterConnection connection)
         {

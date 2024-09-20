@@ -1,5 +1,5 @@
-﻿using MachineControlHub.LogErrorHistory;
-using System.IO.Ports;
+﻿using System.IO.Ports;
+using MachineControlHub.LogErrorHistory;
 
 namespace MachineControlHub.PrinterConnection
 {
