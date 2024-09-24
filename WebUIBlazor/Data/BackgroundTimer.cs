@@ -2,9 +2,9 @@
 {
     public class BackgroundTimer
     {
-        public readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
+        private readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10));
 
-        public CancellationTokenSource _cts = new();
+        private readonly CancellationTokenSource _cts = new();
 
         public event Action TenMilisecondsElapsed;
         public event Action HalfSecondElapsed;
@@ -29,18 +29,12 @@
             }
         }
 
-        public void StartTimer()
+        private void StartTimer()
         {
             _ = DoWorkAsync();
         }
 
-        public void StopTimer()
-        {
-            _cts.Cancel();
-        }
-
-
-        public async Task DoWorkAsync()
+        private async Task DoWorkAsync()
         {
             int i = 0;
 

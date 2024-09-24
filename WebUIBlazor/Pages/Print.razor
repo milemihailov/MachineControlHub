@@ -1,14 +1,13 @@
 ﻿@page "/print"
 @page "/"
-@inject PrintingService PrintManager
-@inject PrinterDataService PrinterDataHandler
+@inject PrintingService PrintingService
+@inject PrinterDataService PrinterDataService
 @inject NavigationManager MyNavigationManager
 @inject HotendTemperatureService HotendTemperatureService
 @inject BedTemperatureService BedTemperatureService
 @inject ChamberTemperatureService ChamberTemperatureService
-@inject BackgroundTimer background
-@inject PrinterManagerService printerManager
-@inject BedLevelingService levelBed
+@inject BackgroundTimer Background
+@inject PrinterManagerService PrinterManagerService
 @inject ControlPanelService ControlPanelService
 
 @inject IDialogService DialogService
@@ -37,32 +36,32 @@
 
         <!-- MudExpansionPanel for displaying uploaded files -->
         <MudExpansionPanel Text="UPLOADED FILES">
-            @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
+            @foreach (var file in PrinterManagerService.ActivePrinter.PrintService.UploadedFiles)
             {
                 <MudListItem>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <!-- Displaying file name -->
                         <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
                         <!-- Displaying file size -->
-                        <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
+                        <MudText Typo="Typo.overline">@Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
                         <!-- Progress indicator -->
-                        <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
+                        <MudProgressCircular Color="Color.Default" Indeterminate=@PrinterManagerService.ActivePrinter.IsTransferringFile />
                         <!-- Button to start adding file to media -->
-                        <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
+                        <MudButton Disabled="PrinterManagerService.ActivePrinter.IsTransferringFile" OnClick="() => PrintingService.WriteFileToDrive(PrintingService.DriveLetter, file.FileName, PrinterManagerService.ActivePrinter)">Add to media</MudButton>
                     </div>
                 </MudListItem>
             }
         </MudExpansionPanel>
         <!-- Select dropdown for choosing media -->
-        @if (PrintManager.DriversAvailable != null)
+        @if (PrintingService.DriversAvailable != null)
         {
-            <MudSelect Disabled="@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintManager.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                @foreach (var port in PrintManager.DriversAvailable)
+            <MudSelect Disabled="@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintingService.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var port in PrintingService.DriversAvailable)
                 {
                     <MudSelectItem Value="@port.DriveName">
                         <div style="display: flex; justify-content: space-between;">
                             <MudText> @port.DriveName @port.VolumeLabel </MudText>
-                            @if (PrintManager.DriveLetter == port.DriveName)
+                            @if (PrintingService.DriveLetter == port.DriveName)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                             }
@@ -72,18 +71,18 @@
             </MudSelect>
         }
 
-        @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        @if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
-            <MudSelect @bind-Value="@PrintManager.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <MudSelect @bind-Value="@PrintingService.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
 
-                @if (PrintManager.SDFiles != null)
+                @if (PrintingService.SDFiles != null)
                 {
-                    @foreach (var file in PrintManager.SDFiles)
+                    @foreach (var file in PrintingService.SDFiles)
                     {
                         <MudSelectItem Value="@file.FileName">
                             <div style="display: flex; justify-content: space-around;">
                                 <span>@file.FileName</span>
-                                <span>@($"{Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+                                <span>@($"{Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
                             </div>
                         </MudSelectItem>
                     }
@@ -95,39 +94,39 @@
         <div>
             <ContainerSpaceBetween Class="pt-8">
                 <MudText>File printing:</MudText>
-                <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
+                <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Estimated print time left:</MudText>
-                <MudText>@printerManager.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
+                <MudText>@PrinterManagerService.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Elapsed print time:</MudText>
                 <MudText>
-                    @printerManager.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
+                    @PrinterManagerService.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
                 </MudText>
             </ContainerSpaceBetween>
             <ContainerSpaceBetween>
                 <MudText>Start time:</MudText>
-                <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
+                <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
             </ContainerSpaceBetween>
 
             <ContainerSpaceBetween>
                 <MudText>File Size:</MudText>
-                <MudText><strong>@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(printerManager.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
+                <MudText><strong>@Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(PrinterManagerService.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
             </ContainerSpaceBetween>
-            @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+            @if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
                 <ContainerSpaceBetween>
-                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printerManager.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
+                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrinterManagerService.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
                         <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-                            <b> @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+                            <b> @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
                         </MudText>
                     </MudProgressLinear>
                 </ContainerSpaceBetween>
 
                 <ContainerSpaceBetween>
-                    <MudButton FullWidth="true" OnClick="() => PrintManager.CancelCurrentObject(printerManager.ActivePrinter)" Color="Color.Tertiary">
+                    <MudButton FullWidth="true" OnClick="() => PrintingService.CancelCurrentObject(PrinterManagerService.ActivePrinter)" Color="Color.Tertiary">
                         Cancel Current Object
                     </MudButton>
                 </ContainerSpaceBetween>
@@ -140,63 +139,63 @@
     <MudItem Style="width:100%;" xs="12" sm="12" md="4" lg="6" xl="2" Class="pl-6 mr-0 pr-0 pt-10 mb-8 mt-4">
 
         <!-- Conditions to enable\disable buttons -->
-        @if (printerManager.ActivePrinter.SerialConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+        @if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
         {
-            PrintManager.StartButtonEnableDisable = false;
-            PrintManager.PrintJobControlsEnableDisable = true;
+            PrintingService.StartButtonEnableDisable = false;
+            PrintingService.PrintJobControlsEnableDisable = true;
         }
-        @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+        @if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
         {
-            PrintManager.StartButtonEnableDisable = true;
-            PrintManager.PrintJobControlsEnableDisable = false;
+            PrintingService.StartButtonEnableDisable = true;
+            PrintingService.PrintJobControlsEnableDisable = false;
         }
 
         <!-- Container for controlling print operations -->
         <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true">
             <!-- Button to start printing -->
             <MudTooltip Text="Start print">
-                <MudIconButton Disabled="@PrintManager.StartButtonEnableDisable"
+                <MudIconButton Disabled="@PrintingService.StartButtonEnableDisable"
                                Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="@(PrintManager.StartButtonEnableDisable ? null : ConfirmStartAsync)"
+                               OnClick="@(PrintingService.StartButtonEnableDisable ? null : ConfirmStartAsync)"
                                Size="Size.Medium">
-                    <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.StartButtonEnableDisable ? 0.5 : 1); cursor:@(PrintManager.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.StartButtonEnableDisable ? 0.5 : 1); cursor:@(PrintingService.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
             <!-- Button to pause printing -->
             <MudTooltip Text="Pause print">
-                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                <MudIconButton Disabled="@PrintingService.PrintJobControlsEnableDisable"
                                Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="() => PrintManager.PausePrint(printerManager.ActivePrinter)"
+                               OnClick="() => PrintingService.PausePrint(PrinterManagerService.ActivePrinter)"
                                Size="Size.Medium"
                                Title="Pause Print">
-                    <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
             <!-- Button to resume printing -->
             <MudTooltip Text="Resume print">
-                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                <MudIconButton Disabled="@PrintingService.PrintJobControlsEnableDisable"
                                Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)"
+                               OnClick="() => PrintingService.ResumePrint(PrinterManagerService.ActivePrinter)"
                                Size="Size.Medium"
                                Title="Resume Print">
-                    <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
             <!-- Button to stop printing -->
             <MudTooltip Text="Stop print">
-                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                <MudIconButton Disabled="@PrintingService.PrintJobControlsEnableDisable"
                                Class="mt-2"
                                Variant="Variant.Text"
                                OnClick="StopPrint"
                                Size="Size.Medium"
                                Title="Stop Print">
-                    <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
         </MudStack>
@@ -209,7 +208,7 @@
             <MudTooltip Text="Release Media">
                 <MudIconButton Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)"
+                               OnClick="() => PrintingService.ReleaseMedia(PrinterManagerService.ActivePrinter)"
                                Size="Size.Medium">
                     <img src="/svg/ReleaseMedia.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                 </MudIconButton>
@@ -217,27 +216,27 @@
 
             <!-- Button to attach media -->
             <MudTooltip Text="Attach Media">
-                <MudIconButton Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached"
+                <MudIconButton Disabled="PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached"
                                Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}"
+                               OnClick="() => {PrintingService.AttachMedia(PrinterManagerService.ActivePrinter); RefreshAfterAttachingMedia();}"
                                Size="Size.Medium">
                     <img src="/svg/AttachMedia.svg" alt="Custom SVG" style="width:40px; height:30px;
-                        opacity:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? 0.5 : 1);
-                        cursor:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
+                        opacity:@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached ? 0.5 : 1);
+                        cursor:@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
             <!-- Button to attach media -->
             <MudTooltip Text="Send gcode to the SD">
-                <MudIconButton Disabled="printerManager.ActivePrinter.CurrentPrintJob.IsPrinting"
+                <MudIconButton Disabled="PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting"
                                Class="mt-2"
                                Variant="Variant.Text"
-                               OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)"
+                               OnClick="() => SendFileToSd(PrintingService.UploadedFileContent)"
                                Size="Size.Medium">
                     <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
-                        opacity:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
-                        cursor:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
+                        opacity:@(PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
+                        cursor:@(PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
@@ -261,7 +260,7 @@
 
             <!-- Button to change filament -->
             <MudTooltip Text="Change filament">
-                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.ChangeFilament(printerManager.ActivePrinter)">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.ChangeFilament(PrinterManagerService.ActivePrinter)">
                     <!-- Render the custom SVG file from wwwroot/svg/ -->
                     <img src="/svg/ChangeFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                 </MudIconButton>
@@ -269,7 +268,7 @@
 
             <!-- Button to load filament -->
             <MudTooltip Text="Load filament">
-                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.LoadFilament(printerManager.ActivePrinter)">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.LoadFilament(PrinterManagerService.ActivePrinter)">
                     <!-- Render the custom SVG file from wwwroot/svg/ -->
                     <img src="/svg/LoadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                 </MudIconButton>
@@ -277,7 +276,7 @@
 
             <!-- Button to unload filament -->
             <MudTooltip Text="Unload filament">
-                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.UnloadFilament(PrinterManagerService.ActivePrinter)">
                     <!-- Render the custom SVG file from wwwroot/svg/ -->
                     <img src="/svg/UnloadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                 </MudIconButton>
@@ -285,7 +284,7 @@
 
             <!-- Button to toggle fan on/off-->
             <MudTooltip Text="Turn fan on/off">
-                <MudToggleIconButton @bind-Toggled="@ControlPanelService.ToggleFanValue" Class="mt-2" Size="Size.Medium" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}">
+                <MudToggleIconButton @bind-Toggled="@ControlPanelService.ToggleFanValue" Class="mt-2" Size="Size.Medium" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter);}">
                     @if (!ControlPanelService.ToggleFanValue)
                     {
                         <!-- Custom SVG for Fan Off -->
@@ -308,9 +307,9 @@
 
             <!-- Temperature Graph ----------------------------------------------------------->
             <MudItem xs="12" md="6" lg="6" xl="7" Class="px-4">
-                <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
-                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(printerManager.ActivePrinter.MotionSettings.PrintSpeed, printerManager.ActivePrinter)">Print Speed: @printerManager.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
-                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(printerManager.ActivePrinter.MotionSettings.PrintFlow, printerManager.ActivePrinter)">Print Flow: @printerManager.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, PrinterManagerService.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed, PrinterManagerService.ActivePrinter)">Print Speed: @PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow, PrinterManagerService.ActivePrinter)">Print Flow: @PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
             </MudItem>
 
             <!-- Container for controlling temperature settings -->
@@ -325,13 +324,13 @@
                             <MudStack Justify="Justify.FlexStart" Row="true">
 
                                 <MudTooltip Text="Turn hotend off">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(0, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(0, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/HotendOff.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
 
                                 <MudTooltip Text="Turn hotend on">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.TargetHotendTemp, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.TargetHotendTemp, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/HotendOn.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
@@ -360,13 +359,13 @@
                             <MudStack Justify="Justify.FlexStart" Row="true">
 
                                 <MudTooltip Text="Turn bed off">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(0, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(0, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/BedOff.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
 
                                 <MudTooltip Text="Turn bed on">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(BedTemperatureService.TargetBedTemp, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(BedTemperatureService.TargetBedTemp, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/BedOn.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
@@ -393,13 +392,13 @@
                             <MudStack Justify="Justify.FlexStart" Row="true">
 
                                 <MudTooltip Text="Turn chamber off">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(0, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(0, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/ChamberOff.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
 
                                 <MudTooltip Text="Turn chamber on">
-                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(ChamberTemperatureService.TargetChamberTemp, printerManager.ActivePrinter)">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(ChamberTemperatureService.TargetChamberTemp, PrinterManagerService.ActivePrinter)">
                                         <img src="/svg/ChamberOn.svg" style="width: 40px; height: 30px;" />
                                     </MudIconButton>
                                 </MudTooltip>
@@ -434,7 +433,7 @@
 
                 <!-- Preheating Profiles -------------------------------------------------------------->
                 <MudCarousel Class="mud-width-full my-8" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)" EnableSwipeGesture="true" ShowBullets="false">
-                    @foreach (var profile in PrinterDataHandler.PreheatingProfiles)
+                    @foreach (var profile in PrinterDataService.PreheatingProfiles)
                     {
                         <!-- MudCarouselItem to display a preheating profile -->
                         <MudCarouselItem Transition="MudBlazor.Transition.Slide" Color="@Color.Surface">
@@ -459,7 +458,7 @@
                                                    Size="Size.Large"
                                                    Variant="Variant.Text"
                                                    Color="Color.Warning"
-                                                   OnClick="() => PrinterDataHandler.StartPreheating(profile, printerManager.ActivePrinter)" />
+                                                   OnClick="() => PrinterDataService.StartPreheating(profile, PrinterManagerService.ActivePrinter)" />
                                 </MudTooltip>
                                 <!-- Button to delete preheating profile -->
                                 <MudTooltip Text="Delete preset">
@@ -467,7 +466,7 @@
                                                    Size="Size.Large"
                                                    Variant="Variant.Text"
                                                    Color="Color.Error"
-                                                   OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
+                                                   OnClick="() => PrinterDataService.DeletePreheatingProfile(profile)" />
                                 </MudTooltip>
 
                                 <MudTooltip Text="Make preset">
@@ -497,12 +496,12 @@
                 <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
                     <!-- MudChart component displaying a line chart -->
                     <MudChart ChartType="ChartType.Line"
-                              ChartSeries="@PrintManager.Series"
-                              @bind-SelectedIndex="PrintManager.Index"
-                              XAxisLabels="@PrintManager.XAxisLabels"
+                              ChartSeries="@PrintingService.Series"
+                              @bind-SelectedIndex="PrintingService.Index"
+                              XAxisLabels="@PrintingService.XAxisLabels"
                               Width="100%"
                               Height="350px"
-                              ChartOptions="PrintManager.Options" />
+                              ChartOptions="PrintingService.Options" />
                 </div>
             </MudItem>
         </MudGrid>
@@ -520,16 +519,16 @@
         {
             using (StringReader reader = new StringReader(content))
             {
-                printerManager.ActivePrinter.SerialConnection.Write(content);
+                PrinterManagerService.ActivePrinter.SerialConnection.Write(content);
             }
         });
     }
 
-    public async void SendFileToSD(string file)
+    public async void SendFileToSd(string file)
     {
-        printerManager.ActivePrinter.IsBusy = true;
-        await printerManager.ActivePrinter.PrintService.TransferFileToSD(file, "name.gco");
-        printerManager.ActivePrinter.IsBusy = false;
+        PrinterManagerService.ActivePrinter.IsBusy = true;
+        await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(file, "name.gco");
+        PrinterManagerService.ActivePrinter.IsBusy = false;
     }
 
     public void OnRefreshProgressState()
@@ -541,7 +540,7 @@
     string FileContentBuffer { get; set; } = "";
 
     // List of files on the SD card
-    string SDFiles { get; set; } = "";
+    string SdFiles { get; set; } = "";
 
     // Color state for the temperature display
     bool IsPrimaryColor { get; set; } = true;
@@ -553,23 +552,21 @@
     protected override void OnInitialized()
     {
         // Subscribe to service events
-        background.SecondElapsed += OnSecondElapsed;
-        background.FiveSecondsElapsed += OnFiveSecondsElapsed;
-        background.HalfSecondElapsed += OnHalfSecondElapsed;
-        printerManager.ActivePrinterChanged += OnSelectedPrinter;
-        printerManager.InputReceived += OnUpdate;
-        printerManager.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
+        Background.SecondElapsed += OnSecondElapsed;
+        Background.FiveSecondsElapsed += OnFiveSecondsElapsed;
+        Background.HalfSecondElapsed += OnHalfSecondElapsed;
+        PrinterManagerService.ActivePrinterChanged += OnSelectedPrinter;
+        PrinterManagerService.InputReceived += OnUpdate;
+        PrinterManagerService.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
 
 
         // request print flow value
-        PrinterDataHandler.RequestPrintFlow(printerManager.ActivePrinter);
+        PrinterDataService.RequestPrintFlow(PrinterManagerService.ActivePrinter);
 
         // request print speed value
-        PrinterDataHandler.RequestPrintSpeed(printerManager.ActivePrinter);
-        // printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
-        // printerManager.ActivePrinter.SerialConnection.Connected += OnConnecting;
+        PrinterDataService.RequestPrintSpeed(PrinterManagerService.ActivePrinter);
 
-        /// Initialize the chart for the fan speed, print speed, and print flow values
+        // Initialize the chart for the fan speed, print speed, and print flow values
         Series = new List<ChartSeries>
         {
             new ChartSeries()
@@ -577,8 +574,8 @@
                 Data = new double[]
                 {
                     ControlPanelService.FanSpeedInPercentage,
-                    printerManager.ActivePrinter.MotionSettings.PrintSpeed,
-                    printerManager.ActivePrinter.MotionSettings.PrintFlow
+                    PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
+                    PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
                 }
             },
         };
@@ -589,16 +586,16 @@
         if (firstRender)
         {
             // Check if the printer is connected, has printers available and is not printing
-            if ((printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected) && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+            if ((PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected) && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
                 // Request the list of files on the SD card
-                printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
-                printerManager.ActivePrinter.SerialConnection.Write("M304");
-                PrinterDataHandler.RequestFirmwareReport(printerManager.ActivePrinter);
+                PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
+                PrinterManagerService.ActivePrinter.SerialConnection.Write("M304");
+                PrinterDataService.RequestFirmwareReport(PrinterManagerService.ActivePrinter);
             }
 
             // Load preheating profiles from the specified path
-            PrinterDataHandler.PreheatingProfiles = PrinterDataHandler.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_JSON_PATH);
+            PrinterDataService.PreheatingProfiles = PrinterDataService.LoadPrinterDataList<MachineControlHub.Material.PreheatingProfiles>(Data.PrinterDataService.PREHEATING_PROFILES_JSON_PATH);
         }
     }
 
@@ -612,13 +609,13 @@
         try
         {
             // Clear SDFiles list before switching printers
-            if (PrintManager.SDFiles != null)
+            if (PrintingService.SDFiles != null)
             {
-                PrintManager.SDFiles.Clear();
+                PrintingService.SDFiles.Clear();
             }
 
             // Asks for bed mesh
-            printerManager.ActivePrinter.SerialConnection.Write("M420 V");
+            PrinterManagerService.ActivePrinter.SerialConnection.Write("M420 V");
 
             await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
         }
@@ -643,10 +640,10 @@
     /// <param name="input">The input received from the printer.</param>
     public async void OnUpdate(string input)
     {
-        if (!printerManager.ActivePrinter.IsBusy)
+        if (!PrinterManagerService.ActivePrinter.IsBusy)
         {
             // Check if the printer is connected and has printers
-            if (printerManager.ActivePrinter.SerialConnection.IsConnected && printerManager.Printers.Count > 0)
+            if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
             {
                 // Accumulate file content
                 FileContentBuffer += input;
@@ -655,24 +652,24 @@
                 if (input.Contains("End file"))
                 {
                     // remove empty lines from the file content buffer
-                    SDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                    SdFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
 
                     // Add the list of files to the SDFiles list
-                    PrintManager.ListSDFiles(SDFiles, printerManager.ActivePrinter);
+                    PrintingService.ListSDFiles(SdFiles, PrinterManagerService.ActivePrinter);
 
                     // Clear the file content buffer
                     FileContentBuffer = "";
                 }
 
                 // get the name of the file being printed
-                PrintManager.GetPrintingFileName(input, printerManager.ActivePrinter);
+                PrintingService.GetPrintingFileName(input, PrinterManagerService.ActivePrinter);
 
                 // parse the current hotend, bed and chamber temperatures
-                await HotendTemperatureService.ParseCurrentHotendTemperature(input, printerManager.ActivePrinter);
-                await BedTemperatureService.ParseCurrentBedTemperature(input, printerManager.ActivePrinter);
-                if (printerManager.ActivePrinter.HasChamber)
+                await HotendTemperatureService.ParseCurrentHotendTemperature(input, PrinterManagerService.ActivePrinter);
+                await BedTemperatureService.ParseCurrentBedTemperature(input, PrinterManagerService.ActivePrinter);
+                if (PrinterManagerService.ActivePrinter.HasChamber)
                 {
-                    await ChamberTemperatureService.ParseCurrentChamberTemperature(input, printerManager.ActivePrinter);
+                    await ChamberTemperatureService.ParseCurrentChamberTemperature(input, PrinterManagerService.ActivePrinter);
                 }
 
                 // Ensure the graph data does not exceed 30 entries by removing the oldest entries
@@ -687,13 +684,13 @@
                 PrintingService.BedGraph.Add(BedTemperatureService.CurrentBedTemp);
 
                 // Update the graph data with the latest values
-                PrintManager.UpdateGraphData();
+                PrintingService.UpdateGraphData();
 
                 // Parse the firmware settings
-                PrinterDataHandler.OnUpdateSettings(input, printerManager.ActivePrinter);
+                PrinterDataService.OnUpdateSettings(input, PrinterManagerService.ActivePrinter);
 
 
-                /// Update the print flow, print speed, and fan speed chart values
+                // Update the print flow, print speed, and fan speed chart values
                 Series = new List<ChartSeries>
     {
         new ChartSeries()
@@ -702,17 +699,17 @@
             Data = new double[]
             {
                 ControlPanelService.FanSpeedInPercentage,
-                printerManager.ActivePrinter.MotionSettings.PrintSpeed,
-                printerManager.ActivePrinter.MotionSettings.PrintFlow
+                PrinterManagerService.ActivePrinter.MotionSettings.PrintSpeed,
+                PrinterManagerService.ActivePrinter.MotionSettings.PrintFlow
             }
         },
     };
 
                 // update the print flow value
-                PrinterDataHandler.GetPrintFlow(input, printerManager.ActivePrinter);
+                PrinterDataService.GetPrintFlow(input, PrinterManagerService.ActivePrinter);
 
                 // update the print speed value
-                PrinterDataHandler.GetPrintSpeed(input, printerManager.ActivePrinter);
+                PrinterDataService.GetPrintSpeed(input, PrinterManagerService.ActivePrinter);
 
                 ControlPanelService.GetFanSpeed(input);
 
@@ -736,24 +733,24 @@
     /// </summary>
     private async void OnSecondElapsed()
     {
-        if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
-            if (!printerManager.ActivePrinter.IsBusy)
+            if (!PrinterManagerService.ActivePrinter.IsBusy)
             {
                 // If automatic temperature reporting is not enabled, request temperature data
-                if (!printerManager.ActivePrinter.HasAutoReportTemperature)
+                if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature)
                 {
-                    printerManager.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                    PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
                 }
 
                 // If automatic status reporting is not enabled, request the SD status
-                if (!printerManager.ActivePrinter.HasAutoReportSDStatus)
+                if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus)
                 {
-                    printerManager.ActivePrinter.SerialConnection.Write("M27");
+                    PrinterManagerService.ActivePrinter.SerialConnection.Write("M27");
                 }
 
                 // Asynchronously get the status of the drives
-                await Task.Run(() => PrintManager.GetDrives());
+                await Task.Run(() => PrintingService.GetDrives());
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -766,17 +763,17 @@
     /// </summary>
     private async void OnFiveSecondsElapsed()
     {
-        /// Check if the printer is connected and not busy
-        if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
+        // Check if the printer is connected and not busy
+        if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
-            if (!printerManager.ActivePrinter.IsBusy)
+            if (!PrinterManagerService.ActivePrinter.IsBusy)
             {
                 await Task.Run(() =>
                 {
                     // If printing is in progress, request name of the file being printed
-                    if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+                    if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
                     {
-                        printerManager.ActivePrinter.SerialConnection.Write("M27 C");
+                        PrinterManagerService.ActivePrinter.SerialConnection.Write("M27 C");
                     }
                 });
             }
@@ -789,14 +786,14 @@
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         // Read the file's content into the print.file variable
-        PrintManager.UploadedFileContent = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+        PrintingService.UploadedFileContent = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
 
         // Get the file name and size from the event arguments
         var fileName = e.File.Name;
         var fileSize = e.File.Size;
 
         // Add the file's information to the list of uploaded files
-        printerManager.ActivePrinter.PrintService.UploadedFiles.Add((fileName, PrintManager.UploadedFileContent, fileSize));
+        PrinterManagerService.ActivePrinter.PrintService.UploadedFiles.Add((fileName, PrintingService.UploadedFileContent, fileSize));
 
         StateHasChanged();
     }
@@ -807,7 +804,7 @@
     public async Task ConfirmStartAsync()
     {
         // Check if the printer is connected
-        if (printerManager.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
@@ -819,7 +816,7 @@
             if (result == true)
             {
                 // Check if a file is selected for printing
-                if (PrintManager.FileToPrint == "")
+                if (PrintingService.FileToPrint == "")
                 {
                     // Show an error message if no file is selected
                     Snackbar.Add("No file selected", Severity.Error);
@@ -827,23 +824,23 @@
                 else
                 {
                     // Start the print job with the selected file
-                    PrintManager.StartPrint(PrintManager.FileToPrint, printerManager.ActivePrinter);
+                    PrintingService.StartPrint(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter);
 
                     // Record the start time of the print job
-                    PrintManager.StartTimeOfPrint(printerManager.ActivePrinter);
+                    PrintingService.StartTimeOfPrint(PrinterManagerService.ActivePrinter);
 
                     // Reset and start the stopwatch for the current print job
-                    printerManager.ActivePrinter.CurrentPrintJob.ResetStopwatch();
-                    printerManager.ActivePrinter.CurrentPrintJob.StartStopwatch();
+                    PrinterManagerService.ActivePrinter.CurrentPrintJob.ResetStopwatch();
+                    PrinterManagerService.ActivePrinter.CurrentPrintJob.StartStopwatch();
 
                     // Get the file name and size of the file to be printed
-                    PrintManager.GetFileNameAndSize(PrintManager.FileToPrint, printerManager.ActivePrinter);
+                    PrintingService.GetFileNameAndSize(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter);
 
                     // Reset the finalization flag
-                    printerManager.ActivePrinter.CurrentPrintJob.FinalizationExecuted = false;
+                    PrinterManagerService.ActivePrinter.CurrentPrintJob.FinalizationExecuted = false;
 
                     // Show a success message indicating the print job has started
-                    Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {PrintManager.FileToPrint} </li></ul>", Severity.Success);
+                    Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {PrintingService.FileToPrint} </li></ul>", Severity.Success);
                 }
             }
         }
@@ -861,7 +858,7 @@
     public async Task StopPrint()
     {
         // Check if the printer is connected
-        if (printerManager.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
@@ -870,23 +867,23 @@
             yesText: "Stop!", cancelText: "Cancel");
 
             // If the user confirms and a print job is in progress
-            if (result == true && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+            if (result == true && PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
                 // Stop the current print job
-                printerManager.ActivePrinter.PrintService.AbortCurrentPrint();
+                PrinterManagerService.ActivePrinter.PrintService.AbortCurrentPrint();
 
                 // Stop the stopwatch for the current print job
-                printerManager.ActivePrinter.CurrentPrintJob.StopStopwatch();
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.StopStopwatch();
 
                 // Reset the print progress and format the total print time
-                printerManager.ActivePrinter.CurrentPrintJob.PrintProgress = 0;
-                PrintManager.FormatTotalPrintTime(printerManager.ActivePrinter);
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.PrintProgress = 0;
+                PrintingService.FormatTotalPrintTime(PrinterManagerService.ActivePrinter);
 
                 // Set the print job status to not printing
-                printerManager.ActivePrinter.CurrentPrintJob.IsPrinting = false;
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting = false;
 
                 // Add the print job to the print history
-                PrinterDataHandler.AddPrintJobToHistory(printerManager.ActivePrinter);
+                PrinterDataService.AddPrintJobToHistory(PrinterManagerService.ActivePrinter);
 
                 // Show a success message indicating the print job has stopped
                 Snackbar.Add("Print Stopped", Severity.Error);
@@ -906,21 +903,12 @@
         }
     }
 
-    // public void OnDisconnecting()
-    // {
-    //     Snackbar.Add("Printer disconnected", Severity.Error);
-    // }
-
-    // public void OnConnecting()
-    // {
-    //     Snackbar.Add("Printer connected", Severity.Success);
-    // }
 
     public void Dispose()
     {
-        printerManager.InputReceived -= OnUpdate;
-        background.SecondElapsed -= OnSecondElapsed;
-        background.FiveSecondsElapsed -= OnFiveSecondsElapsed;
-        printerManager.ActivePrinterChanged -= OnSelectedPrinter;
+        PrinterManagerService.InputReceived -= OnUpdate;
+        Background.SecondElapsed -= OnSecondElapsed;
+        Background.FiveSecondsElapsed -= OnFiveSecondsElapsed;
+        PrinterManagerService.ActivePrinterChanged -= OnSelectedPrinter;
     }
 }

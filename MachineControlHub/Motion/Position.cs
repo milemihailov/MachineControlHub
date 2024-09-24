@@ -27,30 +27,6 @@
         EMovePos
     }
 
-    public enum CurrentPositions
-    {
-        /// <summary>
-        /// Represents the X-axis current position.
-        /// </summary>
-        XCurrentPos,
-
-        /// <summary>
-        /// Represents the Y-axis current position.
-        /// </summary>
-        YCurrentPos,
-
-        /// <summary>
-        /// Represents the Z-axis current position.
-        /// </summary>
-        ZCurrentPos,
-
-        /// <summary>
-        /// Represents the E-axis current position.
-        /// </summary>
-        ECurrentPos,
-    }
-
-
     /// <summary>
     /// Represents a position in 3D space, including current and optional move positions.
     /// </summary>

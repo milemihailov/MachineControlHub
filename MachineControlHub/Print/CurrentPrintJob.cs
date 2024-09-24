@@ -34,7 +34,6 @@ namespace MachineControlHub.Print
             PrintProgressRecords = new List<PrintProgressRecord>();
         }
 
-
         public string PortName { get; set; }
 
         public string PrinterName { get; set; }

@@ -1,13 +1,13 @@
-﻿@inject Data.PrinterDataService printerData
-@inject Data.BackgroundTimer background
-@inject Data.PrinterManagerService printerManager
+﻿@inject Data.PrinterDataService PrinterData
+@inject Data.BackgroundTimer Background
+@inject Data.PrinterManagerService PrinterManager
 
-<MudText Class="pr-9" Typo="Typo.h6" Color="@(printerManager.ActivePrinter.SerialConnection.IsConnected ? Color.Tertiary : Color.Error)">@printerManager.ActivePrinter.Name</MudText>
+<MudText Class="pr-9" Typo="Typo.h6" Color="@(PrinterManager.ActivePrinter.SerialConnection.IsConnected ? Color.Tertiary : Color.Error)">@PrinterManager.ActivePrinter.Name</MudText>
 
 <MudTooltip Text="Select printer">
     <MudMenu Class="pr-12" Icon="@Icons.Material.Filled.Cable">
         <ChildContent>
-            @foreach (var bs in printerManager.Printers.Values)
+            @foreach (var bs in PrinterManager.Printers.Values)
             {
                 <MudMenuItem OnClick="() => OnPrinterSelected(bs.SerialConnection.PortName)" Disabled="@(!bs.SerialConnection.IsConnected ? true : false)">
                     <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.SerialConnection.IsConnected ? Severity.Success : Severity.Error )" Variant="Variant.Text">
@@ -26,24 +26,21 @@
 
     protected override void OnInitialized()
     {
-        background.SecondElapsed += OnSecondElapsed;
+        Background.SecondElapsed += OnSecondElapsed;
     }
 
     private void OnSecondElapsed()
     {
-        InvokeAsync(() =>
-        {
-            StateHasChanged();
-        });
+        InvokeAsync(StateHasChanged);
     }
 
     private void OnPrinterSelected(string portName)
     {
-        printerManager.SelectPrinter(portName);
+        PrinterManager.SelectPrinter(portName);
     }
 
     public void Dispose()
     {
-        background.SecondElapsed -= OnSecondElapsed;
+        Background.SecondElapsed -= OnSecondElapsed;
     }
 }
