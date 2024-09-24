@@ -13,11 +13,6 @@
         /// </summary>
         public int MaxTemp { get; set; }
 
-        /// <summary>
-        /// Gets or sets the target temperature set for the hotend in degrees Celsius.
-        /// </summary>
-        public int SetTemp { get; set; }
-
         public int TargetTemp { get; set; }
 
         void ParseCurrentTemperature(string input);

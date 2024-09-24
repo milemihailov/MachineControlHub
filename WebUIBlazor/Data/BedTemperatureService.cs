@@ -7,7 +7,6 @@ namespace WebUI.Data
     {
 
         public int CurrentBedTemp { get; set; }
-        public int SetBedTemp { get; set; }
         public int TargetBedTemp { get; set; }
         public int PIDBedCycles { get; set; }
         public int PIDBedTemp { get; set; }
@@ -16,9 +15,6 @@ namespace WebUI.Data
         public void SetBedTemperature(int setTemp, Printer printer)
         {
             printer.BedTemperatures.SetTemperature(setTemp);
-
-            // Set the target temperature to the new set temperature
-            SetBedTemp = 0;
 
             // Set the target temperature to the new set temperature
             TargetBedTemp = setTemp;

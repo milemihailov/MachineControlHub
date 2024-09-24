@@ -25,6 +25,7 @@
 @using System.Text
 @using System.Diagnostics
 
+<Connection />
 <PrinterState />
 <PromptAndNotificationsHandler />
 
@@ -32,7 +33,7 @@
 
 
 
-    <MudItem xs="12" sm="12" md="8" lg="4" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
+    <MudItem xs="12" sm="12" md="8" lg="6" xl="4" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
 
         <!-- MudExpansionPanel for displaying uploaded files -->
         <MudExpansionPanel Text="UPLOADED FILES">
@@ -136,7 +137,7 @@
 
 
     <!-- Print Controls ------------------------------------------------->
-    <MudItem Style="width:100%;" xs="12" sm="12" md="4" lg="2" Class="pl-6 mr-0 pr-0 pt-10 mb-8">
+    <MudItem Style="width:100%;" xs="12" sm="12" md="4" lg="6" xl="2" Class="pl-6 mr-0 pr-0 pt-10 mb-8 mt-4">
 
         <!-- Conditions to enable\disable buttons -->
         @if (printerManager.ActivePrinter.SerialConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
@@ -151,63 +152,65 @@
         }
 
         <!-- Container for controlling print operations -->
-        <MudStack Justify="Justify.Center" Row="true">
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true">
             <!-- Button to start printing -->
-            <MudTooltip Text="Start Print">
+            <MudTooltip Text="Start print">
                 <MudIconButton Disabled="@PrintManager.StartButtonEnableDisable"
                                Class="mt-2"
                                Variant="Variant.Text"
                                OnClick="@(PrintManager.StartButtonEnableDisable ? null : ConfirmStartAsync)"
-                               Size="Size.Small"
-                               Color="Color.Tertiary">
+                               Size="Size.Medium">
                     <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.StartButtonEnableDisable ? 0.5 : 1); cursor:@(PrintManager.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
+
             <!-- Button to pause printing -->
-            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
-                           Class="mt-2"
-                           Variant="Variant.Text"
-                           OnClick="() => PrintManager.PausePrint(printerManager.ActivePrinter)"
-                           Size="Size.Small"
-                           Color="Color.Tertiary"
-                           Title="Pause Print">
-                <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
-            </MudIconButton>
+            <MudTooltip Text="Pause print">
+                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="() => PrintManager.PausePrint(printerManager.ActivePrinter)"
+                               Size="Size.Medium"
+                               Title="Pause Print">
+                    <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
 
             <!-- Button to resume printing -->
-            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
-                           Class="mt-2"
-                           Variant="Variant.Text"
-                           OnClick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)"
-                           Size="Size.Small"
-                           Color="Color.Tertiary"
-                           Title="Resume Print">
-                <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
-            </MudIconButton>
+            <MudTooltip Text="Resume print">
+                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="() => PrintManager.ResumePrint(printerManager.ActivePrinter)"
+                               Size="Size.Medium"
+                               Title="Resume Print">
+                    <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
 
             <!-- Button to stop printing -->
-            <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
-                           Class="mt-2"
-                           Variant="Variant.Text"
-                           OnClick="StopPrint"
-                           Size="Size.Small"
-                           Color="Color.Tertiary"
-                           Title="Stop Print">
-                <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
-            </MudIconButton>
+            <MudTooltip Text="Stop print">
+                <MudIconButton Disabled="@PrintManager.PrintJobControlsEnableDisable"
+                               Class="mt-2"
+                               Variant="Variant.Text"
+                               OnClick="StopPrint"
+                               Size="Size.Medium"
+                               Title="Stop Print">
+                    <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintManager.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintManager.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                </MudIconButton>
+            </MudTooltip>
         </MudStack>
 
 
         <!-- Container for media control buttons -->
-        <MudStack Justify="Justify.Center" Row="true">
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
 
             <!-- Button to release media -->
             <MudTooltip Text="Release Media">
                 <MudIconButton Class="mt-2"
                                Variant="Variant.Text"
                                OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)"
-                               Size="Size.Small"
-                               Color="Color.Tertiary">
+                               Size="Size.Medium">
                     <img src="/svg/ReleaseMedia.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                 </MudIconButton>
             </MudTooltip>
@@ -218,8 +221,7 @@
                                Class="mt-2"
                                Variant="Variant.Text"
                                OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}"
-                               Size="Size.Small"
-                               Color="Color.Tertiary">
+                               Size="Size.Medium">
                     <img src="/svg/AttachMedia.svg" alt="Custom SVG" style="width:40px; height:30px;
                         opacity:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? 0.5 : 1);
                         cursor:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
@@ -232,8 +234,7 @@
                                Class="mt-2"
                                Variant="Variant.Text"
                                OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)"
-                               Size="Size.Small"
-                               Color="Color.Tertiary">
+                               Size="Size.Medium">
                     <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
                         opacity:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
                         cursor:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
@@ -241,178 +242,258 @@
             </MudTooltip>
 
             <!--Upload button-->
-            <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt" Class="mr-0 pr-0">
-                <ActivatorContent>
+            <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
+                <ButtonTemplate>
                     <MudTooltip Text="Upload files">
-                        <MudIconButton Class="mr-0 pr-0"
-                                       HtmlTag="label"
+                        <MudIconButton HtmlTag="label"
                                        Variant="Variant.Text"
-                                       Size="Size.Small"
-                                       Color="Color.Tertiary"
-                                       Title="Release Media">
+                                       Size="Size.Medium"
+                                       Title="Release Media"
+                                       for="@context.Id">
                             <img src="/svg/Upload.svg" alt="Custom SVG" style="width:40px; height:30px;" />
                         </MudIconButton>
                     </MudTooltip>
-                </ActivatorContent>
+                </ButtonTemplate>
             </MudFileUpload>
         </MudStack>
-        <!-- Grid for file upload and display -->
-        @* <!-- MudExpansionPanel for displaying uploaded files -->
-        <MudItem xs="12" md="12" lg="12">
-        <MudExpansionPanel>
-        @foreach (var file in printerManager.ActivePrinter.PrintService.UploadedFiles)
-        {
-        <MudListItem>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Displaying file name -->
-        <MudText Typo="Typo.subtitle2">@file.FileName</MudText>
-        <!-- Displaying file size -->
-        <MudText Typo="Typo.overline">@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(@file.FileSize), 2)MB</MudText>
-        <!-- Progress indicator -->
-        <MudProgressCircular Color="Color.Default" Indeterminate=@printerManager.ActivePrinter.IsTransferringFile />
-        <!-- Button to start adding file to media -->
-        <MudButton Disabled="printerManager.ActivePrinter.IsTransferringFile" OnClick="() => PrintManager.WriteFileToDrive(PrintManager.DriveLetter, file.FileName, printerManager.ActivePrinter)">Add to media</MudButton>
-        </div>
-        </MudListItem>
-        }
-        </MudExpansionPanel>
-        </MudItem> *@
 
-        @*         <!-- Grid for media control buttons -->
-        <MudGrid Justify="Justify.SpaceAround">
-        <MudItem xs="6" md="4" lg="4" Class="px-0">
-        <!-- Button to release media -->
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
 
-        <MudIconButton Class="mt-2"
-        Variant="Variant.Text"
-        OnClick="() => PrintManager.ReleaseMedia(printerManager.ActivePrinter)"
-        Size="Size.Small"
-        Color="Color.Tertiary"
-        Title="Release Media">
-        <img src="/svg/ReleaseMedia.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudItem>
-        <MudItem xs="6" md="4" lg="4" Class="px-0">
-        <!-- Button to attach media -->
-        <MudIconButton Disabled="printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached"
-        Class="mt-2"
-        Variant="Variant.Text"
-        OnClick="() => {PrintManager.AttachMedia(printerManager.ActivePrinter); RefreshAfterAttachingMedia();}"
-        Size="Size.Small"
-        Color="Color.Tertiary"
-        Title="Attach Media">
-        <img src="/svg/AttachMedia.svg" alt="Custom SVG" style="width:40px; height:30px;
-        opacity:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? 0.5 : 1);
-        cursor:@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
-        </MudIconButton>
-        </MudItem>
-        <MudItem xs="12" md="4" lg="4" Class="px-0">
-        <!-- Button to attach media -->
-        <MudIconButton Disabled="printerManager.ActivePrinter.CurrentPrintJob.IsPrinting"
-        Class="mt-2"
-        Variant="Variant.Text"
-        OnClick="() => SendFileToSD(PrintManager.UploadedFileContent)"
-        Size="Size.Small"
-        Color="Color.Tertiary"
-        Title="Transfer to machine if attached any media">
-        <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
-        opacity:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
-        cursor:@(printerManager.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
-        </MudIconButton>
-        </MudItem>
-        </MudGrid> *@
-        @*
-        <!-- Select dropdown for choosing media -->
-        @if (PrintManager.DriversAvailable != null)
-        {
-        <MudSelect Disabled="@(printerManager.ActivePrinter.IsTransferringFile || printerManager.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintManager.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-        @foreach (var port in PrintManager.DriversAvailable)
-        {
-        <MudSelectItem Value="@port.DriveName">
-        <div style="display: flex; justify-content: space-between;">
-        <MudText> @port.DriveName @port.VolumeLabel </MudText>
-        @if (PrintManager.DriveLetter == port.DriveName)
-        {
-        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-        }
-        </div>
-        </MudSelectItem>
-        }
-        </MudSelect>
-        }
+            <!-- Button to change filament -->
+            <MudTooltip Text="Change filament">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.ChangeFilament(printerManager.ActivePrinter)">
+                    <!-- Render the custom SVG file from wwwroot/svg/ -->
+                    <img src="/svg/ChangeFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                </MudIconButton>
+            </MudTooltip>
 
-        @if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.SerialConnection.IsConnected)
-        {
-        <MudSelect @bind-Value="@PrintManager.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <!-- Button to load filament -->
+            <MudTooltip Text="Load filament">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.LoadFilament(printerManager.ActivePrinter)">
+                    <!-- Render the custom SVG file from wwwroot/svg/ -->
+                    <img src="/svg/LoadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                </MudIconButton>
+            </MudTooltip>
 
-        @if (PrintManager.SDFiles != null)
-        {
-        @foreach (var file in PrintManager.SDFiles)
-        {
-        <MudSelectItem Value="@file.FileName">
-        <div style="display: flex; justify-content: space-around;">
-        <span>@file.FileName</span>
-        <span>@($"{Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
-        </div>
-        </MudSelectItem>
-        }
-        }
-        </MudSelect>
-        }
+            <!-- Button to unload filament -->
+            <MudTooltip Text="Unload filament">
+                <MudIconButton Class="mt-2" Variant="Variant.Text" Size="Size.Medium" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">
+                    <!-- Render the custom SVG file from wwwroot/svg/ -->
+                    <img src="/svg/UnloadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                </MudIconButton>
+            </MudTooltip>
 
-
-        <!-- Displaying print details -->
-        <div>
-        <ContainerSpaceBetween Class="pt-8">
-        <MudText>File printing:</MudText>
-        <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
-        </ContainerSpaceBetween>
-        <ContainerSpaceBetween>
-        <MudText>Estimated print time left:</MudText>
-        <MudText>@printerManager.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
-        </ContainerSpaceBetween>
-        <ContainerSpaceBetween>
-        <MudText>Elapsed print time:</MudText>
-        <MudText>
-        @printerManager.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
-        </MudText>
-        </ContainerSpaceBetween>
-        <ContainerSpaceBetween>
-        <MudText>Start time:</MudText>
-        <MudText><strong>@printerManager.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
-        </ContainerSpaceBetween>
-
-        <ContainerSpaceBetween>
-        <MudText>File Size:</MudText>
-        <MudText><strong>@Math.Round(printerManager.ActivePrinter.CurrentPrintJob.ConvertToMB(printerManager.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
-        </ContainerSpaceBetween>
-        @if (printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
-        {
-        <ContainerSpaceBetween>
-        <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printerManager.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
-        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-        <b> @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((printerManager.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
-        </MudText>
-        </MudProgressLinear>
-        </ContainerSpaceBetween>
-
-        <ContainerSpaceBetween>
-        <MudButton FullWidth="true" OnClick="() => PrintManager.CancelCurrentObject(printerManager.ActivePrinter)" Color="Color.Tertiary">
-        Cancel Current Object
-        </MudButton>
-        </ContainerSpaceBetween>
-        }
-        </div> *@
+            <!-- Button to toggle fan on/off-->
+            <MudTooltip Text="Turn fan on/off">
+                <MudToggleIconButton @bind-Toggled="@ControlPanelService.ToggleFanValue" Class="mt-2" Size="Size.Medium" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}">
+                    @if (!ControlPanelService.ToggleFanValue)
+                    {
+                        <!-- Custom SVG for Fan Off -->
+                        <img src="/svg/FanOff.svg" alt="Fan On" style="width: 40px; height: 30px;" />
+                    }
+                    else
+                    {
+                        <!-- Custom SVG for Fan On -->
+                        <img src="/svg/FanOn.svg" alt="Fan Off" style="width: 40px; height: 30px;" />
+                    }
+                </MudToggleIconButton>
+            </MudTooltip>
+        </MudStack>
     </MudItem>
 
 
     <!-- Temperatures ---------------------------------------------------------------->
-    <MudItem xs="12" sm="12" md="12" lg="6" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
-        <!-- Container for controlling temperature settings -->
+    <MudItem xs="12" sm="12" md="12" lg="12" xl="6" Class="pt-10 pr-0 mr-0 pl-8 mt-6" Style="width:100%;">
         <MudGrid>
+
             <!-- Temperature Graph ----------------------------------------------------------->
-            <MudItem xs="12" md="6" lg="6" Class="pa-0 mr-0">
-                <!-- Centering div for the MudChart component -->
+            <MudItem xs="12" md="6" lg="6" xl="7" Class="px-4">
+                <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(printerManager.ActivePrinter.MotionSettings.PrintSpeed, printerManager.ActivePrinter)">Print Speed: @printerManager.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
+                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(printerManager.ActivePrinter.MotionSettings.PrintFlow, printerManager.ActivePrinter)">Print Flow: @printerManager.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
+            </MudItem>
+
+            <!-- Container for controlling temperature settings -->
+            <MudItem xs="12" sm="12" md="6" lg="6" xl="5" Class="px-4">
+
+                <!-- Grid for displaying hotend temperature settings -->
+                <MudGrid Class="pb-6">
+                    <MudItem xs="12" sm="12" md="12" lg="12" Style="align-content:space-around;">
+                        <!-- Container with text for current hotend temperature -->
+                        <MudContainer Style="display: flex; justify-content:space-evenly;" Class="pt-0 mt-0">
+
+                            <MudStack Justify="Justify.FlexStart" Row="true">
+
+                                <MudTooltip Text="Turn hotend off">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(0, printerManager.ActivePrinter)">
+                                        <img src="/svg/HotendOff.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Turn hotend on">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.TargetHotendTemp, printerManager.ActivePrinter)">
+                                        <img src="/svg/HotendOn.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+
+                            </MudStack>
+
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (HotendTemperatureService.CurrentHotendTemp < HotendTemperatureService.TargetHotendTemp)
+                                {
+                                    <img src="@(IsPrimaryColor ? "/svg/Flame1.svg" : "/svg/Flame2.svg")" alt="Thermometer On" style="width: 30px; height: 25px;" />
+                                }
+                                @HotendTemperatureService.CurrentHotendTemp
+
+                                <MudNumericField Style="max-width:80px;" Class="pb-2 ml-4" @bind-Value="HotendTemperatureService.TargetHotendTemp" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+
+                            </MudText>
+                        </MudContainer>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Grid for displaying bed temperature settings -->
+                <MudGrid Class="pb-6">
+                    <MudItem xs="12" sm="12" md="12" lg="12" Style="align-content:space-around;">
+                        <!-- Container with text for current bed temperature -->
+                        <MudContainer Style="display: flex; justify-content:space-evenly;" Class="pt-0 mt-0">
+                            <MudStack Justify="Justify.FlexStart" Row="true">
+
+                                <MudTooltip Text="Turn bed off">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(0, printerManager.ActivePrinter)">
+                                        <img src="/svg/BedOff.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Turn bed on">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => BedTemperatureService.SetBedTemperature(BedTemperatureService.TargetBedTemp, printerManager.ActivePrinter)">
+                                        <img src="/svg/BedOn.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (BedTemperatureService.CurrentBedTemp < BedTemperatureService.TargetBedTemp)
+                                {
+                                    <img src="@(IsPrimaryColor ? "/svg/Flame1.svg" : "/svg/Flame2.svg")" alt="Thermometer On" style="width: 30px; height: 25px;" />
+                                }
+                                @BedTemperatureService.CurrentBedTemp
+                                <MudNumericField Style="max-width:80px;" Class="pb-2 ml-4" @bind-Value="BedTemperatureService.TargetBedTemp" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+                            </MudText>
+                        </MudContainer>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Grid for displaying chamber temperature settings -->
+                <MudGrid Class="pb-6">
+                    <MudItem xs="12" sm="12" md="12" lg="12" Style="align-content:space-around;">
+                        <!-- Container with text for current chamber temperature -->
+                        <MudContainer Style="display: flex; justify-content:space-evenly;" Class="pt-0 mt-0">
+
+                            <MudStack Justify="Justify.FlexStart" Row="true">
+
+                                <MudTooltip Text="Turn chamber off">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(0, printerManager.ActivePrinter)">
+                                        <img src="/svg/ChamberOff.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Turn chamber on">
+                                    <MudIconButton Size="Size.Medium" @onclick="() => ChamberTemperatureService.SetChamberTemperature(ChamberTemperatureService.TargetChamberTemp, printerManager.ActivePrinter)">
+                                        <img src="/svg/ChamberOn.svg" style="width: 40px; height: 30px;" />
+                                    </MudIconButton>
+                                </MudTooltip>
+
+                            </MudStack>
+
+                            <MudText Style="display:flex; align-items:center;">
+                                @if (ChamberTemperatureService.CurrentChamberTemp < ChamberTemperatureService.TargetChamberTemp)
+                                {
+                                    <img src="@(IsPrimaryColor ? "/svg/Flame1.svg" : "/svg/Flame2.svg")" alt="Thermometer On" style="width: 30px; height: 25px;" />
+                                }
+                                @ChamberTemperatureService.CurrentChamberTemp
+
+                                <MudNumericField Style="max-width:80px;" Class="pb-2 ml-4" @bind-Value="@ChamberTemperatureService.TargetChamberTemp" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
+
+                            </MudText>
+                        </MudContainer>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+
+    <!-- Bed Leveling ---------------------------------------------------------------->
+    <BedLevel />
+
+
+    <!-- Preheating profiles and info graphs ----------------------------------------------------------->
+    <MudItem xs="12" md="12" lg="12" xl="6" Class="pa-8 mr-0">
+        <MudGrid>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+
+                <!-- Preheating Profiles -------------------------------------------------------------->
+                <MudCarousel Class="mud-width-full my-8" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)" EnableSwipeGesture="true" ShowBullets="false">
+                    @foreach (var profile in PrinterDataHandler.PreheatingProfiles)
+                    {
+                        <!-- MudCarouselItem to display a preheating profile -->
+                        <MudCarouselItem Transition="MudBlazor.Transition.Slide" Color="@Color.Surface">
+                            <!-- Displaying the name of the material -->
+                            <MudText Typo="Typo.h4" Style="display: flex; justify-content: center;">@profile.MaterialName</MudText>
+
+                            <!-- Div for displaying the hotend temperature, bed temperature, and fan speed -->
+                            <div class="d-flex pt-10 pr-16 pl-16" Style="display: flex; justify-content: space-around; align-items: center;">
+                                <!-- Hotend temperature -->
+                                <MudText Typo="Typo.overline"><b>Hotend:</b> @(profile.HotendTemp)°C</MudText>
+                                <!-- Bed temperature -->
+                                <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
+                                <!-- Fan speed -->
+                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeedInPercent)%</MudText>
+                            </div>
+
+                            <!-- Div for preheat and delete buttons -->
+                            <div Style="display: flex; justify-content: center;" class="my-7">
+                                <!-- Button to start preheating -->
+                                <MudTooltip Text="Start preheating">
+                                    <MudIconButton Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                                   Size="Size.Large"
+                                                   Variant="Variant.Text"
+                                                   Color="Color.Warning"
+                                                   OnClick="() => PrinterDataHandler.StartPreheating(profile, printerManager.ActivePrinter)" />
+                                </MudTooltip>
+                                <!-- Button to delete preheating profile -->
+                                <MudTooltip Text="Delete preset">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Large"
+                                                   Variant="Variant.Text"
+                                                   Color="Color.Error"
+                                                   OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
+                                </MudTooltip>
+
+                                <MudTooltip Text="Make preset">
+                                    <a href="printersettings?tab=preheating" style="text-decoration: none;">
+                                        <MudIconButton Size="Size.Large"
+                                                       Icon="@Icons.Material.Filled.Add"
+                                                       Variant="Variant.Text"
+                                                       Color="Color.Tertiary" />
+                                    </a>
+                                </MudTooltip>
+                            </div>
+                        </MudCarouselItem>
+                    }
+                </MudCarousel>
+            </MudItem>
+
+            <!-- Fan speed, print speed and print flow graphs -->
+            <MudItem xs="12" md="12" lg="6">
+                <div>
+                    <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="ControlPanelService.Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
+                </div>
+            </MudItem>
+
+            <!-- Temperature graph -->
+            <MudItem xs="12" md="12" lg="6">
+
                 <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
                     <!-- MudChart component displaying a line chart -->
                     <MudChart ChartType="ChartType.Line"
@@ -423,233 +504,6 @@
                               Height="350px"
                               ChartOptions="PrintManager.Options" />
                 </div>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="6" lg="6">
-                <!-- Grid for displaying hotend temperature settings -->
-                <MudGrid Class="pb-6">
-                    <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
-                        <!-- Container with text for current hotend temperature -->
-                        <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Hotend:</MudText>
-                            <MudText Style="display:flex; align-items:center;">
-                                @if (HotendTemperatureService.CurrentHotendTemp < HotendTemperatureService.TargetHotendTemp)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                             Size="Size.Large"
-                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
-                                             Class="pr-2 mr-2" />
-                                }
-                                @HotendTemperatureService.CurrentHotendTemp
-                            </MudText>
-                        </ContainerSpaceBetween>
-                        <!-- Container with text for target hotend temperature -->
-                        <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Hotend:</MudText>
-                            <MudText>@HotendTemperatureService.TargetHotendTemp</MudText>
-                        </ContainerSpaceBetween>
-                    </MudItem>
-                    <MudItem xs="12" sm="12" md="6">
-                        <MudGrid Style="align-items: center;">
-                            <!-- MudNumericField for setting hotend temperature -->
-                            <MudItem xs="12" sm="6" md="12">
-                                <MudNumericField @bind-Value="HotendTemperatureService.SetHotendTemp" Label="Set Hotend" Immediate="true" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
-                                <ContainerSpaceBetween Class="ma-0 pa-0">
-                                    <!-- Button to set hotend temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.SetHotendTemperature(HotendTemperatureService.SetHotendTemp, printerManager.ActivePrinter)">Set Temperature</MudButton>
-                                    <!-- Button to turn off hotend temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => HotendTemperatureService.SetHotendTemperature(0, printerManager.ActivePrinter)">Turn Off</MudButton>
-                                </ContainerSpaceBetween>
-                            </MudItem>
-                        </MudGrid>
-                    </MudItem>
-                    <MudDivider />
-                </MudGrid>
-                <!-- Grid for displaying bed temperature settings -->
-                <MudGrid Class="pb-6">
-                    <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
-                        <!-- Container with text for current bed temperature -->
-                        <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Bed:</MudText>
-                            <MudText Style="display:flex; align-items:center;">
-                                @if (BedTemperatureService.CurrentBedTemp < BedTemperatureService.TargetBedTemp)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                             Size="Size.Large"
-                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
-                                             Class="pr-2 mr-2" />
-                                }
-                                @BedTemperatureService.CurrentBedTemp
-                            </MudText>
-                        </ContainerSpaceBetween>
-                        <!-- Container with text for target bed temperature -->
-                        <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Bed:</MudText>
-                            <MudText>@BedTemperatureService.TargetBedTemp</MudText>
-                        </ContainerSpaceBetween>
-                    </MudItem>
-                    <MudItem xs="12" sm="12" md="6">
-                        <MudGrid Style="align-items: center;">
-                            <MudItem xs="12" sm="6" md="12">
-                                <!-- MudNumericField for setting bed temperature -->
-                                <MudNumericField @bind-Value="BedTemperatureService.SetBedTemp" Label="Set Bed" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
-                                <ContainerSpaceBetween Class="ma-0 pa-0">
-                                    <!-- Button to set bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => BedTemperatureService.SetBedTemperature(BedTemperatureService.SetBedTemp, printerManager.ActivePrinter)">Set Temperature</MudButton>
-                                    <!-- Button to turn off bed temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => BedTemperatureService.SetBedTemperature(0, printerManager.ActivePrinter)">Turn Off</MudButton>
-                                </ContainerSpaceBetween>
-                            </MudItem>
-                        </MudGrid>
-                    </MudItem>
-                    <MudDivider />
-                </MudGrid>
-                <!-- Grid for displaying chamber temperature settings -->
-                <MudGrid Class="pb-6">
-                    <MudItem xs="12" sm="12" md="6" Style="align-content:space-around;">
-                        <!-- Container with text for current chamber temperature -->
-                        <ContainerSpaceBetween Class="pt-0 mt-0">
-                            <MudText>Current Chamber:</MudText>
-                            <MudText Style="display:flex; align-items:center;">
-                                @if (ChamberTemperatureService.CurrentChamberTemp < ChamberTemperatureService.TargetChamberTemp)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                             Size="Size.Large"
-                                             Color="@(IsPrimaryColor ? Color.Warning : Color.Default)"
-                                             Class="pr-2 mr-2" />
-                                }
-                                @ChamberTemperatureService.CurrentChamberTemp
-                            </MudText>
-                        </ContainerSpaceBetween>
-                        <!-- Container with text for target chamber temperature -->
-                        <ContainerSpaceBetween Class="pt-2 mt-2">
-                            <MudText>Target Chamber:</MudText>
-                            <MudText>@ChamberTemperatureService.TargetChamberTemp</MudText>
-                        </ContainerSpaceBetween>
-                    </MudItem>
-                    <MudItem xs="12" sm="12" md="6">
-                        <MudGrid Style="align-items: center;">
-                            <MudItem xs="12" sm="6" md="12">
-                                <!-- MudNumericField for setting chamber temperature -->
-                                <MudNumericField @bind-Value="ChamberTemperatureService.SetChamberTemp" Label="Set Chamber" Variant="Variant.Text" Min="0" HideSpinButtons="true" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6" md="12" Class="my-0 py-0">
-                                <ContainerSpaceBetween Class="ma-0 pa-0">
-                                    <!-- Button to set chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => ChamberTemperatureService.SetChamberTemperature(ChamberTemperatureService.SetChamberTemp, printerManager.ActivePrinter)">Set Temperature</MudButton>
-                                    <!-- Button to turn off chamber temperature -->
-                                    <MudButton FullWidth="true" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" @onclick="() => ChamberTemperatureService.SetChamberTemperature(0, printerManager.ActivePrinter)">Turn Off</MudButton>
-                                </ContainerSpaceBetween>
-                            </MudItem>
-                        </MudGrid>
-                    </MudItem>
-                    <MudDivider />
-                </MudGrid>
-
-            </MudItem>
-        </MudGrid>
-    </MudItem>
-
-    <!-- Bed Leveling ---------------------------------------------------------------->
-    <BedLevel />
-
-
-    <!-- Temperature Graph ----------------------------------------------------------->
-    <MudItem xs="12" md="6" lg="6" Class="pa-8 mr-0">
-        <MudGrid>
-            <MudItem xs="12" md="12" lg="6">
-
-                <!-- Button to toggle fan on/off-->
-                <MudTooltip Text="Turn fan on/off">
-                    <MudToggleIconButton @bind-Toggled="@ControlPanelService.ToggleFanValue" @onclick="() => {ControlPanelService.ToggleFan(); ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter);}"
-                                         Color="@Color.Error"
-                                         ToggledColor="@Color.Success">
-                        @if (!ControlPanelService.ToggleFanValue)
-                        {
-                            <!-- Custom SVG for Fan Off -->
-                            <img src="/svg/FanOff.svg" alt="Fan On" style="width: 40px; height: 30px;" />
-                        }
-                        else
-                        {
-                            <!-- Custom SVG for Fan On -->
-                            <img src="/svg/FanOn.svg" alt="Home All" style="width: 40px; height: 30px;" />
-                        }
-                    </MudToggleIconButton>
-                </MudTooltip>
-
-                <!-- Button to change filament -->
-                <MudTooltip Text="Change filament">
-                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.ChangeFilament(printerManager.ActivePrinter)">
-                        <!-- Render the custom SVG file from wwwroot/svg/ -->
-                        <img src="/svg/ChangeFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                    </MudIconButton>
-                </MudTooltip>
-
-                <!-- Button to load filament -->
-                <MudTooltip Text="Load filament">
-                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.LoadFilament(printerManager.ActivePrinter)">
-                        <!-- Render the custom SVG file from wwwroot/svg/ -->
-                        <img src="/svg/LoadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                    </MudIconButton>
-                </MudTooltip>
-
-                <!-- Button to unload filament -->
-                <MudTooltip Text="Unload filament">
-                    <MudIconButton Class="mt-2" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => HotendTemperatureService.UnloadFilament(printerManager.ActivePrinter)">
-                        <!-- Render the custom SVG file from wwwroot/svg/ -->
-                        <img src="/svg/UnloadFilament.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                    </MudIconButton>
-                </MudTooltip>
-
-                <!-- Sliders to control fan speed, print speed and print flow -->
-                <MudSlider Size="Size.Large" @bind-Value="@ControlPanelService.FanSpeedValue" Min="0" Max="255" @onchange="() => ControlPanelService.SetFanSpeed(ControlPanelService.FanSpeedValue, printerManager.ActivePrinter)">Fan Speed: @ControlPanelService.FanSpeedInPercentage% </MudSlider>
-                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintSpeed" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintSpeedPercentage(printerManager.ActivePrinter.MotionSettings.PrintSpeed, printerManager.ActivePrinter)">Print Speed: @printerManager.ActivePrinter.MotionSettings.PrintSpeed% </MudSlider>
-                <MudSlider Size="Size.Large" @bind-Value="@printerManager.ActivePrinter.MotionSettings.PrintFlow" Min="0" Max="500" @onchange="() => ControlPanelService.SetPrintFlowPercentage(printerManager.ActivePrinter.MotionSettings.PrintFlow, printerManager.ActivePrinter)">Print Flow: @printerManager.ActivePrinter.MotionSettings.PrintFlow% </MudSlider>
-
-            </MudItem>
-            <MudItem xs="12" md="12" lg="6">
-                <div>
-                    <MudChart ChartType="ChartType.StackedBar" ChartSeries="@Series" @bind-SelectedIndex="ControlPanelService.Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
-                </div>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="12">
-
-                <!-- Preheating Profiles -------------------------------------------------------------->
-                <MudCarousel Class="mud-width-full" Style="height:200px;" TData="object" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)" EnableSwipeGesture="true" Elevation="1">
-                    @foreach (var profile in PrinterDataHandler.PreheatingProfiles)
-                    {
-                        <!-- MudCarouselItem to display a preheating profile -->
-                        <MudCarouselItem Transition="MudBlazor.Transition.Slide" Color="@Color.Surface">
-                            <!-- Displaying the name of the material -->
-                            <MudText Typo="Typo.h4" Style="display: flex; justify-content: center;">@profile.MaterialName</MudText>
-
-                            <!-- Div for displaying the hotend temperature, bed temperature, and fan speed -->
-                            <div class="d-flex pt-4 pr-16 pl-16" Style="display: flex; justify-content: space-around; align-items: center;">
-                                <!-- Hotend temperature -->
-                                <MudText Typo="Typo.overline"><b>Hotend:</b> @(profile.HotendTemp)°C</MudText>
-                                <!-- Bed temperature -->
-                                <MudText Typo="Typo.overline"><b>Bed</b>: @(profile.BedTemp)°C</MudText>
-                                <!-- Fan speed -->
-                                <MudText Typo="Typo.overline"><b>Fan Speed:</b> @(profile.FanSpeedInPercent)%</MudText>
-                            </div>
-
-                            <!-- Div for preheat and delete buttons -->
-                            <div Style="display: flex; justify-content: center;" class="pt-2">
-                                <!-- Button to start preheating -->
-                                <MudIconButton Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                               Size="Size.Medium"
-                                               Variant="Variant.Text"
-                                               Color="Color.Warning"
-                                               OnClick="() => PrinterDataHandler.StartPreheating(profile, printerManager.ActivePrinter)" />
-                                <!-- Button to delete preheating profile -->
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Text" Color="Color.Error" OnClick="() => PrinterDataHandler.DeletePreheatingProfile(profile)" />
-                            </div>
-                        </MudCarouselItem>
-                    }
-                </MudCarousel>
             </MudItem>
         </MudGrid>
     </MudItem>
@@ -701,6 +555,7 @@
         // Subscribe to service events
         background.SecondElapsed += OnSecondElapsed;
         background.FiveSecondsElapsed += OnFiveSecondsElapsed;
+        background.HalfSecondElapsed += OnHalfSecondElapsed;
         printerManager.ActivePrinterChanged += OnSelectedPrinter;
         printerManager.InputReceived += OnUpdate;
         printerManager.ActivePrinter.PrintService.RefreshProgressState += OnRefreshProgressState;
@@ -719,7 +574,6 @@
         {
             new ChartSeries()
             {
-                Name = "Fan Speed",
                 Data = new double[]
                 {
                     ControlPanelService.FanSpeedInPercentage,
@@ -868,6 +722,16 @@
     }
 
     /// <summary>
+    /// Called every half a second to make an animation like behaviour for icon
+    /// </summary>
+    private async void OnHalfSecondElapsed()
+    {
+        // Toggle the color state
+        IsPrimaryColor = !IsPrimaryColor;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
     /// This method is called every second to update temperature data, SD status, etc...
     /// </summary>
     private async void OnSecondElapsed()
@@ -895,8 +759,6 @@
             }
         }
 
-        // Toggle the color state
-        IsPrimaryColor = !IsPrimaryColor;
     }
 
     /// <summary>

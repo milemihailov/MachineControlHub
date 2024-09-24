@@ -561,7 +561,7 @@ namespace WebUI.Data
         {
             if (message.Contains("Count"))
             {
-                var match = Regex.Match(message, @"X\s*:\s*(\d+\.?\d*)\s*Y\s*:\s*(\d+\.?\d*)\s*Z\s*:\s*(\d+\.?\d*)\s*E\s*:\s*(\d+\.?\d*)");
+                var match = Regex.Match(message, @"X\s*:\s*(-?\d+\.?\d*)\s*Y\s*:\s*(-?\d+\.?\d*)\s*Z\s*:\s*(-?\d+\.?\d*)\s*E\s*:\s*(-?\d+\.?\d*)");
 
                 if (match.Success)
                 {

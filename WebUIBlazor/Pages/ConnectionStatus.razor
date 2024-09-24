@@ -4,19 +4,20 @@
 
 <MudText Class="pr-9" Typo="Typo.h6" Color="@(printerManager.ActivePrinter.SerialConnection.IsConnected ? Color.Tertiary : Color.Error)">@printerManager.ActivePrinter.Name</MudText>
 
-
-<MudMenu Class="pr-12" Icon="@Icons.Material.Filled.Cable">
-    <ChildContent>
-        @foreach (var bs in printerManager.Printers.Values)
-        {
-            <MudMenuItem OnClick="() => OnPrinterSelected(bs.SerialConnection.PortName)" Disabled="@(!bs.SerialConnection.IsConnected ? true : false)">
-                <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.SerialConnection.IsConnected ? Severity.Success : Severity.Error )" Variant="Variant.Text">
-                    @(new MarkupString(bs.SerialConnection.IsConnected ? $"<strong>{bs.Name}</strong> - Connected" : $"<strong>{bs.Name}</strong> - Disconnected"))
-                </MudAlert>
-            </MudMenuItem>
-        }
-    </ChildContent>
-</MudMenu>
+<MudTooltip Text="Select printer">
+    <MudMenu Class="pr-12" Icon="@Icons.Material.Filled.Cable">
+        <ChildContent>
+            @foreach (var bs in printerManager.Printers.Values)
+            {
+                <MudMenuItem OnClick="() => OnPrinterSelected(bs.SerialConnection.PortName)" Disabled="@(!bs.SerialConnection.IsConnected ? true : false)">
+                    <MudAlert ContentAlignment="HorizontalAlignment.Center" Icon="@Icons.Material.Filled.PrivateConnectivity" Severity="@(bs.SerialConnection.IsConnected ? Severity.Success : Severity.Error )" Variant="Variant.Text">
+                        @(new MarkupString(bs.SerialConnection.IsConnected ? $"<strong>{bs.Name}</strong> - Connected" : $"<strong>{bs.Name}</strong> - Disconnected"))
+                    </MudAlert>
+                </MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+</MudTooltip>
 
 @code {
 

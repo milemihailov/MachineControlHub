@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Dumpify" Version="0.6.6" />
     <PackageReference Include="MudBlazor" Version="6.21.0" />
-    <PackageReference Include="Plotly.Blazor" Version="4.1.0" />
+    <PackageReference Include="Plotly.Blazor" Version="5.1.2" />
   </ItemGroup>
 
   <ItemGroup>

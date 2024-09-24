@@ -7,7 +7,6 @@ namespace WebUI.Data
 
 
         public int CurrentChamberTemp { get; set; }
-        public int SetChamberTemp { get; set; }
         public int TargetChamberTemp { get; set; }
         public int PIDChamberCycles { get; set; }
         public int PIDChamberTemp { get; set; }
@@ -24,7 +23,6 @@ namespace WebUI.Data
             {
                 printer.ChamberTemperatures.ParseCurrentTemperature(input);
                 CurrentChamberTemp = printer.ChamberTemperatures.CurrentTemp;
-                SetChamberTemp = printer.ChamberTemperatures.SetTemp;
                 TargetChamberTemp = printer.ChamberTemperatures.TargetTemp;
             });
         }

@@ -28,7 +28,6 @@ namespace MachineControlHub.Temps
 
         public int CurrentTemp { get; set; }
         public int MaxTemp { get; set; }
-        public int SetTemp { get; set; }
         public int TargetTemp { get; set; }
 
 

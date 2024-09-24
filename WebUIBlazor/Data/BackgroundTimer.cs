@@ -7,6 +7,7 @@
         public CancellationTokenSource _cts = new();
 
         public event Action TenMilisecondsElapsed;
+        public event Action HalfSecondElapsed;
         public event Action SecondElapsed;
         public event Action FiveSecondsElapsed;
 
@@ -53,6 +54,11 @@
                     if (i % 100 == 0)
                     {
                         SecondElapsed?.Invoke();
+                    }
+
+                    if (i % 30 == 0)
+                    {
+                        HalfSecondElapsed?.Invoke();
                     }
 
                     if (i % 500 == 0)

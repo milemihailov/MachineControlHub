@@ -3,11 +3,13 @@
 @inject Data.PrinterManagerService PrinterManager
 @inject ISnackbar Snackbar
 
-<MudContainer Style="display: flex; justify-content: center; align-items: center;" Class="pt-3">
-    <MudStack Spacing="2">
-        <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.ElectricalServices" Color="Color.Tertiary" OnClick="OnExpandCollapseClick"></MudFab>
-        <MudCollapse Expanded="_expanded">
-            <MudPaper >
+<MudContainer Style="display: flex; justify-content: center; align-items: center;">
+    <MudStack Spacing="2" Class="mr-6 pt-2">
+        <MudTooltip Text="Connect/Disconnect">
+            <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.ElectricalServices" Color="Color.Tertiary" OnClick="OnExpandCollapseClick"></MudFab>
+        </MudTooltip>
+        <MudPopover Open="_expanded">
+            <MudPaper>
                 <div style="display: flex; gap: 16px; padding: 0px 56px;">
                     <MudSelect T="string" Label="Select Port" @bind-Value="portName" Immediate="true" Variant="Variant.Text" Style="max-width:160px;">
                         @foreach (var template in PrinterManager.PrinterSerialConnection.AvailableConnections())
@@ -36,8 +38,9 @@
                     </MudItem>
                 </MudGrid>
             </MudPaper>
-        </MudCollapse>
+        </MudPopover>
     </MudStack>
+    <ConnectionStatus />
 </MudContainer>
 
 
@@ -65,8 +68,8 @@
         {
 
             PrinterManager.AddPrinter(portName, baudRate, printerName);
-            
-            if(printerName == null)
+
+            if (printerName == null)
             {
                 printerName = portName;
             }
@@ -101,9 +104,10 @@
 
     public void Disconnect()
     {
-        PrinterManager.ActivePrinter.SerialConnection.Disconnect();
+        PrinterManager.Printers[portName].SerialConnection.Disconnect();
         PrinterManager.Printers.Remove(portName);
         Console.WriteLine($"Disconecting port{portName}");
+        Snackbar.Add($"{portName} disconnected", Severity.Error);
     }
 
     public void GetPorts()

@@ -6,7 +6,6 @@ namespace WebUI.Data
     public class HotendTemperatureService
     {
         public int CurrentHotendTemp { get; set; }
-        public int SetHotendTemp { get; set; }
         public int TargetHotendTemp { get; set; }
         public int PIDHotendCycles { get; set; }
         public int PIDHotendTemp { get; set; }
@@ -16,9 +15,6 @@ namespace WebUI.Data
         public void SetHotendTemperature(int setTemp, Printer printer)
         {
             printer.HotendTemperatures.SetTemperature(setTemp);
-
-            /// Reset the set temperature to 0
-            SetHotendTemp = 0;
 
             /// Update the target temperature
             TargetHotendTemp = setTemp;

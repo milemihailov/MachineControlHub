@@ -2,12 +2,15 @@
 @using MachineControlHub
 @using MachineControlHub.Material
 @using MachineControlHub.Motion
+
 @inject PrinterDataService PrinterDataService
 @inject NavigationManager MyNavigationManager
 @inject PrinterManagerService PrinterManager
 @inject HotendTemperatureService HotendTemperature
 @inject BedTemperatureService BedTemperature
+@inject ISnackbar Snackbar
 
+<Connection />
 <PrinterState />
 <PromptAndNotificationsHandler />
 
@@ -21,7 +24,7 @@
             <MudIconButton Icon="@Icons.Material.Filled.Save" Variant="Variant.Text" Color="Color.Tertiary" OnClick="() => PrinterDataService.SaveToEEPROM(PrinterManager.ActivePrinter)" />
         </MudTooltip>
     </div>
-    <MudTabs>
+    <MudTabs @bind-ActivePanelIndex="activeTabIndex">
 
         <!-- Printer Information -------------------------------------------------------------------------------------------->
 
@@ -238,7 +241,7 @@
                                 <MudNumericField @bind-Value="BedTemperature.PIDBedCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => BedTemperature.SetBedPIDValues(PrinterManager.ActivePrinter)">Start Bed PID Autotune</MudButton>
+                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => {BedTemperature.SetBedPIDValues(PrinterManager.ActivePrinter); SnackbarMessage(PIDAutoTuneMessage); }">Start Bed PID Autotune</MudButton>
                             </MudItem>
                         </MudGrid>
                         <MudText Class="mt-4">
@@ -320,7 +323,7 @@
                                 <MudNumericField @bind-Value="HotendTemperature.PIDHotendCycles" Label="Number Of Cycles" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
                             </MudItem>
                             <MudItem xs="12">
-                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => HotendTemperature.SetHotendPIDValues(PrinterManager.ActivePrinter)">Start Hotend PID Autotune</MudButton>
+                                <MudButton Color="Color.Tertiary" FullWidth="true" @onclick="() => {HotendTemperature.SetHotendPIDValues(PrinterManager.ActivePrinter); SnackbarMessage(PIDAutoTuneMessage);}">Start Hotend PID Autotune</MudButton>
                             </MudItem>
                         </MudGrid>
                         <MudText Class="mt-4">
@@ -655,7 +658,7 @@
                                 PrinterManager.ActivePrinter.PreheatingProfiles.CalculatePercentageIntoFanSpeed(PrinterManager.ActivePrinter.PreheatingProfiles.FanSpeedInPercent);
                                 PrinterDataService.SetPreheatingProfiles(PrinterManager.ActivePrinter);
                             }"
-                                Color="Color.Tertiary">
+                                       Color="Color.Tertiary">
                                 Send Preset To Printer
                             </MudButton>
                         </MudContainer>
@@ -903,6 +906,13 @@
 
 
 @code {
+    private string PIDAutoTuneMessage = "PID auto tuning started";
+
+    // Default to the first tab
+    private int activeTabIndex = 0;
+
+    // Track if the navigation was from a link
+    private bool isNavigated = false;
 
     bool _expanded = true;
     string minHeight = "200px";
@@ -917,6 +927,25 @@
     {
         PrinterManager.ActivePrinterChanged += OnSelectedPrinter;
         PrinterManager.InputReceived += OnUpdate;
+
+        var uri = MyNavigationManager.ToAbsoluteUri(MyNavigationManager.Uri);
+        // Check if the query parameter is present (but only for direct navigation)
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("tab", out var tab))
+        {
+            // Set the flag to true when query parameter is found
+            isNavigated = true; 
+
+            // Navigate to the correct tab only if it's a direct navigation (not on refresh)
+            if (tab == "preheating")
+            {
+                activeTabIndex = 5;
+            }
+            // Remove the query parameter without reloading the page
+            var uriWithoutQuery = uri.GetLeftPart(UriPartial.Path);
+
+            // replace keeps the user on the same page
+            MyNavigationManager.NavigateTo(uriWithoutQuery, replace: true);
+        }
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -928,6 +957,13 @@
                 PrinterDataService.RequestPrinterSettingsReport(PrinterManager.ActivePrinter);
                 PrinterDataService.RequestFirmwareReport(PrinterManager.ActivePrinter);
             }
+        }
+
+        if (firstRender && !isNavigated)
+        {
+            // Ensure the first tab is selected on refresh
+            activeTabIndex = 0;
+            StateHasChanged();
         }
     }
 
@@ -951,6 +987,11 @@
         {
             Console.WriteLine($"Unexpected error: {ex.Message}");
         }
+    }
+
+    private void SnackbarMessage(string input)
+    {
+        Snackbar.Add(input,Severity.Info);
     }
 
     public void Dispose()

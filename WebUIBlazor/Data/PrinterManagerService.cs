@@ -19,7 +19,7 @@ namespace WebUI.Data
         public event Action<string> InputReceived;
         public event EventHandler ActivePrinterChanged;
         public event Action PrinterBusy;
-        public string Notification { get; set; }
+        public string NotificationParsedFromAction { get; set; }
         public string UnknownCommandMessage { get; set; }
 
         public PrinterManagerService()
@@ -85,7 +85,7 @@ namespace WebUI.Data
             if (Printers.ContainsKey(comPort))
             {
                 ActivePrinter = Printers[comPort];
-                Notification = null;
+                NotificationParsedFromAction = null;
                 ActivePrinterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -187,21 +187,21 @@ namespace WebUI.Data
         /// <param name="data">The input data string to be parsed for notifications and prompts.</param>
         /// <remarks>
         /// This method uses regular expressions to identify and extract notification and prompt actions
-        /// from the input data. If a notification is found, it updates the <see cref="Notification"/> property.
+        /// from the input data. If a notification is found, it updates the <see cref="NotificationParsedFromAction"/> property.
         /// </remarks>
         public void ParseNotifications(string data)
         {
-            string patternNotification = @"//action:notification\s*(.*)";
+            string patternNotificationAction = @"//action:notification\s*(.*)";
 
             if (data.Contains("//action:notification"))
             {
-                Match match = Regex.Match(data, patternNotification);
+                Match match = Regex.Match(data, patternNotificationAction);
                 if (match.Success)
                 {
-                    string result = match.Groups[1].Value;
-                    Notification = result;
+                    NotificationParsedFromAction = match.Groups[1].Value;
                 }
             }
+
         }
 
         public void ParseUnknownCommandMessage(string input)
