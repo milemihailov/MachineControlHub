@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using MudBlazor.Services;
+using WebUI;
 using WebUI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,10 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+
+
+
+    Util.OpenUrl("http://localhost:5000");
 }
 
 app.UseHttpsRedirection();
@@ -38,5 +44,7 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+
 
 app.Run();

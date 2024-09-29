@@ -21,7 +21,7 @@
 <MudGrid Style="width: 100vw;">
 
     @* Interactive Bed -------------------------------------------------------------- *@
-    <MudItem xs="12" sm="12" md="12" lg="5" xl="5">
+    <MudItem xs="12" sm="12" md="12" lg="7" xl="5">
         <MudGrid>
             <MudItem xs="10" sm="10" md="10" lg="10" Class="pr-0 mr-0">
                 <div style="margin-right:0px; padding-left:0px;">
@@ -41,92 +41,112 @@
     </MudItem>
 
     @* Control Panel -------------------------------------------------------------- *@
-    <MudItem xs="12" sm="12" md="12" lg="3" xl="3" Class="px-3 mt-6">
+    <MudItem xs="12" sm="12" md="12" lg="5" xl="3" Class="px-3 mt-6">
         <div style="justify-content:center;">
             <MudGrid Class="py-5">
                 <MudItem lg="6" Class="pl-12">
 
                     @* #1 *@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Z+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Z-axis positive move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Z+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Extrude.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Extrude">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Extrude.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Y+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Y-axis positive move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Y+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, true, true)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/XYHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
-
-                        @* <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="PrinterManagerService.ActivePrinter.MotionSettings.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" /> *@
+                        <MudTooltip Text="XY home">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, true, true)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/XYHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
                     </MudStack>
 
                     @* #2 *@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudTooltip Text="Z-axis negative move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Z-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Z-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="X-axis negative move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/X-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/X-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Home">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/HomeAll.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/HomeAll.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
-
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick=" () => ControlPanelService.AdjustAxis(MovePositions.XMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/X+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
-
+                        <MudTooltip Text="X-axis positive move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick=" () => ControlPanelService.AdjustAxis(MovePositions.XMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/X+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
                     </MudStack>
 
 
                     @* #3 *@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudTooltip Text="Align Z">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.ZSteppersAutoAlignment(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/AlignZ.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.ZSteppersAutoAlignment(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/AlignZ.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Retract">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Retract.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Retract.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Y-axis negative move">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/Y-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
 
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/Y-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
-
-
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, false, false, true)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/ZHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Z home">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, false, false, true)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/ZHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
                     </MudStack>
 
                     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.DisableSteppers(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-                            <!-- Render the custom SVG file from wwwroot/svg/ -->
-                            <img src="/svg/DisableMotors.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-                        </MudIconButton>
+                        <MudTooltip Text="Disable stepper motors">
+                            <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.DisableSteppers(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
+                                <!-- Render the custom SVG file from wwwroot/svg/ -->
+                                <img src="/svg/DisableMotors.svg" alt="Custom SVG" style="width:40px; height:30px;" />
+                            </MudIconButton>
+                        </MudTooltip>
                     </MudStack>
                 </MudItem>
 
@@ -162,113 +182,10 @@
             </MudGrid>
 
         </div>
-        @*
-
-        <div Class="py-5">
-        <MudContainer MaxWidth="MaxWidth.Small" Class="px-2">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick=" () => ControlPanelService.AdjustAxis(MovePositions.XMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/X+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Y+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Z+.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(0.02, PrinterManagerService.ActivePrinter)">Z +0.02</MudButton>
-        <MudNumericField Margin="MudBlazor.Margin.Dense" Immediate="true" @bind-Value="PrinterManagerService.ActivePrinter.MotionSettings.FeedRateFreeMove" TextUpdateSuppression="false" Label="Set Feedrate" Variant="Variant.Outlined" Min="0" HideSpinButtons="true" />
-        </MudStack>
-
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.XMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/X-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.YMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Y-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.ZMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Z-.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => ControlPanelService.BabySteps(-0.02, PrinterManagerService.ActivePrinter)">Z -0.02</MudButton>
-        <MudText Typo="Typo.overline"><b>CURRENT FEEDRATE: </b> @(PrinterManagerService.ActivePrinter.MotionSettings.FeedRateFreeMove)(mm/min)</MudText>
-        </MudStack>
-
-
-        <MudStack Class="mb-2 flex-none" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-        <MudText Align="Align.Center" Typo="Typo.subtitle2">Set A Moving Value:</MudText>
-        <MudChipSet @bind-SelectedChip="Selected" Filter="true" Mandatory="true">
-        <MudChip Text="0.1" Color="Color.Success" Value="@((double)0.1)">0.1 mm</MudChip>
-        <MudChip Text="1" Color="Color.Success" Value="@((double)1)">1 mm</MudChip>
-        <MudChip Default="true" Text="10" Color="Color.Success" Value="@((double)10)">10 mm</MudChip>
-        <MudChip Text="100" Color="Color.Success" Value="@((double)100)">100 mm</MudChip>
-        </MudChipSet>
-        @if (Selected != null)
-        {
-        ControlPanelService.ValueToMove = double.Parse(Selected.Text);
-        }
-        </MudStack>
-        <div Style="display: flex; justify-content: center;" Elevation="0">
-        <MudContainer>
-        <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
-        <MudItem xs="4" Class="px-0">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, true, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Extrude.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter)" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/HomeAll.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudItem>
-        <MudItem xs="4" Class="px-0">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.AdjustAxis(MovePositions.EMovePos, false, PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/Retract.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, true, true)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/XYHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudItem>
-        <MudItem xs="4" Class="px-0">
-        <MudTooltip Text="Disable Stepper Motors">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.DisableSteppers(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/DisableMotors.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudTooltip>
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.HomeAxisCommand(PrinterManagerService.ActivePrinter, false, false, true)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/ZHome.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudItem>
-        </MudGrid>
-
-        <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
-        <MudItem xs="12" Class="px-0">
-        <MudTooltip Text="Z Align">
-        <MudIconButton Class="mt-2" Variant="Variant.Text" OnClick="() => ControlPanelService.ZSteppersAutoAlignment(PrinterManagerService.ActivePrinter)" Size="Size.Small" Color="Color.Tertiary">
-        <!-- Render the custom SVG file from wwwroot/svg/ -->
-        <img src="/svg/AlignZ.svg" alt="Custom SVG" style="width:40px; height:30px;" />
-        </MudIconButton>
-        </MudTooltip>
-        </MudItem>
-        </MudGrid>
-        </MudContainer>
-        </div>
-        </MudContainer>
-        </div> *@
     </MudItem>
 
     @* Console Output -------------------------------------------------------------- *@
-    <MudItem xs="12" sm="12" md="12" lg="4" xl="4">
+    <MudItem xs="12" sm="12" md="12" lg="12" xl="4">
         <MudPaper Class="d-flex mud-height-full" MaxHeight="800px">
             <textarea id="consoleOutput" style="width:100%; padding:5px; resize: none;" readonly rows="10" cols="50">@ControlPanelService.ConsoleOutput</textarea>
         </MudPaper>

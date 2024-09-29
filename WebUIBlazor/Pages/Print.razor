@@ -159,7 +159,7 @@
                                Variant="Variant.Text"
                                OnClick="@(PrintingService.StartButtonEnableDisable ? null : ConfirmStartAsync)"
                                Size="Size.Medium">
-                    <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.StartButtonEnableDisable ? 0.5 : 1); cursor:@(PrintingService.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/StartPrint.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.StartButtonEnableDisable ? 0.2 : 1); cursor:@(PrintingService.StartButtonEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
@@ -171,7 +171,7 @@
                                OnClick="() => PrintingService.PausePrint(PrinterManagerService.ActivePrinter)"
                                Size="Size.Medium"
                                Title="Pause Print">
-                    <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Pause.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.2 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
@@ -183,7 +183,7 @@
                                OnClick="() => PrintingService.ResumePrint(PrinterManagerService.ActivePrinter)"
                                Size="Size.Medium"
                                Title="Resume Print">
-                    <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Resume.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.2 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
 
@@ -195,7 +195,7 @@
                                OnClick="StopPrint"
                                Size="Size.Medium"
                                Title="Stop Print">
-                    <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.5 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
+                    <img src="/svg/Stop.svg" alt="Custom SVG" style="width:40px; height:30px; opacity:@(PrintingService.PrintJobControlsEnableDisable ? 0.2 : 1); cursor:@(PrintingService.PrintJobControlsEnableDisable ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
         </MudStack>
