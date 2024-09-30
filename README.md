@@ -20,7 +20,7 @@ With the Machine Control Hub, you can take full control of your 3D printing oper
 
 - Download the Release: Get the release package corresponding to your operating system from the official repository.
 - Extract the Folder: Unzip the downloaded folder to a location of your choice.
-- Launch the Application: Start the ControlHub.exe file.
+- Launch the Application: Start the WebUI.exe file.
 
 Once launched, the application will run in your web browser, allowing you to control and monitor your 3D printers seamlessly.
 
