@@ -46,6 +46,13 @@ Once launched, the application will run in your web browser, allowing you to con
 
 This is an open-source project and pull requests are welcome, also if you think some changes are needed please open an issue.
 
+## Contact
+
+If you have any questions, suggestions, or feedback, feel free to reach out:
+
+- **Email**: milemihailov5@gmail.com
+- **LinkedIn**: https://www.linkedin.com/in/mile-mihailov-334a15222/
+
 ## License
 
 Copyright (C) 2023-2024 Mile Mihailov
