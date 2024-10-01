@@ -1,19 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Version>1.0.0.0</Version>
 
-  <ItemGroup>
-    <PackageReference Include="Dumpify" Version="0.6.6" />
-    <PackageReference Include="MudBlazor" Version="6.21.0" />
-    <PackageReference Include="Plotly.Blazor" Version="5.1.2" />
-  </ItemGroup>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MachineControlHub\MachineControlHub.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Dumpify" Version="0.6.6" />
+		<PackageReference Include="MudBlazor" Version="6.21.0" />
+		<PackageReference Include="Plotly.Blazor" Version="5.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MachineControlHub\MachineControlHub.csproj" />
+	</ItemGroup>
 
 </Project>
