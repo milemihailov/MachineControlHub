@@ -1,7 +1,7 @@
 # Machine Control Hub
 The Machine Control Hub is an intuitive application designed for managing and monitoring 3D printers with Marlin firmware with ease. This app streamlines your 3D printing experience by allowing you to control multiple printers from a single interface.
 
-## Features:
+## Features
 
 - Printer Control: Start, pause, or stop prints with just a few clicks.
 - Print Monitoring: Keep an eye on your prints in real-time, ensuring that everything runs smoothly.
@@ -16,7 +16,7 @@ With the Machine Control Hub, you can take full control of your 3D printing oper
 - Supported operating systems: Windows, macOS, Linux.
 - Ensure the latest drivers for serial communication are installed (if applicable).
 
-## Installation Instructions:
+## Installation Instructions
 
 - Download the Release: Get the release package corresponding to your operating system from the official repository.
 - Extract the Folder: Unzip the downloaded folder to a location of your choice.
@@ -24,7 +24,7 @@ With the Machine Control Hub, you can take full control of your 3D printing oper
 
 Once launched, the application will run in your web browser, allowing you to control and monitor your 3D printers seamlessly.
 
-# How to use:
+## How to use
 
 - Connection: Select your port and baudrate (you can also choose a name for your printer) and Connect
 - After connecting it will automatically select the recently connected printer
