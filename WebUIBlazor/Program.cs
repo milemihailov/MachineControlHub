@@ -33,7 +33,7 @@ if (!app.Environment.IsDevelopment())
 
 
 
-    Util.OpenUrl("http://localhost:5000");
+    Util.OpenUrl("http://localhost:5135");
 }
 
 app.UseHttpsRedirection();
