@@ -71,6 +71,10 @@
     {
         try
         {
+            if (PrinterManager.Printers.ContainsKey(PortName))
+            {
+                PrinterManager.Printers.Remove(PortName);
+            }
 
             PrinterManager.AddPrinter(PortName, BaudRate, PrinterName);
 
@@ -112,7 +116,6 @@
         PrinterManager.Printers[PortName].SerialConnection.Disconnect();
         PrinterManager.Printers.Remove(PortName);
         Console.WriteLine($"Disconecting port {PortName}");
-        Snackbar.Add($"{PortName} disconnected", Severity.Error);
         ConnectionState = !ConnectionState;
     }
 
@@ -120,7 +123,6 @@
     {
         if (PrinterManager.PrinterSerialConnection != null)
         {
-
             var availablePorts = PrinterManager.PrinterSerialConnection.AvailableConnections();
 
             foreach (var port in availablePorts)
