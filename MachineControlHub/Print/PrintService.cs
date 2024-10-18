@@ -39,7 +39,10 @@ namespace MachineControlHub.Print
             int checksum = 0;
             foreach (char c in command)
             {
-                checksum ^= c; // XOR each character
+                unchecked
+                {
+                    checksum ^= c; // XOR each character
+                }
             }
             return checksum;
         }
@@ -72,14 +75,13 @@ namespace MachineControlHub.Print
         /// <exception cref="Exception">Thrown for any other errors that occur during the file transfer.</exception>
         public async Task TransferFileToSD(string GcodeContent, string fileName)
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 try
                 {
                     TransferToSD = true;
                     Stopwatch.Reset();
                     Stopwatch.Start();
-
                     // Adds all the content in a list (seemed easier to filter from unwanted characters from the firmware)
                     List<string> lines = new();
                     using (StringReader reader = new(GcodeContent))
@@ -124,7 +126,7 @@ namespace MachineControlHub.Print
                             Connection.Write(lineToSend);
 
                             // If error when sending a line it will retry to send the error line
-                            string input = Connection.Read();
+                            string input = await Connection.ReadAllAsync();
                             if (input.Contains("Resend"))
                             {
                                 Match resendMatch = Regex.Match(input, @"(?<=Resend:\s*)\d+");
@@ -155,7 +157,7 @@ namespace MachineControlHub.Print
                             // Estimate remaining time
                             double progressPercentage = (double)i / lines.Count;
                             double timePerLine = Stopwatch.ElapsedMilliseconds / (double)i; // Time spent per line
-                            double remainingTimeMs = timePerLine * (lines.Count - i); // Estimate remaining time in milliseconds
+                            long remainingTimeMs = (long)(timePerLine * (lines.Count - i)); // Estimate remaining time in milliseconds
                             TimeSpan remainingTime = TimeSpan.FromMilliseconds(remainingTimeMs);
 
                             // Format the remaining time
@@ -165,7 +167,7 @@ namespace MachineControlHub.Print
                             while (!success && retryCount < 3)
                             {
                                 Connection.Write(lineToSend);
-                                string response = Connection.Read();
+                                string response = await Connection.ReadAllAsync();
 
                                 retryCount++;
                             }
@@ -264,7 +266,6 @@ namespace MachineControlHub.Print
             {
                 files.Add((match.Groups[2].Value, match.Groups[1].Value));
             }
-            Console.WriteLine(files);
             return files;
         }
     }

@@ -131,10 +131,11 @@ namespace WebUI.Data
         /// </remarks>
         private async Task ReadFromPort(Printer printer, CancellationToken token)
         {
-            if (!printer.IsBusy)
+            while (!token.IsCancellationRequested)
             {
-                while (!token.IsCancellationRequested)
+                if (!printer.PrintService.TransferToSD)
                 {
+
                     if (printer.SerialConnection != null && printer.SerialConnection.HasData())
                     {
                         printer.SerialConnection.IsConnected = true;
@@ -178,6 +179,7 @@ namespace WebUI.Data
                     await Task.Delay(600, token);
                 }
             }
+
         }
 
 
@@ -201,7 +203,6 @@ namespace WebUI.Data
                     NotificationParsedFromAction = match.Groups[1].Value;
                 }
             }
-
         }
 
         public void ParseUnknownCommandMessage(string input)

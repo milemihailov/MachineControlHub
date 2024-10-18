@@ -227,7 +227,7 @@
                 </MudIconButton>
             </MudTooltip>
 
-            <!-- Button to attach media -->
+            <!-- Button to send file to media -->
             <MudTooltip Text="Send gcode to the SD">
                 <MudIconButton Disabled="PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting"
                                Class="mt-2"
@@ -527,7 +527,7 @@
     public async void SendFileToSd(string file)
     {
         PrinterManagerService.ActivePrinter.IsBusy = true;
-        await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(file, "name.gco");
+        await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(file, PrinterManagerService.ActivePrinter.PrintService.UploadedFiles.Last().FileName);
         PrinterManagerService.ActivePrinter.IsBusy = false;
     }
 
@@ -640,58 +640,56 @@
     /// <param name="input">The input received from the printer.</param>
     public async void OnUpdate(string input)
     {
-        if (!PrinterManagerService.ActivePrinter.IsBusy)
+        // Check if the printer is connected and has printers
+        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
         {
-            // Check if the printer is connected and has printers
-            if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
+            // Accumulate file content
+            FileContentBuffer += input;
+
+            // get the list of files on the SD card
+            if (input.Contains("End file"))
             {
-                // Accumulate file content
-                FileContentBuffer += input;
+                // remove empty lines from the file content buffer
+                SdFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
 
-                // get the list of files on the SD card
-                if (input.Contains("End file"))
-                {
-                    // remove empty lines from the file content buffer
-                    SdFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                // Add the list of files to the SDFiles list
+                PrintingService.ListSDFiles(SdFiles, PrinterManagerService.ActivePrinter);
 
-                    // Add the list of files to the SDFiles list
-                    PrintingService.ListSDFiles(SdFiles, PrinterManagerService.ActivePrinter);
+                // Clear the file content buffer
+                FileContentBuffer = "";
+            }
 
-                    // Clear the file content buffer
-                    FileContentBuffer = "";
-                }
+            // get the name of the file being printed
+            PrintingService.GetPrintingFileName(input, PrinterManagerService.ActivePrinter);
 
-                // get the name of the file being printed
-                PrintingService.GetPrintingFileName(input, PrinterManagerService.ActivePrinter);
+            // parse the current hotend, bed and chamber temperatures
+            await HotendTemperatureService.ParseCurrentHotendTemperature(input, PrinterManagerService.ActivePrinter);
+            await BedTemperatureService.ParseCurrentBedTemperature(input, PrinterManagerService.ActivePrinter);
+            if (PrinterManagerService.ActivePrinter.HasChamber)
+            {
+                await ChamberTemperatureService.ParseCurrentChamberTemperature(input, PrinterManagerService.ActivePrinter);
+            }
 
-                // parse the current hotend, bed and chamber temperatures
-                await HotendTemperatureService.ParseCurrentHotendTemperature(input, PrinterManagerService.ActivePrinter);
-                await BedTemperatureService.ParseCurrentBedTemperature(input, PrinterManagerService.ActivePrinter);
-                if (PrinterManagerService.ActivePrinter.HasChamber)
-                {
-                    await ChamberTemperatureService.ParseCurrentChamberTemperature(input, PrinterManagerService.ActivePrinter);
-                }
+            // Ensure the graph data does not exceed 30 entries by removing the oldest entries
+            if (PrintingService.HotendGraph.Count >= 30)
+            {
+                PrintingService.HotendGraph.RemoveAt(0);
+                PrintingService.BedGraph.RemoveAt(0);
+            }
 
-                // Ensure the graph data does not exceed 30 entries by removing the oldest entries
-                if (PrintingService.HotendGraph.Count >= 30)
-                {
-                    PrintingService.HotendGraph.RemoveAt(0);
-                    PrintingService.BedGraph.RemoveAt(0);
-                }
+            // Add the current temperature data to the graph
+            PrintingService.HotendGraph.Add(HotendTemperatureService.CurrentHotendTemp);
+            PrintingService.BedGraph.Add(BedTemperatureService.CurrentBedTemp);
 
-                // Add the current temperature data to the graph
-                PrintingService.HotendGraph.Add(HotendTemperatureService.CurrentHotendTemp);
-                PrintingService.BedGraph.Add(BedTemperatureService.CurrentBedTemp);
+            // Update the graph data with the latest values
+            PrintingService.UpdateGraphData();
 
-                // Update the graph data with the latest values
-                PrintingService.UpdateGraphData();
-
-                // Parse the firmware settings
-                PrinterDataService.OnUpdateSettings(input, PrinterManagerService.ActivePrinter);
+            // Parse the firmware settings
+            PrinterDataService.OnUpdateSettings(input, PrinterManagerService.ActivePrinter);
 
 
-                // Update the print flow, print speed, and fan speed chart values
-                Series = new List<ChartSeries>
+            // Update the print flow, print speed, and fan speed chart values
+            Series = new List<ChartSeries>
     {
         new ChartSeries()
         {
@@ -705,17 +703,17 @@
         },
     };
 
-                // update the print flow value
-                PrinterDataService.GetPrintFlow(input, PrinterManagerService.ActivePrinter);
+            // update the print flow value
+            PrinterDataService.GetPrintFlow(input, PrinterManagerService.ActivePrinter);
 
-                // update the print speed value
-                PrinterDataService.GetPrintSpeed(input, PrinterManagerService.ActivePrinter);
+            // update the print speed value
+            PrinterDataService.GetPrintSpeed(input, PrinterManagerService.ActivePrinter);
 
-                ControlPanelService.GetFanSpeed(input);
+            ControlPanelService.GetFanSpeed(input);
 
-                await InvokeAsync(StateHasChanged);
-            }
+            await InvokeAsync(StateHasChanged);
         }
+
     }
 
     /// <summary>
@@ -735,25 +733,22 @@
     {
         if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
-            if (!PrinterManagerService.ActivePrinter.IsBusy)
+            // If automatic temperature reporting is not enabled, request temperature data
+            if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature)
             {
-                // If automatic temperature reporting is not enabled, request temperature data
-                if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature)
-                {
-                    PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
-                }
-
-                // If automatic status reporting is not enabled, request the SD status
-                if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus)
-                {
-                    PrinterManagerService.ActivePrinter.SerialConnection.Write("M27");
-                }
-
-                // Asynchronously get the status of the drives
-                await Task.Run(() => PrintingService.GetDrives());
-
-                await InvokeAsync(StateHasChanged);
+                PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
             }
+
+            // If automatic status reporting is not enabled, request the SD status
+            if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus)
+            {
+                PrinterManagerService.ActivePrinter.SerialConnection.Write("M27");
+            }
+
+            // Asynchronously get the status of the drives
+            await Task.Run(() => PrintingService.GetDrives());
+
+            await InvokeAsync(StateHasChanged);
         }
 
     }
@@ -766,17 +761,14 @@
         // Check if the printer is connected and not busy
         if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
-            if (!PrinterManagerService.ActivePrinter.IsBusy)
+            await Task.Run(() =>
             {
-                await Task.Run(() =>
+                // If printing is in progress, request name of the file being printed
+                if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
                 {
-                    // If printing is in progress, request name of the file being printed
-                    if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
-                    {
-                        PrinterManagerService.ActivePrinter.SerialConnection.Write("M27 C");
-                    }
-                });
-            }
+                    PrinterManagerService.ActivePrinter.SerialConnection.Write("M27 C");
+                }
+            });
         }
     }
 
