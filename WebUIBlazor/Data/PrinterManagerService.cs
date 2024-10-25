@@ -182,7 +182,6 @@ namespace WebUI.Data
 
         }
 
-
         /// <summary>
         /// Parses notification and prompt actions from the provided data string.
         /// </summary>

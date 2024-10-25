@@ -89,6 +89,8 @@
 
             PrinterManager.SelectPrinter(PortName);
 
+            PrinterManager.ActivePrinter.SerialConnection.Write("M401 S1");
+
             //set the host keep alive command to 1 second after connection
             PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
 

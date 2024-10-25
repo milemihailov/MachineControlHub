@@ -40,6 +40,7 @@ namespace WebUI.Data
                 FileName = printer.CurrentPrintJob.FileName,
                 TotalPrintTime = printer.CurrentPrintJob.TotalPrintTime,
                 StartTimeOfPrint = printer.CurrentPrintJob.StartTimeOfPrint,
+                EndTimeOfPrint = printer.CurrentPrintJob.EndTimeOfPrint,
                 FileSize = printer.CurrentPrintJob.FileSize
             };
 
@@ -54,6 +55,12 @@ namespace WebUI.Data
         public void RemovePrintJob(CurrentPrintJob printJob)
         {
             PrintHistory.Remove(printJob);
+            SavePrinterData(PRINT_HISTORY_PATH, PrintHistory);
+        }
+
+        public void RemoveAllPrintJobs()
+        {
+            PrintHistory.Clear();
             SavePrinterData(PRINT_HISTORY_PATH, PrintHistory);
         }
 

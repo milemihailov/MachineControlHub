@@ -56,6 +56,8 @@ namespace MachineControlHub.Print
         /// </summary>
         public DateTime? StartTimeOfPrint { get; set; }
 
+        public DateTime? EndTimeOfPrint { get; set; }
+
 
         /// <summary>
         /// Gets or sets the name of the currently printing file.

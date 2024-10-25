@@ -6,6 +6,8 @@
 @inject PrinterDataService printerDataServiceTest
 @inject PrinterManagerService PrinterManager
 @inject NavigationManager MyNavigationManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <Connection />
 <PrinterState />
@@ -17,7 +19,7 @@
             <!-- Add this div with text-align style -->
             <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
         </div>
-
+        <MudButton FullWidth="true" Color="Color.Error" OnClick="ConfirmAndRemoveAllPrintJobs">Clear all records</MudButton>
         @foreach (var printJob in printerDataServiceTest.PrintHistory.Where(printJob => printJob.PortName == PrinterManager.ActivePrinter.SerialConnection.PortName))
         {
             <div style="display:flex; justify-content:center; align-items: center;">
@@ -42,12 +44,13 @@
                         <MudText>File size:</MudText>
                         <MudText>@Math.Round(printJob.ConvertToMB(printJob.FileSize), 2)MB</MudText>
                     </ContainerSpaceBetween>
-
+                    <ContainerSpaceBetween>
+                        <MudText>End time of print: </MudText>
+                        <MudText> @printJob.EndTimeOfPrint </MudText>
+                    </ContainerSpaceBetween>
                     <MudButton FullWidth="true" Color="Color.Error" OnClick="() => printerDataServiceTest.RemovePrintJob(printJob)">Delete Record</MudButton>
-                    <MudDivider />@*
-                <ContainerSpaceBetween>
-                <MudText>End time of print: @printJob.EndTimeOfPrint</MudText>
-                </ContainerSpaceBetween>  *@
+                    <MudDivider />
+
                 </div>
             </div>
         }
@@ -127,6 +130,26 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+
+    private async Task ConfirmAndRemoveAllPrintJobs()
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Confirm Deletion",
+            "Are you sure you want to clear all records?",
+            yesText: "Yes",
+            noText: "No",
+            options: new DialogOptions() { DisableBackdropClick = true });
+
+        if (result == true)
+        {
+            printerDataServiceTest.RemoveAllPrintJobs();
+            Snackbar.Add("All records have been cleared.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Action canceled.", Severity.Info);
         }
     }
 }

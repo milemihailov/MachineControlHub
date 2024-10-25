@@ -864,6 +864,9 @@
                 // Stop the current print job
                 PrinterManagerService.ActivePrinter.PrintService.AbortCurrentPrint();
 
+                // Set the end time of the print job
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.EndTimeOfPrint = DateTime.Now;
+
                 // Stop the stopwatch for the current print job
                 PrinterManagerService.ActivePrinter.CurrentPrintJob.StopStopwatch();
 

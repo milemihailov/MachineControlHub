@@ -220,6 +220,7 @@ namespace WebUI.Data
             if (finished.Success)
             {
                 printer.CurrentPrintJob.PrintProgress = 100;
+                printer.CurrentPrintJob.EndTimeOfPrint = DateTime.Now;
             }
 
             // If there is any print progress
