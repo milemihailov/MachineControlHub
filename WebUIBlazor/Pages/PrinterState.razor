@@ -24,7 +24,7 @@
 
 }
 
-@if (printerManager.ActivePrinter.SerialConnection.IsConnected)
+@if (printerManager.ActivePrinter.SerialConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
 {
     <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!printerManager.ActivePrinter.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
         @if (printerManager.ActivePrinter.IsBusy)
@@ -37,7 +37,7 @@
 
 <MudAlert ContentAlignment="HorizontalAlignment.Center" NoIcon="true" Severity="Severity.Success">
     <MudText Typo="Typo.h6" Color="Color.Primary">@printerManager.NotificationParsedFromAction</MudText>
-    <MudText Typo="Typo.h6" Color="Color.Error">@printerManager.UnknownCommandMessage</MudText>
+    @* <MudText Typo="Typo.h6" Color="Color.Error">@printerManager.UnknownCommandMessage</MudText> *@
 </MudAlert>
 
 @code {

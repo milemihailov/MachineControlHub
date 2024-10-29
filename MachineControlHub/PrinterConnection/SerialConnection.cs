@@ -147,7 +147,6 @@ namespace MachineControlHub.PrinterConnection
             {
                 Logger.LogError($"Error writing to serial port: {ex.Message}");
                 IsConnected = false;
-                Disconnected?.Invoke();
             }
         }
 

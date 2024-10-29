@@ -298,6 +298,12 @@
                 </MudToggleIconButton>
             </MudTooltip>
         </MudStack>
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
+
+            <MudTooltip Text="Delete selected SD file">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"  Color="Color.Error" Size="Size.Large" OnClick="() => PrintingService.DeleteSDFile(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter)">Delete</MudIconButton>
+            </MudTooltip>
+        </MudStack>
     </MudItem>
 
 

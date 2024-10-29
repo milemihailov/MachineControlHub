@@ -603,7 +603,7 @@ namespace WebUI.Data
             if (input.Contains("Stats"))
             {
                 string printsPattern = @"Prints:\s*(\d+), Finished:\s*(\d+), Failed:\s*(\d+)";
-                string timePattern = @"Total time:\s*(\d+h)?\s*(\d+m)?\s*(\d+s)?,?\s*Longest job:\s*(\d+m)?\s*(\d+s)?";
+                string timePattern = @"Total time:\s*(\d+y)?\s*(\d+mo)?\s*(\d+d)?\s*(\d+h)?\s*(\d+m)?\s*(\d+s)?,?\s*Longest job:\s*(\d+y)?\s*(\d+mo)?\s*(\d+d)?\s*(\d+h)?\s*(\d+m)?\s*(\d+s)?";
                 string filamentPattern = @"Filament used:\s*([\d.]+m)";
 
                 Match printsMatch = Regex.Match(input, printsPattern);
@@ -619,8 +619,8 @@ namespace WebUI.Data
 
                 if (timeMatch.Success)
                 {
-                    printer.PrintHistory.TotalPrintTime = $"{timeMatch.Groups[1].Value}{timeMatch.Groups[2].Value}{timeMatch.Groups[3].Value}";
-                    printer.PrintHistory.LongestPrintJob = $"{timeMatch.Groups[4].Value}{timeMatch.Groups[5].Value}";
+                    printer.PrintHistory.TotalPrintTime = $"{timeMatch.Groups[1].Value} {timeMatch.Groups[2].Value} {timeMatch.Groups[3].Value} {timeMatch.Groups[4].Value} {timeMatch.Groups[5].Value} {timeMatch.Groups[6].Value}";
+                    printer.PrintHistory.LongestPrintJob = $"{timeMatch.Groups[7].Value} {timeMatch.Groups[8].Value} {timeMatch.Groups[9].Value} {timeMatch.Groups[10].Value} {timeMatch.Groups[11].Value} {timeMatch.Groups[12].Value}";
                 }
 
                 if (filamentMatch.Success)

@@ -82,19 +82,14 @@ namespace WebUI.Data
 
         public void ListSDFiles(string inputText, Printer printer)
         {
-            // Check if the printer's firmware supports long filenames
-            if (printer.HasLongFilenameSupport)
-            {
-                SDFiles = printer.PrintService.ListLongNameSDFiles(inputText);
-                printer.MediaAttached = true;
-            }
+            SDFiles = printer.PrintService.ListSDFiles(inputText);
+            printer.MediaAttached = true;
+        }
 
-            // If the printer's firmware does not support long filenames, use the standard method
-            else
-            {
-                SDFiles = printer.PrintService.ListSDFiles(inputText);
-                printer.MediaAttached = true;
-            }
+        public void DeleteSDFile(string fileName, Printer printer)
+        {
+            printer.SerialConnection.Write($"M30 {fileName};");
+            Console.WriteLine($"M30 {fileName};");
         }
 
         public void StartTimeOfPrint(Printer printer)
@@ -220,7 +215,6 @@ namespace WebUI.Data
             if (finished.Success)
             {
                 printer.CurrentPrintJob.PrintProgress = 100;
-                printer.CurrentPrintJob.EndTimeOfPrint = DateTime.Now;
             }
 
             // If there is any print progress
@@ -238,6 +232,7 @@ namespace WebUI.Data
                     printer.CurrentPrintJob.IsPrinting = false;
                     printer.CurrentPrintJob.StopStopwatch();
                     printer.CurrentPrintJob.PrintProgress = 0;
+                    printer.CurrentPrintJob.EndTimeOfPrint = DateTime.Now;
                     FormatTotalPrintTime(printer);
                     PrinterDataServiceTest.AddPrintJobToHistory(printer);
                     printer.CurrentPrintJob.FinalizationExecuted = true;

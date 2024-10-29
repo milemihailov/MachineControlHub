@@ -63,6 +63,21 @@ namespace MachineControlHub.Print
         }
 
         /// <summary>
+        /// Extracts the part of the line up to the first occurrence of the semicolon.
+        /// </summary>
+        /// <param name="line">The input line containing the G-code command.</param>
+        /// <returns>The part of the line before the first semicolon, or the entire line if no semicolon is found.</returns>
+        public static string ExtractLineBeforeComment(string line)
+        {
+            int semicolonIndex = line.IndexOf(';');
+            if (semicolonIndex >= 0)
+            {
+                return line.Substring(0, semicolonIndex).Trim();
+            }
+            return line.Trim();
+        }
+
+        /// <summary>
         /// Transfers a G-code file to the SD card using a serial connection.
         /// </summary>
         /// <param name="GcodeFile">The path to the G-code file to be transferred.</param>
@@ -82,6 +97,7 @@ namespace MachineControlHub.Print
                     TransferToSD = true;
                     Stopwatch.Reset();
                     Stopwatch.Start();
+
                     // Adds all the content in a list (seemed easier to filter from unwanted characters from the firmware)
                     List<string> lines = new();
                     using (StringReader reader = new(GcodeContent))
@@ -95,7 +111,8 @@ namespace MachineControlHub.Print
                             }
                             else
                             {
-                                lines.Add(line);
+                                string cleanedLine = ExtractLineBeforeComment(line);
+                                lines.Add(cleanedLine);
                             }
                         }
                     }
