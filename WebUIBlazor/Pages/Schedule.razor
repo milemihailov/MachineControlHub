@@ -1,0 +1,172 @@
+﻿@page "/schedule"
+
+@inject PrintingService PrintingService
+@inject PrinterManagerService PrinterManagerService
+@inject PrinterDataService PrinterDataService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@using MachineControlHub
+@using MachineControlHub.Motion
+
+<Connection />
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="6" lg="6">
+        <MudTimePicker Label="24 hours" @bind-Time="PrintingService.ScheduleTime" Color="Color.Tertiary" IconSize="Size.Small" PickerVariant="PickerVariant.Static" />
+
+        <MudButton OnClick="SchedulePrintJob" StartIcon="@Icons.Material.Filled.Schedule" FullWidth="true" Color="Color.Tertiary" Variant="Variant.Filled"> schedule</MudButton>
+
+        @if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        {
+            <MudSelect @bind-Value="@PrintingService.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+
+                @if (PrintingService.ListOfSDFiles != null)
+                {
+                    @foreach (var file in PrintingService.ListOfSDFiles)
+                    {
+                        <MudSelectItem Value="@file.FileName">
+                            <div style="display: flex; justify-content: space-around;">
+                                <span>@file.FileName</span>
+                                <span>@($"{Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(double.Parse(file.FileSize)), 2)}MB")</span>
+                            </div>
+                        </MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        }
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3" lg="3">
+
+        @foreach (var task in PrinterDataService.PrintSchedules)
+        {
+            <ContainerSpaceBetween>
+                <MudText Typo="Typo.subtitle2">Printer:</MudText>
+                <MudText Typo="Typo.body2"> @task.SchedulePrinter</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText Typo="Typo.subtitle2">File:</MudText>
+                <MudText Typo="Typo.body2"> @task.ScheduleName</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText Typo="Typo.subtitle2">Size:</MudText>
+                <MudText Typo="Typo.body2"> @Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(task.ScheduleSize), 2)MB</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText Typo="Typo.subtitle2">Scheduled Time:</MudText>
+                <MudText Typo="Typo.body2"> @task.ScheduleTime</MudText>
+            </ContainerSpaceBetween>
+            <ContainerSpaceBetween>
+                <MudText Typo="Typo.subtitle2">Status:</MudText>
+                <MudText Typo="Typo.body2"> @task.ScheduleStatus</MudText>
+            </ContainerSpaceBetween>
+            <MudButton FullWidth="true" Color="Color.Error" Variant="Variant.Text" OnClick="() => PrinterDataService.RemoveScheduledPrint(task)"> Delete Task</MudButton>
+        }
+
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+
+    // Buffer to accumulate file content until processing is triggered
+    string FileContentBuffer { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        PrinterDataService.PrintSchedules = PrinterDataService.LoadPrinterDataList<MachineControlHub.Print.PrintSchedule>(PrinterDataService.PRINTER_SCHEDULED_PRINTS_PATH);
+
+        PrinterManagerService.InputReceived += OnUpdate;
+        PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if the printer is connected, has printers available and is not printing
+            if ((PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected) && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+            {
+                // Request the list of files on the SD card
+                PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
+            }
+        }
+    }
+
+    public void OnUpdate(string input)
+    {
+        // Check if the printer is connected and has printers
+        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
+        {
+            // Accumulate file content
+            FileContentBuffer += input;
+
+            // get the list of files on the SD card
+            if (input.Contains("End file"))
+            {
+                // remove empty lines from the file content buffer
+                PrintingService.ParsedStringSDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+
+                // Add the list of files to the SDFiles list
+                PrintingService.ListSDFiles(PrintingService.ParsedStringSDFiles, PrinterManagerService.ActivePrinter);
+
+                // Clear the file content buffer
+                FileContentBuffer = "";
+            }
+        }
+
+        // Clear the file content buffer if it exceeds 4000 characters
+        if (FileContentBuffer.Length > 4000)
+        {
+            FileContentBuffer = "";
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async Task SchedulePrintJob()
+    {
+        // Show a confirmation dialog to the user
+        bool? result = await DialogService.ShowMessageBox(
+        "Schedule a print:",
+        $"Schedule a print for {PrintingService.ScheduleTime}",
+        yesText: "Schedule!", cancelText: "Cancel");
+
+
+        // If the user confirms the start of the print job
+        if (result == true)
+        {
+            // Check if a file is selected for printing
+            if (PrintingService.FileToPrint == "")
+            {
+                // Show an error message if no file is selected
+                Snackbar.Add("No file selected", Severity.Error);
+            }
+            else
+            {
+                // Show a success message indicating the print job has started
+                Snackbar.Add($"<ul><li>Print Scheduled</li><li> File Name: {PrintingService.FileToPrint}</li><li>Scheduled Time: {PrintingService.ScheduleTime}<li/></ul>", Severity.Success);
+
+                // Get the file name and size of the file to be printed
+                PrintingService.GetFileNameAndSize(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter);
+
+                PrinterDataService.AddScheduledPrint(PrinterManagerService.ActivePrinter, PrintingService.ScheduleTime);
+
+                // Start the print job with the selected file
+                await PrintingService.SetScheduledTask(PrintingService.ScheduleTime, PrintingService.FileToPrint, PrinterManagerService.ActivePrinter);
+
+                // Record the start time of the print job
+                PrintingService.StartTimeOfPrint(PrinterManagerService.ActivePrinter);
+
+                // Reset and start the stopwatch for the current print job
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.ResetStopwatch();
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.StartStopwatch();
+
+                // Reset the finalization flag
+                PrinterManagerService.ActivePrinter.CurrentPrintJob.FinalizationExecuted = false;
+            }
+        }
+    }
+}

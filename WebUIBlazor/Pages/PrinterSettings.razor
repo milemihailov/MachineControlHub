@@ -572,16 +572,21 @@
                             <MudText Color="Color.Primary" Typo="Typo.button">Bed Leveling State</MudText>
                         </MudCardHeader>
                         <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Auto Bed Level</MudText>
+                            <MudText Typo="Typo.subtitle2">Auto Bed Level:</MudText>
                             <MudText> @(PrinterManagerService.ActivePrinter.AutoBedLevelingEnabled ? "Enabled" : "Not Enabled") </MudText>
                         </ContainerSpaceBetween>
                         <ContainerSpaceBetween>
-                            <MudText Typo="Typo.subtitle2">Fade Height</MudText>
+                            <MudText Typo="Typo.subtitle2">Fade Height:</MudText>
                             <MudText> @PrinterManagerService.ActivePrinter.MotionSettings.FadeHeight mm</MudText>
+                        </ContainerSpaceBetween>
+                        <ContainerSpaceBetween>
+                            <MudText Typo="Typo.subtitle2">BL Touch HS Mode:</MudText>
+                            <MudText> @(PrinterManagerService.ActivePrinter.BLTTouchHSMode ? "On" : "Off")</MudText>
                         </ContainerSpaceBetween>
                         <MudDivider Class="mt-3" DividerType="DividerType.FullWidth" />
                         <ExpansionPanel>
-                            <MudSwitch Color="Color.Tertiary" @bind-Value="PrinterManagerService.ActivePrinter.AutoBedLevelingEnabled" Label="Enable Auto Bed Level" @onclick="() => PrinterDataService.SetBedLevelingOn(PrinterManagerService.ActivePrinter)" />
+                            <MudSwitch Color="Color.Tertiary" @bind-Value="PrinterManagerService.ActivePrinter.AutoBedLevelingEnabled" Label="Enable/Disable Auto Bed Level" @onclick="() => PrinterDataService.SetBedLevelingOn(PrinterManagerService.ActivePrinter)" />
+                            <MudSwitch Color="Color.Tertiary" @bind-Value="PrinterManagerService.ActivePrinter.BLTTouchHSMode" Label="Enable/Disable BLTouch HS Mode" @onclick="() => PrinterDataService.SetBLTouchHSMode(PrinterManagerService.ActivePrinter)" />
                             <MudNumericField Label="Fade Height" @bind-Value="PrinterManagerService.ActivePrinter.MotionSettings.FadeHeight" Immediate="true" Variant="Variant.Outlined" />
                             <MudButton Color="Color.Tertiary" OnClick="() => PrinterDataService.SetFadeHeight(PrinterManagerService.ActivePrinter)" FullWidth="true">Update Values</MudButton>
                         </ExpansionPanel>
@@ -956,6 +961,7 @@
             {
                 PrinterDataService.RequestPrinterSettingsReport(PrinterManagerService.ActivePrinter);
                 PrinterDataService.RequestFirmwareReport(PrinterManagerService.ActivePrinter);
+                PrinterDataService.RequestBLTouchMode(PrinterManagerService.ActivePrinter);
             }
         }
 

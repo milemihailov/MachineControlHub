@@ -79,6 +79,8 @@ namespace MachineControlHub
         /// </summary>
         public bool HasAutoBedLevel { get; set; }
 
+        public bool BLTTouchHSMode { get; set; }
+
         public bool AutoBedLevelingEnabled { get; set; }
 
         public bool HasChamber { get; set; }
@@ -176,6 +178,8 @@ namespace MachineControlHub
         public IPrinterConnection PrinterConnection { get; set; }
 
         public SerialConnection SerialConnection { get; set; }
+
+        public PrintSchedule PrintSchedule { get; set; }
 
     }
 

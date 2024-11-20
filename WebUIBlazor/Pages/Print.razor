@@ -15,6 +15,7 @@
 
 @implements IDisposable
 
+@using MachineControlHub
 @using MachineControlHub.Temps
 @using System.Globalization
 @using Plotly.Blazor.Interop
@@ -23,10 +24,12 @@
 @using MachineControlHub.Print;
 @using System.Text
 @using System.Diagnostics
+@using System.Text.RegularExpressions
 
 <Connection />
 <PrinterState />
 <PromptAndNotificationsHandler />
+
 
 <MudGrid Style="width:100%;" Class="pr-0 mr-0">
 
@@ -35,7 +38,7 @@
     <MudItem xs="12" sm="12" md="8" lg="6" xl="4" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
 
         <!-- MudExpansionPanel for displaying uploaded files -->
-        <MudExpansionPanel Text="UPLOADED FILES">
+@*         <MudExpansionPanel Text="UPLOADED FILES">
             @foreach (var file in PrinterManagerService.ActivePrinter.PrintService.UploadedFiles)
             {
                 <MudListItem>
@@ -51,9 +54,9 @@
                     </div>
                 </MudListItem>
             }
-        </MudExpansionPanel>
+        </MudExpansionPanel> *@
         <!-- Select dropdown for choosing media -->
-        @if (PrintingService.DriversAvailable != null)
+@*         @if (PrintingService.DriversAvailable != null)
         {
             <MudSelect Disabled="@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintingService.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var port in PrintingService.DriversAvailable)
@@ -69,15 +72,15 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-        }
+        } *@
 
         @if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
             <MudSelect @bind-Value="@PrintingService.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
 
-                @if (PrintingService.SDFiles != null)
+                @if (PrintingService.ListOfSDFiles != null)
                 {
-                    @foreach (var file in PrintingService.SDFiles)
+                    @foreach (var file in PrintingService.ListOfSDFiles)
                     {
                         <MudSelectItem Value="@file.FileName">
                             <div style="display: flex; justify-content: space-around;">
@@ -226,21 +229,25 @@
                         cursor:@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached ? "not-allowed" : "pointer");" />
                 </MudIconButton>
             </MudTooltip>
-
-            <!-- Button to send file to media -->
-            <MudTooltip Text="Send gcode to the SD">
-                <MudIconButton Disabled="PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting"
-                               Class="mt-2"
-                               Variant="Variant.Text"
-                               OnClick="() => SendFileToSd(PrintingService.UploadedFileContent)"
-                               Size="Size.Medium">
-                    <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
+            <!--  Upload to SD card  -->
+            <MudFileUpload T="IBrowserFile" OnFilesChanged="TransferToSD" Accept=".gcode,.gco,.txt">
+                <ButtonTemplate>
+                    <MudTooltip Text="Upload file to the SD">
+                        <MudIconButton HtmlTag="label"
+                                       Variant="Variant.Text"
+                                       Disabled="PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting"
+                                       Size="Size.Medium"
+                                       Title="Release Media"
+                                       for="@context.Id">
+                            <img src="/svg/TransferToSD.svg" alt="Custom SVG" style="width:40px; height:30px;
                         opacity:@(PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting ? 0.5 : 1);
                         cursor:@(PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting ? "not-allowed" : "pointer");" />
-                </MudIconButton>
-            </MudTooltip>
+                        </MudIconButton>
+                    </MudTooltip>
+                </ButtonTemplate>
+            </MudFileUpload>
 
-            <!--Upload button-->
+@*             <!--Upload button-->
             <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
                 <ButtonTemplate>
                     <MudTooltip Text="Upload files">
@@ -253,7 +260,11 @@
                         </MudIconButton>
                     </MudTooltip>
                 </ButtonTemplate>
-            </MudFileUpload>
+            </MudFileUpload> *@
+
+            <MudTooltip Text="Delete selected SD file">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Large" OnClick="() => DeleteSDFile(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter)">Delete</MudIconButton>
+            </MudTooltip>
         </MudStack>
 
         <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
@@ -296,12 +307,6 @@
                         <img src="/svg/FanOn.svg" alt="Fan Off" style="width: 40px; height: 30px;" />
                     }
                 </MudToggleIconButton>
-            </MudTooltip>
-        </MudStack>
-        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
-
-            <MudTooltip Text="Delete selected SD file">
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"  Color="Color.Error" Size="Size.Large" OnClick="() => PrintingService.DeleteSDFile(PrintingService.FileToPrint, PrinterManagerService.ActivePrinter)">Delete</MudIconButton>
             </MudTooltip>
         </MudStack>
     </MudItem>
@@ -517,25 +522,7 @@
 
     public List<ChartSeries> Series { get; set; }
     public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
-
-    public async void PlayTune(string content)
-    {
-
-        await Task.Run(() =>
-        {
-            using (StringReader reader = new StringReader(content))
-            {
-                PrinterManagerService.ActivePrinter.SerialConnection.Write(content);
-            }
-        });
-    }
-
-    public async void SendFileToSd(string file)
-    {
-        PrinterManagerService.ActivePrinter.IsBusy = true;
-        await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(file, PrinterManagerService.ActivePrinter.PrintService.UploadedFiles.Last().FileName);
-        PrinterManagerService.ActivePrinter.IsBusy = false;
-    }
+    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true, CloseButton = true};
 
     public void OnRefreshProgressState()
     {
@@ -544,9 +531,6 @@
 
     // Buffer to accumulate file content until processing is triggered
     string FileContentBuffer { get; set; } = "";
-
-    // List of files on the SD card
-    string SdFiles { get; set; } = "";
 
     // Color state for the temperature display
     bool IsPrimaryColor { get; set; } = true;
@@ -615,9 +599,9 @@
         try
         {
             // Clear SDFiles list before switching printers
-            if (PrintingService.SDFiles != null)
+            if (PrintingService.ListOfSDFiles != null)
             {
-                PrintingService.SDFiles.Clear();
+                PrintingService.ListOfSDFiles.Clear();
             }
 
             // Asks for bed mesh
@@ -656,28 +640,38 @@
             if (input.Contains("End file"))
             {
                 // remove empty lines from the file content buffer
-                SdFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
-
+                PrintingService.ParsedStringSDFiles = string.Join("\n", FileContentBuffer.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)));
+                // Console.WriteLine(SdFiles);
                 // Add the list of files to the SDFiles list
-                PrintingService.ListSDFiles(SdFiles, PrinterManagerService.ActivePrinter);
+                PrintingService.ListSDFiles(PrintingService.ParsedStringSDFiles, PrinterManagerService.ActivePrinter);
 
                 // Clear the file content buffer
                 FileContentBuffer = "";
             }
 
-            // get the name of the file being printed
-            PrintingService.GetPrintingFileName(input, PrinterManagerService.ActivePrinter);
+            // Clear the file content buffer if it exceeds 4000 characters
+            if (FileContentBuffer.Length > 4000)
+            {
+                FileContentBuffer = "";
+            }
+
+            if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting && !PrinterManagerService.ActivePrinter.IsBusy)
+            {
+                // get the name of the file being printed
+                PrintingService.GetPrintingFileName(input, PrinterManagerService.ActivePrinter);
+            }
 
             // parse the current hotend, bed and chamber temperatures
             await HotendTemperatureService.ParseCurrentHotendTemperature(input, PrinterManagerService.ActivePrinter);
             await BedTemperatureService.ParseCurrentBedTemperature(input, PrinterManagerService.ActivePrinter);
+
             if (PrinterManagerService.ActivePrinter.HasChamber)
             {
                 await ChamberTemperatureService.ParseCurrentChamberTemperature(input, PrinterManagerService.ActivePrinter);
             }
 
             // Ensure the graph data does not exceed 30 entries by removing the oldest entries
-            if (PrintingService.HotendGraph.Count >= 30)
+            if (PrintingService.HotendGraph.Count >= 50)
             {
                 PrintingService.HotendGraph.RemoveAt(0);
                 PrintingService.BedGraph.RemoveAt(0);
@@ -740,19 +734,19 @@
         if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
         {
             // If automatic temperature reporting is not enabled, request temperature data
-            if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature)
+            if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature && !PrinterManagerService.ActivePrinter.IsBusy)
             {
                 PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
             }
 
             // If automatic status reporting is not enabled, request the SD status
-            if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus)
+            if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus && !PrinterManagerService.ActivePrinter.IsBusy)
             {
                 PrinterManagerService.ActivePrinter.SerialConnection.Write("M27");
             }
 
             // Asynchronously get the status of the drives
-            await Task.Run(() => PrintingService.GetDrives());
+            PrintingService.GetDrives();
 
             await InvokeAsync(StateHasChanged);
         }
@@ -796,10 +790,76 @@
         StateHasChanged();
     }
 
+    private async Task TransferToSD(InputFileChangeEventArgs e)
+    {
+        // Read the file's content into the print.file variable
+        PrintingService.UploadedFileContent = await new StreamReader(e.File.OpenReadStream(Data.PrintingService.MAX_FILE_SIZE)).ReadToEndAsync();
+
+        // Get the file name and size from the event arguments
+        var fileName = e.File.Name;
+        var fileSize = e.File.Size;
+
+        // Show a choosing dialog to the user
+        bool? result = await DialogService.ShowMessageBox(
+        "File Upload Options",
+        "Would you like to upload and start the process immediately, or upload only?",
+        yesText: "Upload and Start", noText: "Upload Only", options: _dialogOptions);
+
+        // PrinterManagerService.ActivePrinter.CurrentPrintJob.ParseExtractedSettingsFromPrintedFile(PrintingService.UploadedFileContent);
+        // Console.WriteLine(PrinterManagerService.ActivePrinter.CurrentPrintJob.ExtractedSettingsFromPrintedFile);
+
+        int bedTemp = 0;
+        var match = Regex.Match(PrintingService.UploadedFileContent, @"M190 S(\d+)");
+
+        if (match.Success)
+        {
+            bedTemp = int.Parse(match.Groups[1].Value);
+        }
+
+        // // If the user confirms the start of the print job
+        if(result == true)
+        {
+            PrinterManagerService.ActivePrinter.SerialConnection.Write($"M140 S{bedTemp}");
+            PrinterManagerService.ActivePrinter.IsBusy = true;
+            await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(PrintingService.UploadedFileContent, fileName);
+            PrinterManagerService.ActivePrinter.IsBusy = false;
+
+            await Task.Delay(500);
+
+            // Start the print job with the selected file
+            PrintingService.StartPrint(fileName.ToUpper(), PrinterManagerService.ActivePrinter);
+
+            // Record the start time of the print job
+            PrintingService.StartTimeOfPrint(PrinterManagerService.ActivePrinter);
+
+            // Reset and start the stopwatch for the current print job
+            PrinterManagerService.ActivePrinter.CurrentPrintJob.ResetStopwatch();
+            PrinterManagerService.ActivePrinter.CurrentPrintJob.StartStopwatch();
+
+            // Get the file name and size of the file to be printed
+            PrintingService.GetFileNameAndSize(fileName.ToUpper(), PrinterManagerService.ActivePrinter);
+
+            // Reset the finalization flag
+            PrinterManagerService.ActivePrinter.CurrentPrintJob.FinalizationExecuted = false;
+
+            // Show a success message indicating the print job has started
+            Snackbar.Add($"<ul><li>Print Started</li> <li> File Printing: {fileName.ToUpper()} </li></ul>", Severity.Success);
+        }
+
+        if (result == false)
+        {
+            PrinterManagerService.ActivePrinter.IsBusy = true;
+            await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(PrintingService.UploadedFileContent, fileName);
+            PrinterManagerService.ActivePrinter.IsBusy = false;
+        }
+
+        StateHasChanged();
+    }
+
     /// <summary>
     /// Asynchronously confirms the start of a print job.
     /// </summary>
-    public async Task ConfirmStartAsync()
+    public async void ConfirmStartAsync()
     {
         // Check if the printer is connected
         if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
@@ -807,8 +867,8 @@
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
             "Start Print",
-            "Do you want to start a print job?",
-            yesText: "Start!", cancelText: "Cancel");
+            "Would you like to start a print job?",
+            yesText: "Start!", cancelText: "Cancel", options: _dialogOptions);
 
             // If the user confirms the start of the print job
             if (result == true)
@@ -846,14 +906,13 @@
         {
             // Show a snackbar message indicating the printer is not connected
             Snackbar.Add("Printer is not connected", Severity.Error);
-            return;
         }
     }
 
     /// <summary>
     /// Stops the current print job if the printer is connected and a print job is in progress.
     /// </summary>
-    public async Task StopPrint()
+    public async void StopPrint()
     {
         // Check if the printer is connected
         if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
@@ -861,8 +920,8 @@
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
             "Stop Print",
-            "Do you want to stop the print?",
-            yesText: "Stop!", cancelText: "Cancel");
+            "Would you like to stop the print?",
+            yesText: "Stop!", cancelText: "Cancel", options: _dialogOptions);
 
             // If the user confirms and a print job is in progress
             if (result == true && PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
@@ -893,17 +952,36 @@
             {
                 // Show a snackbar message indicating no print job is in progress
                 Snackbar.Add("Not Printing", Severity.Error);
-                return;
             }
         }
         else
         {
             // Show a snackbar message indicating the printer is not connected
             Snackbar.Add("Printer is not connected", Severity.Error);
-            return;
         }
     }
 
+    public async void DeleteSDFile(string file, Printer printer)
+    {
+        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+        {
+            // Show a confirmation dialog to the user
+            bool? result = await DialogService.ShowMessageBox(
+            "Delete file",
+            $"Delete {file} from SD card?",
+            yesText: "Delete", cancelText: "Cancel", options: _dialogOptions);
+
+            if(result == true)
+            {
+                PrintingService.DeleteSDFile(file, printer);
+                Snackbar.Add($"File deleted: {file}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Canceled", Severity.Info);
+            }
+        }
+    }
 
     public void Dispose()
     {

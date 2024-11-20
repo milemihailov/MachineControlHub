@@ -15,6 +15,8 @@ namespace WebUI.Data
         public const string PREHEATING_PROFILES_JSON_PATH = "preheatingProfiles.json";
         public const string SELECTED_PRINTER_SETTINGS_PATH = "selectedPrinter.json";
         public const string PRINT_HISTORY_PATH = "printHistory.json";
+        public const string PRINTER_SCHEDULED_PRINTS_PATH = "scheduledPrints.json";
+        public const string PRINTER_SCHEDULED_HISTORY_PATH = "scheduledHistory.json";
 
         const string _sTEPS_PER_UNIT_VALUES_PATTERN = @"M92 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
         const string _mAX_FEEDRATE_VALUES_PATTERN = @"M203 X(\d+\.?\d*) Y(\d+\.?\d*) Z(\d+\.?\d*) E(\d+\.?\d*)";
@@ -30,6 +32,7 @@ namespace WebUI.Data
         public List<PreheatingProfiles> PreheatingProfiles { get; set; } = new List<PreheatingProfiles>();
         public List<CurrentPrintJob> PrintHistory { get; set; } = new List<CurrentPrintJob>();
         public List<PrinterHead> PrinterHeads { get; set; }
+        public List<PrintSchedule> PrintSchedules { get; set; } = new List<PrintSchedule>();
 
         public void AddPrintJobToHistory(Printer printer)
         {
@@ -45,11 +48,41 @@ namespace WebUI.Data
             };
 
             // Deserialize the print history list
-            PrintHistory = LoadPrinterDataList<CurrentPrintJob>(PRINT_HISTORY_PATH);
+            if (File.Exists(PRINT_HISTORY_PATH))
+            {
+                PrintHistory = LoadPrinterDataList<CurrentPrintJob>(PRINT_HISTORY_PATH);
+            }
             // Add the new print job to the top of the list
             PrintHistory.Insert(0, newPrintJob);
             // Serialize updated print history list
             SavePrinterData(PRINT_HISTORY_PATH, PrintHistory);
+        }
+
+        public void AddScheduledPrint(Printer printer, TimeSpan? scheduleTime)
+        {
+            var scheduledPrints = new PrintSchedule(printer.SerialConnection)
+            {
+                ScheduleName = printer.CurrentPrintJob.FileName,
+                ScheduleSize = printer.CurrentPrintJob.FileSize,
+                ScheduleTime = scheduleTime,
+                ScheduleDate = DateTime.Now,
+                SchedulePrinter = printer.Name,
+                ScheduleStatus = "Scheduled"
+            };
+
+            if (File.Exists(PRINTER_SCHEDULED_PRINTS_PATH))
+            {
+                PrintSchedules = LoadPrinterDataList<PrintSchedule>(PRINTER_SCHEDULED_PRINTS_PATH);
+            }
+
+            PrintSchedules.Add(scheduledPrints);
+            SavePrinterData(PRINTER_SCHEDULED_PRINTS_PATH, PrintSchedules);
+        }
+
+        public void RemoveScheduledPrint(PrintSchedule scheduledPrint)
+        {
+            PrintSchedules.Remove(scheduledPrint);
+            SavePrinterData(PRINTER_SCHEDULED_PRINTS_PATH, PrintSchedules);
         }
 
         public void RemovePrintJob(CurrentPrintJob printJob)
@@ -170,6 +203,11 @@ namespace WebUI.Data
             printer.SerialConnection.Write(CommandMethods.BuildRequestPrintFlowCommand());
         }
 
+        public void RequestBLTouchMode(Printer printer)
+        {
+            printer.SerialConnection.Write("M401 H");
+        }
+
         /// <summary>
         /// Gets the settings from the input and updates the printer instance
         /// </summary>
@@ -223,6 +261,7 @@ namespace WebUI.Data
                 GetHomingSensitivityValues(input, printer);
                 SetBedVolume(input, printer);
                 GetChamberState(input, printer);
+                GetBLTouchMode(input, printer);
             });
         }
 
@@ -703,6 +742,16 @@ namespace WebUI.Data
             }
         }
 
+        public void GetBLTouchMode(string message, Printer printer)
+        {
+            var match = Regex.Match(message, @"BLTouch HS mode (ON|OFF)");
+            if (match.Success)
+            {
+                string mode = match.Groups[1].Value;
+                printer.BLTTouchHSMode = mode == "ON";
+            }
+        }
+
         public void GetZProbeState(string message, Printer printer)
         {
             var match = Regex.Match(message, @"Z_PROBE:(\d+)");
@@ -893,6 +942,18 @@ namespace WebUI.Data
                 {
                     printer.SerialConnection.Write("M420 S1");
                 }
+            }
+        }
+
+        public void SetBLTouchHSMode(Printer printer)
+        {
+            if (printer.SerialConnection.IsConnected && !printer.BLTTouchHSMode)
+            {
+                printer.SerialConnection.Write("M401 S1");
+            }
+            else
+            {
+                printer.SerialConnection.Write("M401 S0");
             }
         }
 

@@ -17,7 +17,7 @@ namespace WebUI.Data
         public List<(string DriveName, string VolumeLabel)> DriversAvailable { get; set; } = new List<(string DriveName, string VolumeLabel)>();
 
         // List of files on the SD card with their names and sizes
-        public List<(string FileName, string FileSize)> SDFiles { get; set; }
+        public List<(string FileName, string FileSize)> ListOfSDFiles { get; set; }
 
         // Static list to store hotend temperature graph data
         public static List<double> HotendGraph { get; set; } = new() { };
@@ -49,7 +49,41 @@ namespace WebUI.Data
         // Used to enable or disable pause, resume and stop buttons on UI
         public bool PrintJobControlsEnableDisable { get; set; } = true;
 
+        // List of files on the SD card
+        public string ParsedStringSDFiles { get; set; } = "";
 
+        public TimeSpan? ScheduleTime = new TimeSpan(); // Selected time of day
+
+        public async Task SetScheduledTask(TimeSpan? time, string fileName, Printer printer)
+        {
+            if (time.HasValue)
+            {
+                // Calculate the target DateTime by combining the selected time with today's date
+                DateTime targetTime = DateTime.Today.Add(ScheduleTime.Value);
+
+                // If the target time is in the past, set it for tomorrow
+                if (targetTime < DateTime.Now)
+                {
+                    targetTime = targetTime.AddDays(1);
+                }
+
+                TimeSpan delay = targetTime - DateTime.Now;
+
+                if (delay > TimeSpan.Zero)
+                {
+                    await Task.Delay(delay);
+                }
+
+                printer.PrintService.StartPrint(fileName);
+
+                // Clears the estimation from the previous print if any
+                printer.CurrentPrintJob.PrintProgressRecords.Clear();
+            }
+            else
+            {
+                Console.WriteLine("Please select a valid time.");
+            }
+        }
 
         public PrintingService(PrinterDataService printerDataServiceTest)
         {
@@ -82,14 +116,13 @@ namespace WebUI.Data
 
         public void ListSDFiles(string inputText, Printer printer)
         {
-            SDFiles = printer.PrintService.ListSDFiles(inputText);
+            ListOfSDFiles = printer.PrintService.ListSDFiles(inputText);
             printer.MediaAttached = true;
         }
 
         public void DeleteSDFile(string fileName, Printer printer)
         {
             printer.SerialConnection.Write($"M30 {fileName};");
-            Console.WriteLine($"M30 {fileName};");
         }
 
         public void StartTimeOfPrint(Printer printer)
@@ -119,7 +152,7 @@ namespace WebUI.Data
         public void GetFileNameAndSize(string input, Printer printer)
         {
             // Find the file in the list of SD files
-            var file = SDFiles.FirstOrDefault(f => f.FileName == input);
+            var file = ListOfSDFiles.FirstOrDefault(f => f.FileName == input);
 
             // If the file is found, update the current print job with the file name and size
             if (file != default)
@@ -307,7 +340,7 @@ namespace WebUI.Data
             // Clear the drive letter and SD files list
             DriveLetter = null;
             FileToPrint = null;
-            SDFiles?.Clear();
+            ListOfSDFiles?.Clear();
 
             // Update the media attached status
             printer.MediaAttached = false;

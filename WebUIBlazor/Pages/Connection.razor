@@ -25,16 +25,12 @@
                 </div>
 
                 <MudGrid Class="pt-5">
-                    @foreach (var bs in PrinterManager.Printers.Values)
-                    {
-                        ConnectionState = bs.SerialConnection.IsConnected;
-                    }
                     <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton Disabled="ConnectionState" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => {ConnectionConfiguration(); OnExpandCollapseClick();}">Connect</MudButton>
+                        <MudButton Disabled="@(PrinterManager.Printers.ContainsKey(PortName) ? true : false )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => {ConnectionConfiguration(); OnExpandCollapseClick();}">Connect</MudButton>
                     </MudItem>
 
                     <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton Disabled="!ConnectionState" FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="() => {Disconnect(); OnExpandCollapseClick();}"> Disconnect</MudButton>
+                        <MudButton Disabled="@(PrinterManager.Printers.ContainsKey(PortName) ? false : true )" FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="() => {Disconnect(); OnExpandCollapseClick();}"> Disconnect</MudButton>
                     </MudItem>
 
                     <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
@@ -54,7 +50,6 @@
     private string PrinterName { get; set; }
     private int BaudRate { get; set; } = 115200;
     private List<string> Ports { get; set; } = new List<string>();
-    private bool ConnectionState { get; set; }
     private bool _expanded = false;
 
     private void OnExpandCollapseClick()
@@ -89,8 +84,6 @@
 
             PrinterManager.SelectPrinter(PortName);
 
-            PrinterManager.ActivePrinter.SerialConnection.Write("M401 S1");
-
             //set the host keep alive command to 1 second after connection
             PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
 
@@ -118,7 +111,6 @@
         PrinterManager.Printers[PortName].SerialConnection.Disconnect();
         PrinterManager.Printers.Remove(PortName);
         Console.WriteLine($"Disconecting port {PortName}");
-        ConnectionState = !ConnectionState;
     }
 
     public void GetPorts()
