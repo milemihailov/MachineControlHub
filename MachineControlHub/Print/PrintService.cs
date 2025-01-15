@@ -67,7 +67,7 @@ namespace MachineControlHub.Print
         /// </summary>
         /// <param name="line">The input line containing the G-code command.</param>
         /// <returns>The part of the line before the first semicolon, or the entire line if no semicolon is found.</returns>
-        public static string ExtractLineBeforeComment(string line)
+        static string ExtractLineBeforeComment(string line)
         {
             int semicolonIndex = line.IndexOf(';');
             if (semicolonIndex >= 0)
@@ -146,6 +146,7 @@ namespace MachineControlHub.Print
                             string input = await Connection.ReadAllAsync();
                             if (input.Contains("Resend"))
                             {
+                                Console.WriteLine(input);
                                 Match resendMatch = Regex.Match(input, @"(?<=Resend:\s*)\d+");
                                 if (resendMatch.Success)
                                 {
@@ -171,20 +172,23 @@ namespace MachineControlHub.Print
                             TimeSpan TimeElapsed = TimeSpan.FromMilliseconds(Stopwatch.ElapsedMilliseconds);
                             TransferToSDTimeElapsed = string.Format($"{TimeElapsed.Hours:D2}:{TimeElapsed.Minutes:D2}:{TimeElapsed.Seconds:D2}");
 
-                            // Estimate remaining time
-                            double progressPercentage = (double)i / lines.Count;
-                            double timePerLine = Stopwatch.ElapsedMilliseconds / (double)i; // Time spent per line
-                            long remainingTimeMs = (long)(timePerLine * (lines.Count - i)); // Estimate remaining time in milliseconds
-                            TimeSpan remainingTime = TimeSpan.FromMilliseconds(remainingTimeMs);
+                            //// Estimate remaining time
+                            //double progressPercentage = (double)i / lines.Count;
+                            //double timePerLine = Stopwatch.ElapsedMilliseconds / (double)i; // Time spent per line
+                            //long remainingTimeMs = (long)(timePerLine * (lines.Count - i)); // Estimate remaining time in milliseconds
+                            //TimeSpan remainingTime = TimeSpan.FromMilliseconds(remainingTimeMs);
 
-                            // Format the remaining time
-                            TransferToSDRemainingTime = string.Format($"{remainingTime.Hours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}");
+                            EstimateRemainingTime(lines.Count, i);
+
+                            //// Format the remaining time
+                            //TransferToSDRemainingTime = string.Format($"{remainingTime.Hours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}");
 
                             // Retry up to 3 times
                             while (!success && retryCount < 3)
                             {
                                 Connection.Write(lineToSend);
                                 string response = await Connection.ReadAllAsync();
+                                Console.WriteLine(lineToSend);
 
                                 retryCount++;
                             }
@@ -206,6 +210,18 @@ namespace MachineControlHub.Print
                 Stopwatch.Stop();
                 TransferToSD = false;
             });
+        }
+
+        private void EstimateRemainingTime(int linesCount, int iterator)
+        {
+            // Estimate remaining time
+            //double progressPercentage = (double)iterator / linesCount;
+            double timePerLine = Stopwatch.ElapsedMilliseconds / (double)iterator; // Time spent per line
+            long remainingTimeMs = (long)(timePerLine * (linesCount - iterator)); // Estimate remaining time in milliseconds
+            TimeSpan remainingTime = TimeSpan.FromMilliseconds(remainingTimeMs);
+
+            // Format the remaining time
+            TransferToSDRemainingTime = string.Format($"{remainingTime.Hours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}");
         }
 
 

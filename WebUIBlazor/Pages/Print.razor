@@ -38,7 +38,7 @@
     <MudItem xs="12" sm="12" md="8" lg="6" xl="4" Class="pt-10 pr-0 mr-0 pl-8" Style="width:100%;">
 
         <!-- MudExpansionPanel for displaying uploaded files -->
-@*         <MudExpansionPanel Text="UPLOADED FILES">
+        @*         <MudExpansionPanel Text="UPLOADED FILES">
             @foreach (var file in PrinterManagerService.ActivePrinter.PrintService.UploadedFiles)
             {
                 <MudListItem>
@@ -56,7 +56,7 @@
             }
         </MudExpansionPanel> *@
         <!-- Select dropdown for choosing media -->
-@*         @if (PrintingService.DriversAvailable != null)
+        @*         @if (PrintingService.DriversAvailable != null)
         {
             <MudSelect Disabled="@(PrinterManagerService.ActivePrinter.IsTransferringFile || PrinterManagerService.ActivePrinter.MediaAttached)" Label="Select Media" T="string" @bind-Value="PrintingService.DriveLetter" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var port in PrintingService.DriversAvailable)
@@ -93,48 +93,58 @@
             </MudSelect>
         }
 
-        <!-- Displaying print details -->
-        <div>
-            <ContainerSpaceBetween Class="pt-8">
-                <MudText>File printing:</MudText>
-                <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Estimated print time left:</MudText>
-                <MudText>@PrinterManagerService.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Elapsed print time:</MudText>
-                <MudText>
-                    @PrinterManagerService.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
-                </MudText>
-            </ContainerSpaceBetween>
-            <ContainerSpaceBetween>
-                <MudText>Start time:</MudText>
-                <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
-            </ContainerSpaceBetween>
-
-            <ContainerSpaceBetween>
-                <MudText>File Size:</MudText>
-                <MudText><strong>@Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(PrinterManagerService.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
-            </ContainerSpaceBetween>
-            @if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
-            {
-                <ContainerSpaceBetween>
-                    <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrinterManagerService.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
-                        <MudText Typo="Typo.subtitle1" Color="Color.Surface">
-                            <b> @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+        <MudGrid>
+            <MudItem lg="2">
+                <div>
+                    <img src="data:image/png;base64,@PrintingService.ThumbnailData" alt="Thumbnail" style="width: 150px; height: 150px;" />
+                </div>
+            </MudItem>
+            <MudItem lg="10">
+                <!-- Displaying print details -->
+                <div>
+                    <ContainerSpaceBetween Class="pt-8">
+                        <MudText>File printing:</MudText>
+                        <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FileName</strong></MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Estimated print time left:</MudText>
+                        <MudText>@PrinterManagerService.ActivePrinter.CurrentPrintJob.EstimatePrintTime</MudText>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Elapsed print time:</MudText>
+                        <MudText>
+                            @PrinterManagerService.ActivePrinter.CurrentPrintJob.Stopwatch.Elapsed.ToString("hh\\:mm\\:ss")
                         </MudText>
-                    </MudProgressLinear>
-                </ContainerSpaceBetween>
+                    </ContainerSpaceBetween>
+                    <ContainerSpaceBetween>
+                        <MudText>Start time:</MudText>
+                        <MudText><strong>@PrinterManagerService.ActivePrinter.CurrentPrintJob.FormattedStartTime</strong></MudText>
+                    </ContainerSpaceBetween>
 
-                <ContainerSpaceBetween>
-                    <MudButton FullWidth="true" OnClick="() => PrintingService.CancelCurrentObject(PrinterManagerService.ActivePrinter)" Color="Color.Tertiary">
-                        Cancel Current Object
-                    </MudButton>
-                </ContainerSpaceBetween>
-            }
-        </div>
+                    <ContainerSpaceBetween>
+                        <MudText>File Size:</MudText>
+                        <MudText><strong>@Math.Round(PrinterManagerService.ActivePrinter.CurrentPrintJob.ConvertToMB(PrinterManagerService.ActivePrinter.CurrentPrintJob.FileSize), 2)MB</strong></MudText>
+                    </ContainerSpaceBetween>
+                    @if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+                    {
+                        <ContainerSpaceBetween>
+                            <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="PrinterManagerService.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
+                                <MudText Typo="Typo.subtitle1" Color="Color.Surface">
+                                    <b> @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.CurrentBytes / 1024.0 / 1024.0), 2) MB / @Math.Round((PrinterManagerService.ActivePrinter.CurrentPrintJob.TotalBytes / 1024.0 / 1024.0), 2) MB</b>
+                                </MudText>
+                            </MudProgressLinear>
+                        </ContainerSpaceBetween>
+
+                        <ContainerSpaceBetween>
+                            <MudButton FullWidth="true" OnClick="() => PrintingService.CancelCurrentObject(PrinterManagerService.ActivePrinter)" Color="Color.Tertiary">
+                                Cancel Current Object
+                            </MudButton>
+                        </ContainerSpaceBetween>
+                    }
+                </div>
+            </MudItem>
+        </MudGrid>
+
     </MudItem>
 
 
@@ -247,7 +257,7 @@
                 </ButtonTemplate>
             </MudFileUpload>
 
-@*             <!--Upload button-->
+            @*             <!--Upload button-->
             <MudFileUpload T="IBrowserFile" OnFilesChanged="LoadFiles" Accept=".gcode,.gco,.txt">
                 <ButtonTemplate>
                     <MudTooltip Text="Upload files">
@@ -307,6 +317,16 @@
                         <img src="/svg/FanOn.svg" alt="Fan Off" style="width: 40px; height: 30px;" />
                     }
                 </MudToggleIconButton>
+            </MudTooltip>
+        </MudStack>
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Class="mt-8">
+            <MudTooltip Text="Z-Babystep +0.02">
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Success" Size="Size.Medium" OnClick="() => ControlPanelService.BabySteps(0.02, PrinterManagerService.ActivePrinter)">
+                </MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="Z-Babystep -0.02">
+                <MudIconButton Icon="@Icons.Material.Filled.HorizontalRule" Color="Color.Error" Size="Size.Medium" OnClick="() => ControlPanelService.BabySteps(-0.02, PrinterManagerService.ActivePrinter)">
+                </MudIconButton>
             </MudTooltip>
         </MudStack>
     </MudItem>
@@ -522,7 +542,7 @@
 
     public List<ChartSeries> Series { get; set; }
     public string[] XAxisLabels { get; set; } = { "Fan Speed", "Print Speed", "Print Flow" };
-    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true, CloseButton = true};
+    DialogOptions _dialogOptions = new DialogOptions() { DisableBackdropClick = true, CloseButton = true };
 
     public void OnRefreshProgressState()
     {
@@ -798,6 +818,7 @@
         // Get the file name and size from the event arguments
         var fileName = e.File.Name;
         var fileSize = e.File.Size;
+        PrintingService.ThumbnailData = PrintingService.ProcessThumbnail(PrintingService.UploadedFileContent);
 
         // Show a choosing dialog to the user
         bool? result = await DialogService.ShowMessageBox(
@@ -817,14 +838,14 @@
         }
 
         // // If the user confirms the start of the print job
-        if(result == true)
+        if (result == true)
         {
             PrinterManagerService.ActivePrinter.SerialConnection.Write($"M140 S{bedTemp}");
             PrinterManagerService.ActivePrinter.IsBusy = true;
             await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(PrintingService.UploadedFileContent, fileName);
             PrinterManagerService.ActivePrinter.IsBusy = false;
 
-            await Task.Delay(500);
+            Thread.Sleep(1000);
 
             // Start the print job with the selected file
             PrintingService.StartPrint(fileName.ToUpper(), PrinterManagerService.ActivePrinter);
@@ -971,7 +992,7 @@
             $"Delete {file} from SD card?",
             yesText: "Delete", cancelText: "Cancel", options: _dialogOptions);
 
-            if(result == true)
+            if (result == true)
             {
                 PrintingService.DeleteSDFile(file, printer);
                 Snackbar.Add($"File deleted: {file}", Severity.Success);

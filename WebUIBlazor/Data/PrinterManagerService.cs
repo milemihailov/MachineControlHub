@@ -170,7 +170,7 @@ namespace WebUI.Data
                             ParseNotifications(input);
                             ParseUnknownCommandMessage(input);
                             InputReceived?.Invoke(input);
-                            //Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                            Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
                         }
 
                         printer.BedLevelData.OnBedLevelUpdate(input);

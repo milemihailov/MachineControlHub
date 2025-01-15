@@ -43,6 +43,8 @@ namespace WebUI.Data
         // Index for tracking purposes
         public int Index { get; set; } = -1;
 
+        public string ThumbnailData { get; set; } = "";
+
         // Used to enable or disable start button on UI
         public bool StartButtonEnableDisable { get; set; } = true;
 
@@ -360,6 +362,31 @@ namespace WebUI.Data
 
             // Update the printer's media attached status
             printer.MediaAttached = true;
+        }
+
+        public string ProcessThumbnail(string input)
+        {
+            // Check for the presence of "thumbnail begin" and "thumbnail end"
+            const string startMarker = "thumbnail begin";
+            const string endMarker = "thumbnail end";
+
+            int startIndex = input.IndexOf(startMarker, StringComparison.Ordinal);
+            int endIndex = input.IndexOf(endMarker, StringComparison.Ordinal);
+
+            if (startIndex == -1 || endIndex == -1 || endIndex <= startIndex)
+            {
+                Console.WriteLine("Invalid input: Missing or misordered markers.");
+                return null;
+            }
+
+            // Extract the thumbnail data
+            startIndex += startMarker.Length;
+            string thumbnailData = input.Substring(startIndex, endIndex - startIndex);
+
+            // Clean up the extracted data
+            string cleanedData = string.Join("", thumbnailData.Split(';', StringSplitOptions.None).Skip(1).Select(s => s.TrimStart(';', ' ')));
+
+            return cleanedData;
         }
     }
 }
