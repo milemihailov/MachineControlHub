@@ -14,6 +14,7 @@ namespace MachineControlHub.PrinterConnection
         const int _sLEEP_TIME_AFTER_BUSY_CHECK = 1500;
 
         public event Action Disconnected;
+        public event EventHandler<string> DataReceived;
 
         private SerialPort _serialPort;
         public bool IsConnected { get; set; }

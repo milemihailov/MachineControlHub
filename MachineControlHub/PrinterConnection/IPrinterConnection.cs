@@ -7,6 +7,8 @@
     {
         bool IsConnected { get; set; }
 
+        event EventHandler<string> DataReceived;
+
         /// <summary>
         /// Initializes the printer connection based on the provided connection string.
         /// </summary>
