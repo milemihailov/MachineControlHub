@@ -9,7 +9,7 @@ namespace WebUI.Data
     public class PrinterManagerService
     {
         public Printer ActivePrinter { get; set; } = new();
-        public SerialConnection PrinterSerialConnection { get; set; } = new();
+        public IPrinterConnection PrinterConnection { get; set; }
         public BackgroundTimer BackgroundTimer { get; set; } = new();
         private CancellationTokenSource CancellationTokenSource { get; set; }
         private ConcurrentDictionary<string, string> PortData { get; set; } = new();
@@ -25,58 +25,87 @@ namespace WebUI.Data
         public PrinterManagerService()
         {
             BackgroundTimer.TenMilisecondsElapsed += ReadFromAllPortsAsync;
+            PrinterConnection = new NullPrinterConnection();
             ActivePrinter = new()
             {
-                CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection),
+                CurrentPrintJob = new CurrentPrintJob(PrinterConnection),
                 PrintHistory = new(),
-                PrintService = new PrintService(PrinterSerialConnection),
-                HotendTemperatures = new(PrinterSerialConnection),
-                BedTemperatures = new(PrinterSerialConnection),
-                ChamberTemperatures = new(PrinterSerialConnection),
+                PrintService = new PrintService(PrinterConnection),
+                HotendTemperatures = new(PrinterConnection),
+                BedTemperatures = new(PrinterConnection),
+                ChamberTemperatures = new(PrinterConnection),
                 PreheatingProfiles = new(),
                 MotionSettings = new(),
                 StepperDrivers = new(),
                 BedLevelData = new(),
                 Bed = new(),
                 Head = new(),
-                SerialConnection = new(),
+                PrinterConnection = new NullPrinterConnection(),
                 Position = new()
             };
 
         }
 
-        public void AddPrinter(string comport, int baudrate, string name = null)
+        public void AddPrinter(string connectionString, string name = null)
         {
-            if (!Printers.ContainsKey(comport))
-            {
-                PrinterSerialConnection = new()
-                {
-                    BaudRate = baudrate,
-                    PortName = comport
-                };
-                name ??= comport;
 
-                PrinterSerialConnection.Initialize($"{comport},{baudrate}");
-                PrinterSerialConnection.Connect();
-                PrinterSerialConnection.IsConnected = true;
-                Printers.Add(comport, new Printer()
-                {
-                    Name = name,
-                    SerialConnection = PrinterSerialConnection,
-                    CurrentPrintJob = new CurrentPrintJob(PrinterSerialConnection),
-                    PrintHistory = new(),
-                    PrintService = new PrintService(PrinterSerialConnection),
-                    HotendTemperatures = new(PrinterSerialConnection),
-                    BedTemperatures = new(PrinterSerialConnection),
-                    ChamberTemperatures = new(PrinterSerialConnection),
-                    PreheatingProfiles = new(),
-                    MotionSettings = new(),
-                    Position = new(),
-                    StepperDrivers = new(),
-                    BedLevelData = new(),
-                    Bed = new(),
-                    Head = new(),
-                });
+            string Id = PrinterConnectionFactory.GetConnectionName(connectionString);
+
+            // Check if already exists (using proper key)
+            if (Printers.ContainsKey(Id))
+                return;
+
+            // Create connection based on type
+            bool isWifi = PrinterConnectionFactory.IsWiFiConnectionString(connectionString);
+            var connection = PrinterConnectionFactory.CreateConnection(
+                isWifi ? "wifi" : "serial",
+                connectionString
+            );
+            Console.WriteLine(connection);
+            // Connect
+            connection.Connect();
+
+            if (!connection.IsConnected)
+                throw new InvalidOperationException($"Failed to connect to printer using {connectionString}");
+
+            // Set default name if none provided
+            name ??= isWifi ? connectionString.Split(',')[0] : connectionString;
+            foreach (var item in Printers)
+            {
+                Console.WriteLine("Connected Printer: " + item.Key);
+            }
+            // Create printer with initialized components
+            var printer = new Printer()
+            {
+                Name = name,
+                PrinterConnection = connection,
+                CurrentPrintJob = new CurrentPrintJob(connection),
+                PrintHistory = new(),
+                PrintService = new PrintService(connection),
+                HotendTemperatures = new(connection),
+                BedTemperatures = new(connection),
+                ChamberTemperatures = new(connection),
+                PreheatingProfiles = new(),
+                MotionSettings = new(),
+                Position = new(),
+                StepperDrivers = new(),
+                BedLevelData = new(),
+                Bed = new(),
+                Head = new(),
+            };
+
+            // Add to collection
+            Printers.Add(Id, printer);
+            foreach (var item in Printers)
+                Console.WriteLine(item);
+
+            // Set as active printer if it's the first one
+            if (Printers.Count == 1 || ActivePrinter.PrinterConnection == null)
+            {
+                ActivePrinter = printer;
+                printer.PrinterConnection.IsConnected = true;
+                NotificationParsedFromAction = null;
+                ActivePrinterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -136,10 +165,10 @@ namespace WebUI.Data
                 if (!printer.PrintService.TransferToSD)
                 {
 
-                    if (printer.SerialConnection != null && printer.SerialConnection.HasData())
+                    if (printer.PrinterConnection != null && printer.PrinterConnection.HasData())
                     {
-                        printer.SerialConnection.IsConnected = true;
-                        string readData = await printer.SerialConnection.ReadAsync();
+                        printer.PrinterConnection.IsConnected = true;
+                        string readData = await printer.PrinterConnection.ReadAsync();
 
                         if (readData.Contains("echo:busy: processing"))
                         {
@@ -163,14 +192,14 @@ namespace WebUI.Data
                         }
 
                         string input = $"{readData} \n";
-                        PortData[printer.SerialConnection.PortName] = input;
+                        PortData[printer.Name] = input;
 
                         if (printer == ActivePrinter)
                         {
                             ParseNotifications(input);
                             ParseUnknownCommandMessage(input);
                             InputReceived?.Invoke(input);
-                            Console.WriteLine($"{printer.SerialConnection.PortName} : {readData}");
+                            Console.WriteLine($"{printer.Name} : {readData}");
                         }
 
                         printer.BedLevelData.OnBedLevelUpdate(input);

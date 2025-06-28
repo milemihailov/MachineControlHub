@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MudBlazor.Services;
 using WebUI;
 using WebUI.Data;
+using WebUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<BedLevelingService>();
 builder.Services.AddSingleton<PrinterDataService>();
 builder.Services.AddSingleton(BackgroundTimer.Instance);
 builder.Services.AddSingleton<PrinterManagerService>();
+builder.Services.AddScoped<PrinterDiscoveryService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient();
 

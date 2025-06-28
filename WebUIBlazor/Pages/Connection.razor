@@ -1,135 +1,510 @@
-﻿@using MachineControlHub.PrinterConnection
-@inject Data.PrinterDataService printer
-@inject Data.PrinterManagerService PrinterManager
-@inject ISnackbar Snackbar
+﻿@page "/"
 
-<MudContainer Style="display: flex; justify-content: center; align-items: center;">
-    <MudStack Spacing="2" Class="mr-6 pt-2">
-        <MudTooltip Text="Connect/Disconnect">
-            <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.ElectricalServices" Color="Color.Tertiary" OnClick="OnExpandCollapseClick"></MudFab>
-        </MudTooltip>
-        <MudPopover Open="_expanded">
-            <MudPaper>
-                <div style="display: flex; gap: 16px; padding: 0px 56px;">
-                    <MudSelect T="string" Label="Select Port" @bind-Value="PortName" Immediate="true" Variant="Variant.Text" Style="max-width:160px;">
-                        @foreach (var template in Ports)
+@using System.ComponentModel.DataAnnotations
+@using System.Net.NetworkInformation
+@using System.Text.RegularExpressions
+@using WebUI.Services
+@using MachineControlHub.PrinterConnection
+@inject PrinterManagerService PrinterManagerService
+@inject ISnackbar Snackbar
+@inject PrinterDiscoveryService DiscoveryService
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+
+
+<MudPaper Class="pa-4 ma-4">
+    <MudText Typo="Typo.h5">Printer Connection Manager</MudText>
+    <MudText Typo="Typo.body1">Connect and manage multiple 3D printers</MudText>
+
+    <MudDivider Class="my-4" />
+
+    <!-- Connected Printers Section -->
+    <MudCard Class="mb-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">Connected Printers</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (!PrinterManagerService.Printers.Any())
+            {
+                <MudAlert Severity="Severity.Info">No printers connected. Connect a printer below.</MudAlert>
+            }
+            else
+            {
+                <MudList Dense="true">
+                    @foreach (var printer in PrinterManagerService.Printers)
+                    {
+                        <MudListItem>
+                            <div class="d-flex align-center justify-space-between" style="width: 100%">
+                                <div>
+                                    <MudChip Color="@(printer.Value == PrinterManagerService.ActivePrinter ? Color.Success : Color.Default)"
+                                             Size="Size.Small" Class="mr-2">
+                                        @(printer.Value == PrinterManagerService.ActivePrinter ? "Active" : "")
+                                    </MudChip>
+                                    <MudText Inline="true">@printer.Value.Name</MudText>
+                                </div>
+                                <div>
+                                    <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                        <MudButton Color="Color.Primary"
+                                                   OnClick="@(() => SelectPrinter(printer.Key))"
+                                                   Disabled="@(printer.Value == PrinterManagerService.ActivePrinter)">
+                                            Select
+                                        </MudButton>
+                                        <MudButton Color="Color.Error"
+                                                   OnClick="@(() => DisconnectPrinterAsync(printer.Key))">
+                                            Disconnect
+                                        </MudButton>
+                                    </MudButtonGroup>
+                                </div>
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Add New Printer Section -->
+    <MudText Typo="Typo.h6" Class="mb-2">Add a New Printer</MudText>
+    <MudTabs>
+        <!-- Serial Connection Panel -->
+        <MudTabPanel Text="Serial Connection">
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudSelect T="string" Label="Select Port" @bind-Value="PortName" Immediate="true"
+                               Variant="Variant.Outlined">
+                        @foreach (var port in SerialPorts)
                         {
-                            <MudSelectItem Value=@template />
+                            <MudSelectItem Value="@port" />
                         }
                     </MudSelect>
-                    <MudSelect T="int" Label="Select Baudrate" @bind-Value="BaudRate" Variant="Variant.Text" Immediate="true" Style="max-width:160px;">
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudSelect T="int" Label="Baudrate" @bind-Value="BaudRate"
+                               Variant="Variant.Outlined">
                         <MudSelectItem Value="115200" />
                         <MudSelectItem Value="250000" />
                     </MudSelect>
-                    <MudTextField T="string" Label="Printer Name" @bind-Value="PrinterName" Variant="Variant.Text" Immediate="true" Style="max-width:160px;" />
-                </div>
+                </MudItem>
 
-                <MudGrid Class="pt-5">
-                    <MudItem Class="mr-0 pr-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton Disabled="@(PrinterManager.Printers.ContainsKey(PortName) ? true : false )" FullWidth="true" Variant="Variant.Text" Color="Color.Tertiary" @onclick="() => {ConnectionConfiguration(); OnExpandCollapseClick();}">Connect</MudButton>
-                    </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudTextField T="string" Label="Printer Name" @bind-Value="SerialPrinterName"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
 
-                    <MudItem Class="mx-0 px-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton Disabled="@(PrinterManager.Printers.ContainsKey(PortName) ? false : true )" FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="() => {Disconnect(); OnExpandCollapseClick();}"> Disconnect</MudButton>
-                    </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               OnClick="ConnectSerialAsync"
+                               FullWidth="true">
+                        Connect via Serial
+                    </MudButton>
+                </MudItem>
 
-                    <MudItem Class="ml-0 pl-0" xs="12" sm="4" md="4" lg="4">
-                        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Error" @onclick="OnExpandCollapseClick">Hide</MudButton>
-                    </MudItem>
-                </MudGrid>
-            </MudPaper>
-        </MudPopover>
-    </MudStack>
-    <ConnectionStatus />
-</MudContainer>
+                <MudItem xs="12" sm="12" md="12" lg="12" Class="mt-3">
+                    <MudButton Color="Color.Tertiary"
+                               Variant="Variant.Outlined"
+                               OnClick="RefreshSerialPorts"
+                               FullWidth="true">
+                        Refresh Ports
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
 
+        <!-- WiFi Connection Panel -->
+        <MudTabPanel Text="Wi-Fi Connection">
+            <MudTabs>
+                <MudTabPanel Text="Manual Connection">
+                    <MudForm Model="@wifiModel" @ref="@wifiForm">
+                        <MudTextField @bind-Value="wifiModel.IpAddress"
+                                      Label="Printer IP Address"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Validation="@(new Func<string, IEnumerable<string>>(ValidateIp))"
+                                      Class="mt-4" />
+
+                        <MudNumericField @bind-Value="wifiModel.Port"
+                                         Label="Port"
+                                         Variant="Variant.Outlined"
+                                         Min="1"
+                                         Max="65535"
+                                         Class="mt-4" />
+
+                        <MudTextField @bind-Value="wifiModel.PrinterName"
+                                      Label="Printer Name (optional)"
+                                      Variant="Variant.Outlined"
+                                      Class="mt-4" />
+
+                        <MudStack Row="true" Class="mt-4">
+                            <MudButton Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       OnClick="ConnectWiFiAsync">
+                                Connect via Wi-Fi
+                            </MudButton>
+
+                            <MudButton Color="Color.Info"
+                                       Variant="Variant.Outlined"
+                                       OnClick="PingPrinterAsync"
+                                       Disabled="@(string.IsNullOrEmpty(wifiModel.IpAddress) || !IsValidIp(wifiModel.IpAddress))">
+                                Ping
+                            </MudButton>
+                        </MudStack>
+                    </MudForm>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Auto Discovery">
+                    <MudText Class="mb-4">Discover 3D printers on your local network</MudText>
+
+                    <MudTextField @bind-Value="NetworkPrefix"
+                                  Label="Network Prefix (e.g., 192.168.1)"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@IsScanning"
+                                  Class="mt-4" />
+
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               OnClick="ScanNetworkAsync"
+                               Disabled="@IsScanning"
+                               StartIcon="@Icons.Material.Filled.Search"
+                               Class="mt-4">
+                        @(IsScanning ? "Scanning..." : "Scan Network")
+                    </MudButton>
+
+                    @if (IsScanning)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+
+                    @if (DiscoveredPrinters.Any())
+                    {
+                        <MudTable Items="@DiscoveredPrinters" Dense="true" Hover="true" Class="mt-4">
+                            <HeaderContent>
+                                <MudTh>Name</MudTh>
+                                <MudTh>IP Address</MudTh>
+                                <MudTh>Port</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Name">@context.Name</MudTd>
+                                <MudTd DataLabel="IP">@context.IpAddress</MudTd>
+                                <MudTd DataLabel="Port">@context.Port</MudTd>
+                                <MudTd>
+                                    <MudButton Color="Color.Primary"
+                                               Variant="Variant.Filled"
+                                               Size="Size.Small"
+                                               OnClick="() => ConnectToDiscoveredPrinter(context)">
+                                        Connect
+                                    </MudButton>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                    else if (!IsScanning)
+                    {
+                        <MudText Class="mt-4">No printers found. Try scanning again.</MudText>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        </MudTabPanel>
+    </MudTabs>
+</MudPaper>
 
 @code {
+    // WiFi connection properties
+    private MudForm wifiForm;
+    private ConnectionModel wifiModel = new ConnectionModel();
+    private string NetworkPrefix { get; set; } = "192.168.1";
+    private List<DiscoveredPrinter> DiscoveredPrinters { get; set; } = new();
+    private bool IsScanning { get; set; } = false;
+    private CancellationTokenSource _scanCancellationTokenSource;
 
+    // Serial connection properties
     private string PortName { get; set; } = "";
-    private string PrinterName { get; set; }
+    private string SerialPrinterName { get; set; } = "";
     private int BaudRate { get; set; } = 115200;
-    private List<string> Ports { get; set; } = new List<string>();
-    private bool _expanded = false;
+    private List<string> SerialPorts { get; set; } = new List<string>();
 
-    private void OnExpandCollapseClick()
-    {
-        _expanded = !_expanded;
-    }
 
     protected override void OnInitialized()
     {
-        GetPorts();
+        // Get available serial ports
+        RefreshSerialPorts();
+
     }
 
-    public async void ConnectionConfiguration()
+    // Serial Connection Methods
+    private void RefreshSerialPorts()
+    {
+        var serial = new SerialConnection();
+        var availablePorts = serial.AvailableConnections();
+
+        SerialPorts.Clear();
+        foreach (var port in availablePorts)
+        {
+            SerialPorts.Add(port);
+        }
+
+        if (SerialPorts.Any() && string.IsNullOrEmpty(PortName))
+        {
+            PortName = SerialPorts.First();
+            if (string.IsNullOrEmpty(SerialPrinterName))
+            {
+                SerialPrinterName = PortName;
+            }
+        }
+    }
+
+    private async Task ConnectSerialAsync()
+    {
+        if (string.IsNullOrEmpty(PortName))
+        {
+            Snackbar.Add("Please select a serial port", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            string connectionString = $"{PortName}, {BaudRate}, {SerialPrinterName}";
+
+            // Check if this printer is already connected
+            string connName = PrinterConnectionFactory.GetConnectionName(connectionString);
+            if (PrinterManagerService.Printers.ContainsKey(connName))
+            {
+                Snackbar.Add($"Printer {SerialPrinterName} is already connected", Severity.Warning);
+                return;
+            }
+
+            // Add the printer (don't need to disconnect existing ones now)
+            PrinterManagerService.AddPrinter(connectionString, SerialPrinterName);
+
+            // Make this printer active
+            PrinterManagerService.SelectPrinter(PortName);
+
+            // Send printer initialization commands
+            await SendInitializationCommands();
+
+            Snackbar.Add($"Printer {SerialPrinterName} connected via serial port", Severity.Success);
+
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error connecting to serial port: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // WiFi Connection Methods
+    private async Task ConnectWiFiAsync()
+    {
+        await wifiForm.Validate();
+        if (!wifiForm.IsValid) return;
+
+        try
+        {
+            string connectionString = $"{wifiModel.IpAddress},{wifiModel.Port}";
+            string printerName = !string.IsNullOrEmpty(wifiModel.PrinterName)
+                ? wifiModel.PrinterName
+                : $"WiFi-{wifiModel.IpAddress}";
+
+            // Check if this printer is already connected
+            string connName = PrinterConnectionFactory.GetConnectionName(connectionString);
+            if (PrinterManagerService.Printers.ContainsKey(connName))
+            {
+                Snackbar.Add($"Printer {printerName} is already connected", Severity.Warning);
+                return;
+            }
+
+            // Add the new printer
+            PrinterManagerService.PrinterConnection.Initialize(connectionString);
+            PrinterManagerService.AddPrinter(connectionString, printerName);
+
+            // Select the newly added printer
+            PrinterManagerService.SelectPrinter(connectionString);
+
+            // Send printer initialization commands
+            await SendInitializationCommands();
+
+            Snackbar.Add($"Connected to printer {printerName} via Wi-Fi", Severity.Success);
+
+
+            await InvokeAsync(StateHasChanged);
+
+            // Reset printer name field
+            wifiModel.PrinterName = "";
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error connecting via Wi-Fi: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Select a specific printer from the connected printers
+    private void SelectPrinter(string printerKey)
     {
         try
         {
-            if (PrinterManager.Printers.ContainsKey(PortName))
+            PrinterManagerService.SelectPrinter(printerKey);
+            Snackbar.Add($"Selected printer: {PrinterManagerService.ActivePrinter.Name}", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error selecting printer: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Common Methods
+    private async Task SendInitializationCommands()
+    {
+        // Short delay to allow connection to establish
+        await Task.Delay(500);
+
+        // Send standard initialization commands
+        PrinterManagerService.ActivePrinter.PrinterConnection.Write("M113 S1"); // host keep alive
+        PrinterManagerService.ActivePrinter.PrinterConnection.Write("M211");    // bed volume
+        PrinterManagerService.ActivePrinter.PrinterConnection.Write("M27 S2");  // SD status every 2 seconds
+        PrinterManagerService.ActivePrinter.PrinterConnection.Write("M155 S1"); // temperature every 1 second
+        PrinterManagerService.ActivePrinter.PrinterConnection.Write("M154 S1"); // position every 1 second
+    }
+
+    // Disconnect a specific printer
+    private async Task DisconnectPrinterAsync(string printerKey)
+    {
+        if (!PrinterManagerService.Printers.ContainsKey(printerKey))
+        {
+            return;
+        }
+
+        try
+        {
+            // Get printer name before disconnecting
+            string printerName = PrinterManagerService.Printers[printerKey].Name;
+            bool wasActive = PrinterManagerService.Printers[printerKey] == PrinterManagerService.ActivePrinter;
+
+            // Disconnect the printer
+            PrinterManagerService.Printers[printerKey].PrinterConnection.Disconnect();
+
+            // Remove the printer from collection
+            PrinterManagerService.Printers.Remove(printerKey);
+
+            Snackbar.Add($"Disconnected from printer {printerName}", Severity.Info);
+
+
+            // If we disconnected the active printer, select another one if available
+            if (wasActive && PrinterManagerService.Printers.Any())
             {
-                PrinterManager.Printers.Remove(PortName);
+                var firstAvailablePrinter = PrinterManagerService.Printers.First();
+                PrinterManagerService.SelectPrinter(firstAvailablePrinter.Key);
+                Snackbar.Add($"Selected printer: {PrinterManagerService.ActivePrinter.Name}", Severity.Info);
             }
 
-            PrinterManager.AddPrinter(PortName, BaudRate, PrinterName);
-
-            if (PrinterName == null)
-            {
-                PrinterName = PortName;
-            }
-
-            Snackbar.Add($"Printer {PrinterName} connected", Severity.Success);
-
-            await Task.Delay(1000);
-
-            PrinterManager.SelectPrinter(PortName);
-
-            //set the host keep alive command to 1 second after connection
-            PrinterManager.ActivePrinter.SerialConnection.Write("M113 S1");
-
-            //ask for bed volume
-            PrinterManager.ActivePrinter.SerialConnection.Write("M211");
-
-            //report SD status every 2 seconds
-            PrinterManager.ActivePrinter.SerialConnection.Write("M27 S2");
-
-            //report temperature every 1 seconds
-            PrinterManager.ActivePrinter.SerialConnection.Write("M155 S1");
-
-            //report current position every 1 seconds
-            PrinterManager.ActivePrinter.SerialConnection.Write("M154 S1");
             await InvokeAsync(StateHasChanged);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            Snackbar.Add($"Error disconnecting: {ex.Message}", Severity.Error);
         }
     }
 
-    public void Disconnect()
+    // Other WiFi methods
+    private async Task ScanNetworkAsync()
     {
-        PrinterManager.Printers[PortName].SerialConnection.Disconnect();
-        PrinterManager.Printers.Remove(PortName);
-        Console.WriteLine($"Disconecting port {PortName}");
-    }
-
-    public void GetPorts()
-    {
-        if (PrinterManager.PrinterSerialConnection != null)
+        try
         {
-            var availablePorts = PrinterManager.PrinterSerialConnection.AvailableConnections();
+            IsScanning = true;
+            DiscoveredPrinters.Clear();
 
-            foreach (var port in availablePorts)
+            _scanCancellationTokenSource = new CancellationTokenSource();
+            var discoveredPrinters = await DiscoveryService.ScanNetworkAsync(NetworkPrefix + ".1", _scanCancellationTokenSource.Token);
+
+            DiscoveredPrinters = discoveredPrinters;
+
+            if (DiscoveredPrinters.Any())
             {
-                if (!Ports.Contains(port))
-                    Ports.Add(port);
+                Snackbar.Add($"Found {DiscoveredPrinters.Count} printer(s) on the network", Severity.Success);
             }
-
-            if (Ports.Any())
+            else
             {
-
-                PortName = Ports.First();
+                Snackbar.Add("No printers found on the network", Severity.Info);
             }
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error scanning network: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsScanning = false;
+        }
+    }
+
+    private async Task ConnectToDiscoveredPrinter(DiscoveredPrinter printer)
+    {
+        wifiModel.IpAddress = printer.IpAddress;
+        wifiModel.Port = printer.Port;
+        wifiModel.PrinterName = printer.Name;
+
+        await ConnectWiFiAsync();
+    }
+
+    private async Task PingPrinterAsync()
+    {
+        try
+        {
+            using var ping = new Ping();
+            var reply = await ping.SendPingAsync(wifiModel.IpAddress, 2000);
+
+            if (reply.Status == IPStatus.Success)
+            {
+                Snackbar.Add($"Ping successful! Response time: {reply.RoundtripTime}ms", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Ping failed: {reply.Status}", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ping error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Validation Methods
+    private IEnumerable<string> ValidateIp(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            yield return "IP address is required";
+        else if (!IsValidIp(ip))
+            yield return "Invalid IP address format";
+    }
+
+    private bool IsValidIp(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return false;
+
+        string pattern = @"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return Regex.IsMatch(ip, pattern);
+    }
+
+    // Clean up
+    public async ValueTask DisposeAsync()
+    {
+
+        _scanCancellationTokenSource?.Cancel();
+    }
+
+    private class ConnectionModel
+    {
+        [Required]
+        [RegularExpression(@"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+            ErrorMessage = "Invalid IP address")]
+        public string IpAddress { get; set; } = "192.168.1.31";
+
+        [Range(1, 65535)]
+        public int Port { get; set; } = 23;
+
+        public string PrinterName { get; set; }
     }
 }

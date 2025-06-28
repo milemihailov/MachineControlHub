@@ -160,7 +160,37 @@ namespace MachineControlHub.PrinterConnection
 
         public string ReadAll()
         {
-            throw new NotImplementedException();
+            if (!IsConnected || _stream == null)
+                return null;
+
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                byte[] buffer = new byte[4096];
+
+                while (_stream.DataAvailable)
+                {
+                    int bytesRead = _stream.Read(buffer, 0, buffer.Length);
+                    if (bytesRead > 0)
+                    {
+                        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                        sb.Append(data);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                string result = sb.Length > 0 ? sb.ToString() : null;
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading from printer: {ex.Message}");
+                return null;
+            }
         }
 
         public List<string> AvailableConnections()
@@ -187,14 +217,67 @@ namespace MachineControlHub.PrinterConnection
             }
         }
 
-        public Task<string> ReadAsync()
+        public async Task<string> ReadAsync()
         {
-            throw new NotImplementedException();
+            if (!IsConnected || _stream == null)
+                return null;
+
+            try
+            {
+                byte[] buffer = new byte[1024];
+
+                if (_stream.DataAvailable)
+                {
+                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
+                    if (bytesRead > 0)
+                    {
+                        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                        return data;
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading from printer: {ex.Message}");
+                return null;
+            }
         }
 
-        public Task<string> ReadAllAsync()
+        public async Task<string> ReadAllAsync()
         {
-            throw new NotImplementedException();
+            if (!IsConnected || _stream == null)
+                return null;
+
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                byte[] buffer = new byte[4096];
+
+                while (_stream.DataAvailable)
+                {
+                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
+                    if (bytesRead > 0)
+                    {
+                        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                        sb.Append(data);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                string result = sb.Length > 0 ? sb.ToString() : null;
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading from printer: {ex.Message}");
+                return null;
+            }
         }
 
         private void StartBackgroundReading()
