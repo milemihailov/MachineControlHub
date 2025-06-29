@@ -102,18 +102,18 @@ namespace WebUI.Data
 
         public void PausePrint(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildPauseSDPrintCommand());
         }
 
         public void ResumePrint(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildStartSDPrintCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildStartSDPrintCommand());
         }
 
         public void CancelCurrentObject(Printer printer)
         {
             // Send the command to cancel the current object being printed
-            printer.SerialConnection.Write("M486 C");
+            printer.PrinterConnection.Write("M486 C");
         }
 
         public void ListSDFiles(string inputText, Printer printer)
@@ -124,7 +124,7 @@ namespace WebUI.Data
 
         public void DeleteSDFile(string fileName, Printer printer)
         {
-            printer.SerialConnection.Write($"M30 {fileName};");
+            printer.PrinterConnection.Write($"M30 {fileName};");
         }
 
         public void StartTimeOfPrint(Printer printer)
@@ -337,7 +337,7 @@ namespace WebUI.Data
         public void ReleaseMedia(Printer printer)
         {
             // Send the command to release the media
-            printer.SerialConnection.Write("M22");
+            printer.PrinterConnection.Write("M22");
 
             // Clear the drive letter and SD files list
             DriveLetter = null;
@@ -355,7 +355,7 @@ namespace WebUI.Data
         public void AttachMedia(Printer printer)
         {
             // Send the command to attach the media
-            printer.SerialConnection.Write("M21");
+            printer.PrinterConnection.Write("M21");
 
             // Clear the drive letter
             DriveLetter = null;

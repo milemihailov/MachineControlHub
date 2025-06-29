@@ -97,14 +97,14 @@ namespace WebUI.Data
                     break;
             }
             // Send a command to set relative positioning
-            printer.SerialConnection.Write(CommandMethods.BuildRelativePositionCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRelativePositionCommand());
 
             // Send a command to perform a linear move with the specified values and feed rate
-            printer.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(printer.Position, printer.MotionSettings));
-            printer.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildLinearMoveCommand(printer.Position, printer.MotionSettings));
+            printer.PrinterConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
 
             // Request the current positions of the printer
-            printer.SerialConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand());
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace WebUI.Data
         /// <param name="printer">The printer object containing the serial connection.</param>
         public void BabySteps(double input, Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildBabySteppingCommand(input));
+            printer.PrinterConnection.Write(CommandMethods.BuildBabySteppingCommand(input));
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace WebUI.Data
         /// <param name="printer">The printer object containing the serial connection.</param>
         public void ZSteppersAutoAlignment(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildAdjustDualZMotorCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildAdjustDualZMotorCommand());
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace WebUI.Data
         public void DisableSteppers(Printer printer)
         {
             // Send the command to disable the steppers to the printer
-            printer.SerialConnection.Write(CommandMethods.BuildDisableSteppersCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildDisableSteppersCommand());
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace WebUI.Data
         public void HomeAxisCommand(Printer printer, bool x = false, bool y = false, bool z = false)
         {
             // Send the command to turn off the fan to the printer
-            printer.SerialConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
+            printer.PrinterConnection.Write(CommandMethods.BuildHomeAxesCommand(x, y, z));
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace WebUI.Data
         /// </remarks>
         public void SendGcodeViaTerminal(string command, Printer printer)
         {
-            printer.SerialConnection.Write(command);
+            printer.PrinterConnection.Write(command);
             SendCommand = null;
         }
 
@@ -168,7 +168,7 @@ namespace WebUI.Data
         public void SetFanSpeed(int value, Printer printer)
         {
             // Send the fan speed command to the printer
-            printer.SerialConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
+            printer.PrinterConnection.Write(CommandMethods.BuildFanSpeedCommand(value));
             if (value > 0)
             {
                 ToggleFanValue = true;
@@ -182,7 +182,7 @@ namespace WebUI.Data
         /// <param name="printer">The printer object containing the serial connection.</param>
         public void SetPrintSpeedPercentage(int feedrate, Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildSetPrintSpeedCommand(feedrate));
+            printer.PrinterConnection.Write(CommandMethods.BuildSetPrintSpeedCommand(feedrate));
             printer.MotionSettings.PrintSpeed = feedrate;
         }
 
@@ -193,7 +193,7 @@ namespace WebUI.Data
         /// <param name="printer">The printer object containing the serial connection.</param>
         public void SetPrintFlowPercentage(int flowrate, Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildSetPrintFlowCommand(flowrate));
+            printer.PrinterConnection.Write(CommandMethods.BuildSetPrintFlowCommand(flowrate));
             printer.MotionSettings.PrintFlow = flowrate;
         }
 

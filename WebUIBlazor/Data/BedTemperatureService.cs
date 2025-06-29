@@ -43,7 +43,7 @@ namespace WebUI.Data
 
         public void SetBedPIDValues(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles));
+            printer.PrinterConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(-1, PIDBedTemp, PIDBedCycles));
         }
     }
 }

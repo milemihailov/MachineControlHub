@@ -18,7 +18,7 @@ namespace WebUI.Data
         }
 
 
-        public void CalibrateBed(SerialConnection connection)
+        public void CalibrateBed(IPrinterConnection connection)
         {
             printerManagerService.ActivePrinter.BedLevelData.Processing = true;
             connection.Write(CommandMethods.BuildBedLevelingCommand());

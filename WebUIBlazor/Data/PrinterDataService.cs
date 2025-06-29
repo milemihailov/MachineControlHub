@@ -36,9 +36,8 @@ namespace WebUI.Data
 
         public void AddPrintJobToHistory(Printer printer)
         {
-            var newPrintJob = new CurrentPrintJob(printer.SerialConnection)
+            var newPrintJob = new CurrentPrintJob(printer.PrinterConnection)
             {
-                PortName = printer.SerialConnection.PortName,
                 PrinterName = printer.Name,
                 FileName = printer.CurrentPrintJob.FileName,
                 TotalPrintTime = printer.CurrentPrintJob.TotalPrintTime,
@@ -60,7 +59,7 @@ namespace WebUI.Data
 
         public void AddScheduledPrint(Printer printer, TimeSpan? scheduleTime)
         {
-            var scheduledPrints = new PrintSchedule(printer.SerialConnection)
+            var scheduledPrints = new PrintSchedule(printer.PrinterConnection)
             {
                 ScheduleName = printer.CurrentPrintJob.FileName,
                 ScheduleSize = printer.CurrentPrintJob.FileSize,
@@ -125,14 +124,14 @@ namespace WebUI.Data
 
         public void StartPreheating(PreheatingProfiles profile, Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
-            printer.SerialConnection.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
-            printer.SerialConnection.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
+            printer.PrinterConnection.Write(CommandMethods.BuildSetHotendTempCommand(profile.HotendTemp));
+            printer.PrinterConnection.Write(CommandMethods.BuildSetBedTempCommand(profile.BedTemp));
+            printer.PrinterConnection.Write(CommandMethods.BuildFanSpeedCommand(profile.FanSpeed));
         }
 
         public void SaveToEEPROM(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildSaveToEEPROMCommand());
         }
 
         public void SavePrinterData<T>(string filePath, List<T> list)
@@ -169,43 +168,43 @@ namespace WebUI.Data
 
         public void RequestPrinterSettingsReport(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildReportSettings());
+            printer.PrinterConnection.Write(CommandMethods.BuildReportSettings());
         }
 
         public void RequestFirmwareReport(Printer printer)
         {
-            printer.SerialConnection.Write("M115");
-            printer.SerialConnection.Write("M569");
+            printer.PrinterConnection.Write("M115");
+            printer.PrinterConnection.Write("M569");
         }
 
         public void RequestPrintJobStats(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintJobStatsCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRequestPrintJobStatsCommand());
         }
 
         public void RequestSoftwareEndstopSettings(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildCheckSoftwareEndstopsCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildCheckSoftwareEndstopsCommand());
         }
 
         public void RequestCurrentPositions(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRequestCurrentPositionsCommand());
         }
 
         public void RequestPrintSpeed(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintSpeedCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRequestPrintSpeedCommand());
         }
 
         public void RequestPrintFlow(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildRequestPrintFlowCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildRequestPrintFlowCommand());
         }
 
         public void RequestBLTouchMode(Printer printer)
         {
-            printer.SerialConnection.Write("M401 H");
+            printer.PrinterConnection.Write("M401 H");
         }
 
         /// <summary>
@@ -884,129 +883,129 @@ namespace WebUI.Data
 
         public void SetMaximumFeedrates(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildMaxFeedrateCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildMaxFeedrateCommand(printer.MotionSettings));
             }
         }
 
         public void SetStepsPerUnit(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetStepsPerUnitCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetStepsPerUnitCommand(printer.MotionSettings));
             }
         }
 
         public void SetStartingAccelerations(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetStartingAccelerationCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetStartingAccelerationCommand(printer.MotionSettings));
             }
         }
 
         public void SetMaximumAccelerations(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetMaxAccelerationCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetMaxAccelerationCommand(printer.MotionSettings));
             }
         }
 
         public void SetAdvancedSettings(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetAdvancedSettingsCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetAdvancedSettingsCommand(printer.MotionSettings));
             }
         }
 
         public void SetOffsetSettings(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetHomeOffsetsCommand(printer.MotionSettings));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetHomeOffsetsCommand(printer.MotionSettings));
             }
         }
 
         public void SetBedLevelingOn(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
                 if (printer.AutoBedLevelingEnabled)
                 {
-                    printer.SerialConnection.Write("M420 S0");
+                    printer.PrinterConnection.Write("M420 S0");
                 }
                 else
                 {
-                    printer.SerialConnection.Write("M420 S1");
+                    printer.PrinterConnection.Write("M420 S1");
                 }
             }
         }
 
         public void SetBLTouchHSMode(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected && !printer.BLTTouchHSMode)
+            if (printer.PrinterConnection.IsConnected && !printer.BLTTouchHSMode)
             {
-                printer.SerialConnection.Write("M401 S1");
+                printer.PrinterConnection.Write("M401 S1");
             }
             else
             {
-                printer.SerialConnection.Write("M401 S0");
+                printer.PrinterConnection.Write("M401 S0");
             }
         }
 
         public void SetFadeHeight(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write($"M420 Z{printer.MotionSettings.FadeHeight}");
+                printer.PrinterConnection.Write($"M420 Z{printer.MotionSettings.FadeHeight}");
             }
         }
 
         public void SetPreheatingProfiles(Printer printer)
         {
-                printer.SerialConnection.Write(CommandMethods.BuildMaterialPresetCommand(printer.PreheatingProfiles));
+                printer.PrinterConnection.Write(CommandMethods.BuildMaterialPresetCommand(printer.PreheatingProfiles));
         }
 
         public void SetDriverCurrents(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetDriverCurrentsCommand(printer.StepperDrivers));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetDriverCurrentsCommand(printer.StepperDrivers));
             }
         }
 
         public void SetDriverSteppingMode(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetDriverSteppingMode(printer.StepperDrivers));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetDriverSteppingMode(printer.StepperDrivers));
             }
         }
 
         public void SetBumpSensitivty(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetBumpSensitivity(printer.StepperDrivers));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetBumpSensitivity(printer.StepperDrivers));
             }
         }
 
         public void SetBedPidValues(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetBedPidValues(printer.BedTemperatures.PIDValues));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetBedPidValues(printer.BedTemperatures.PIDValues));
             }
         }
 
         public void SetHotendPidValues(Printer printer)
         {
-            if (printer.SerialConnection.IsConnected)
+            if (printer.PrinterConnection.IsConnected)
             {
-                printer.SerialConnection.Write(CommandMethods.BuildSetHotendPidValues(printer.HotendTemperatures.PIDValues));
+                printer.PrinterConnection.Write(CommandMethods.BuildSetHotendPidValues(printer.HotendTemperatures.PIDValues));
             }
         }
 

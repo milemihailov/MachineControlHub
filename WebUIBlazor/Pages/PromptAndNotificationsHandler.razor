@@ -18,7 +18,7 @@
     protected override void OnInitialized()
     {
         printerManager.InputReceived += OnUpdate;
-        printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
+        // printerManager.ActivePrinter.SerialConnection.Disconnected += OnDisconnecting;
     }
 
     public async void OnUpdate(string input)
@@ -158,6 +158,5 @@
     public void Dispose()
     {
         printerManager.InputReceived -= OnUpdate;
-        printerManager.ActivePrinter.SerialConnection.Disconnected -= OnDisconnecting;
     }
 }

@@ -4,7 +4,7 @@
 @inject PrinterManagerService printerManager
 
 
-@if (printerManager.ActivePrinter.SerialConnection != null && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+@if (printerManager.ActivePrinter.PrinterConnection != null && printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
 {
 
     <MudProgressLinear Color="Color.Warning" Striped="true" Size="Size.Large" Value="printerManager.ActivePrinter.CurrentPrintJob.PrintProgress" Class="pb-9">
@@ -24,7 +24,7 @@
 
 }
 
-@if (printerManager.ActivePrinter.SerialConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
+@if (printerManager.ActivePrinter.PrinterConnection.IsConnected && !printerManager.ActivePrinter.CurrentPrintJob.IsPrinting)
 {
     <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="@(!printerManager.ActivePrinter.IsBusy ? Severity.Success : Severity.Warning)" Variant="Variant.Text">
         @if (printerManager.ActivePrinter.IsBusy)

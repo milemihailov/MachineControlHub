@@ -42,22 +42,22 @@ namespace WebUI.Data
 
         public void ChangeFilament(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildFilamentChangeCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildFilamentChangeCommand());
         }
 
         public void LoadFilament(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildLoadFilamentCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildLoadFilamentCommand());
         }
 
         public void UnloadFilament(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
+            printer.PrinterConnection.Write(CommandMethods.BuildUnloadFilamentCommand());
         }
 
         public void SetHotendPIDValues(Printer printer)
         {
-            printer.SerialConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
+            printer.PrinterConnection.Write(CommandMethods.BuildPIDAutoTuneCommand(0, PIDHotendTemp, PIDHotendCycles));
         }
     }
 }

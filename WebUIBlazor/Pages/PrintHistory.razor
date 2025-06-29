@@ -20,7 +20,7 @@
             <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="pb-10">Print History</MudText>
         </div>
         <MudButton FullWidth="true" Color="Color.Error" OnClick="ConfirmAndRemoveAllPrintJobs">Clear all records</MudButton>
-        @foreach (var printJob in printerDataServiceTest.PrintHistory.Where(printJob => printJob.PortName == PrinterManager.ActivePrinter.SerialConnection.PortName))
+        @foreach (var printJob in printerDataServiceTest.PrintHistory.Where(printJob => printJob.PrinterName == PrinterManager.ActivePrinter.Name))
         {
             <div style="display:flex; justify-content:center; align-items: center;">
                 <div style="width:60%;">

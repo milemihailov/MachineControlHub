@@ -16,7 +16,7 @@ namespace MachineControlHub.PrinterConnection
         public int ReadTimeout { get; set; } = 5000; // Default read timeout in milliseconds
         public string IpAddress { get; set; } = "192.168.0.1";
         public int Port { get; set; } = 23; // Default Telnet port
-
+        private SemaphoreSlim _asyncLock = new SemaphoreSlim(1, 1);
         public bool IsConnected { get; set; }
         public int ResponseDelay { get; set; } = 100; // Delay after sending a command before reading response
         public event EventHandler<string> DataReceived;
@@ -222,6 +222,7 @@ namespace MachineControlHub.PrinterConnection
             if (!IsConnected || _stream == null)
                 return null;
 
+            await _asyncLock.WaitAsync();
             try
             {
                 byte[] buffer = new byte[1024];
@@ -242,6 +243,10 @@ namespace MachineControlHub.PrinterConnection
             {
                 Console.WriteLine($"Error reading from printer: {ex.Message}");
                 return null;
+            }
+            finally
+            {
+                _asyncLock.Release();
             }
         }
 

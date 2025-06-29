@@ -352,13 +352,13 @@
             PrinterManagerService.ActivePrinter.Position.EMovePosition = null;
 
             // set positioning mode
-            PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
+            PrinterManagerService.ActivePrinter.PrinterConnection.Write(CommandMethods.BuildAbsolutePositionCommand());
 
             // move to desired position
-            PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildLinearMoveCommand(PrinterManagerService.ActivePrinter.Position, PrinterManagerService.ActivePrinter.MotionSettings));
+            PrinterManagerService.ActivePrinter.PrinterConnection.Write(CommandMethods.BuildLinearMoveCommand(PrinterManagerService.ActivePrinter.Position, PrinterManagerService.ActivePrinter.MotionSettings));
 
             // request current position
-            PrinterManagerService.ActivePrinter.SerialConnection.Write("M114");
+            PrinterManagerService.ActivePrinter.PrinterConnection.Write("M114");
         }
     }
 

@@ -25,7 +25,7 @@
 @using System.Diagnostics
 @using System.Text.RegularExpressions
 
-<Connection />
+@* <Connection /> *@
 <PrinterState />
 <PromptAndNotificationsHandler />
 
@@ -73,7 +73,7 @@
             </MudSelect>
         } *@
 
-        @if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        @if (PrinterManagerService.ActivePrinter.PrinterConnection != null && PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected)
         {
             <MudSelect @bind-Value="@PrintingService.FileToPrint" T="string" Label="Printer Files" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
 
@@ -151,7 +151,7 @@
     <MudItem Style="width:100%;" xs="12" sm="12" md="4" lg="6" xl="2" Class="pl-6 mr-0 pr-0 pt-10 mb-8 mt-4">
 
         <!-- Conditions to enable\disable buttons -->
-        @if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+        @if (PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
         {
             PrintingService.StartButtonEnableDisable = false;
             PrintingService.PrintJobControlsEnableDisable = true;
@@ -595,11 +595,11 @@
         if (firstRender)
         {
             // Check if the printer is connected, has printers available and is not printing
-            if ((PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected) && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+            if ((PrinterManagerService.ActivePrinter.PrinterConnection != null && PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected) && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
             {
                 // Request the list of files on the SD card
-                PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildListSDCardCommand());
-                PrinterManagerService.ActivePrinter.SerialConnection.Write("M304");
+                PrinterManagerService.ActivePrinter.PrinterConnection.Write(CommandMethods.BuildListSDCardCommand());
+                PrinterManagerService.ActivePrinter.PrinterConnection.Write("M304");
                 PrinterDataService.RequestFirmwareReport(PrinterManagerService.ActivePrinter);
             }
 
@@ -624,7 +624,7 @@
             }
 
             // Asks for bed mesh
-            PrinterManagerService.ActivePrinter.SerialConnection.Write("M420 V");
+            PrinterManagerService.ActivePrinter.PrinterConnection.Write("M420 V");
 
             await InvokeAsync(() => MyNavigationManager.NavigateTo(MyNavigationManager.Uri, true));
         }
@@ -650,7 +650,7 @@
     public async void OnUpdate(string input)
     {
         // Check if the printer is connected and has printers
-        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected && PrinterManagerService.Printers.Count > 0)
         {
             // Accumulate file content
             FileContentBuffer += input;
@@ -750,18 +750,18 @@
     /// </summary>
     private async void OnSecondElapsed()
     {
-        if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection != null && PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected)
         {
             // If automatic temperature reporting is not enabled, request temperature data
             if (!PrinterManagerService.ActivePrinter.HasAutoReportTemperature && !PrinterManagerService.ActivePrinter.IsBusy)
             {
-                PrinterManagerService.ActivePrinter.SerialConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
+                PrinterManagerService.ActivePrinter.PrinterConnection.Write(CommandMethods.BuildReportTemperaturesCommand());
             }
 
             // If automatic status reporting is not enabled, request the SD status
             if (!PrinterManagerService.ActivePrinter.HasAutoReportSDStatus && !PrinterManagerService.ActivePrinter.IsBusy)
             {
-                PrinterManagerService.ActivePrinter.SerialConnection.Write("M27");
+                PrinterManagerService.ActivePrinter.PrinterConnection.Write("M27");
             }
 
             // Asynchronously get the status of the drives
@@ -778,14 +778,14 @@
     private async void OnFiveSecondsElapsed()
     {
         // Check if the printer is connected and not busy
-        if (PrinterManagerService.ActivePrinter.SerialConnection != null && PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection != null && PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected)
         {
             await Task.Run(() =>
             {
                 // If printing is in progress, request name of the file being printed
                 if (PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
                 {
-                    PrinterManagerService.ActivePrinter.SerialConnection.Write("M27 C");
+                    PrinterManagerService.ActivePrinter.PrinterConnection.Write("M27 C");
                 }
             });
         }
@@ -839,7 +839,7 @@
         // // If the user confirms the start of the print job
         if (result == true)
         {
-            PrinterManagerService.ActivePrinter.SerialConnection.Write($"M140 S{bedTemp}");
+            PrinterManagerService.ActivePrinter.PrinterConnection.Write($"M140 S{bedTemp}");
             PrinterManagerService.ActivePrinter.IsBusy = true;
             await PrinterManagerService.ActivePrinter.PrintService.TransferFileToSD(PrintingService.UploadedFileContent, fileName);
             PrinterManagerService.ActivePrinter.IsBusy = false;
@@ -882,7 +882,7 @@
     public async void ConfirmStartAsync()
     {
         // Check if the printer is connected
-        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected)
         {
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
@@ -935,7 +935,7 @@
     public async void StopPrint()
     {
         // Check if the printer is connected
-        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected)
         {
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
@@ -983,7 +983,7 @@
 
     public async void DeleteSDFile(string file, Printer printer)
     {
-        if (PrinterManagerService.ActivePrinter.SerialConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
+        if (PrinterManagerService.ActivePrinter.PrinterConnection.IsConnected && !PrinterManagerService.ActivePrinter.CurrentPrintJob.IsPrinting)
         {
             // Show a confirmation dialog to the user
             bool? result = await DialogService.ShowMessageBox(
